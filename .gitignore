@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SPHEREx script outputs
+spherex_cache/
+output/
