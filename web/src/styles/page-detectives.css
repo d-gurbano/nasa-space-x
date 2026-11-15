@@ -1,0 +1,215 @@
+/* Tune the Rewind: the shift-and-stack game. A big pixel-sharp sky like a camera viewfinder,
+   a direction dial and a speed tape like lens rings, a signal meter with a target zone, gold on lock. */
+
+.gm-on .ph { display: none; }
+.page-inner:has(.gm-on) { max-width: 1180px; padding-top: 88px; }
+.page-inner:has(.gm-on) .page-back { margin-bottom: var(--g2); }
+
+.tr { display: grid; gap: var(--g2); }
+.tr[hidden], .tr-end[hidden] { display: none; }
+
+/* top line: what round, the clock, help */
+.tr-top { display: flex; align-items: center; gap: var(--g3); min-height: 56px; }
+.tr-name { flex: 1; min-width: 0; }
+.tr-name .kicker { color: var(--gold); margin: 0 0 4px; }
+.tr-h { margin: 0; font: 600 clamp(22px, 2.6vw, 30px) / 1.1 var(--font); letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tr-prog { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tr-prog li { width: 9px; height: 9px; border-radius: 50%; background: var(--fill-2); transition: background var(--t), box-shadow var(--t); }
+.tr-prog li.now { background: transparent; box-shadow: inset 0 0 0 1.5px var(--gold); }
+.tr-prog li.ok { background: var(--gold); }
+.tr-prog li.help { background: var(--ink-3); }
+.tr-clock { margin: 0; min-width: 76px; text-align: right; font-size: var(--fs-l); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
+/* the stage: sky and controls side by side on wide screens, stacked on phones */
+.tr-stage { display: grid; grid-template-columns: auto minmax(280px, 1fr); gap: var(--g4); align-items: start; }
+.tr-sky {
+  --edge: rgba(255, 255, 255, 0.28);
+  position: relative; width: clamp(340px, calc(100svh - 230px), 620px); aspect-ratio: 1; border-radius: var(--r2); overflow: hidden;
+  background: #04060a; box-shadow: 0 0 0 1px var(--line); transition: box-shadow var(--t-slow) var(--ease);
+}
+.tr-img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; transition: opacity var(--t); }
+.tr-sky.loading .tr-img { opacity: 0.25; }
+.tr-sky.warm { --edge: rgba(242, 181, 68, 0.55); box-shadow: 0 0 0 1px var(--gold-line); }
+.tr-sky.hot { --edge: var(--gold); box-shadow: 0 0 0 1px var(--gold), 0 0 48px rgba(242, 181, 68, 0.18); }
+.tr-sky.won { --edge: var(--gold-2); box-shadow: 0 0 0 1.5px var(--gold), 0 0 90px rgba(242, 181, 68, 0.32); }
+
+/* viewfinder corners */
+.tr-corner { position: absolute; width: 22px; height: 22px; border: 0 solid var(--edge); transition: border-color var(--t-slow); pointer-events: none; }
+.tr-corner.tl { top: 12px; left: 12px; border-width: 1.5px 0 0 1.5px; }
+.tr-corner.tr { top: 12px; right: 12px; border-width: 1.5px 1.5px 0 0; }
+.tr-corner.bl { bottom: 12px; left: 12px; border-width: 0 0 1.5px 1.5px; }
+.tr-corner.br { bottom: 12px; right: 12px; border-width: 0 1.5px 1.5px 0; }
+
+/* the lock: two gold rings close in on the dot */
+.tr-over { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.tr-ring { r: 14px; fill: none; stroke: var(--gold); stroke-width: 1.6px; vector-effect: non-scaling-stroke; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.won .tr-ring { animation: tr-ring 700ms var(--ease-out) forwards; }
+.won .tr-ring-2 { animation: tr-pulse 1.8s var(--ease-out) 700ms infinite; }
+@keyframes tr-ring { from { opacity: 0; transform: scale(5); } to { opacity: 1; transform: scale(1); } }
+@keyframes tr-pulse { from { opacity: 0.7; transform: scale(1); } to { opacity: 0; transform: scale(2.6); } }
+
+/* how it works: three short steps, always in view */
+.tr-how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--g); margin: 0; padding: 0; list-style: none; }
+.tr-how li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--r); background: var(--fill); font-size: var(--fs-s); line-height: 1.35; color: var(--ink-2); }
+.tr-how b { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); font-size: var(--fs-xs); font-weight: 500; }
+
+/* the signal meter: a bar with a marked target zone */
+.tr-sig { display: grid; gap: 8px; padding: 14px 16px; margin-bottom: var(--g3); border-radius: var(--r2); background: var(--fill); box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow var(--t); }
+.tr-sig.in { box-shadow: inset 0 0 0 1px var(--gold-line); }
+.tr-sig-k { display: flex; justify-content: space-between; align-items: baseline; margin: 0; }
+.tr-sig-k > span:first-child { font-size: var(--fs-xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-2); }
+.tr-sig-v { font-size: var(--fs-s); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tr-sig-v b { font-size: var(--fs-xl); font-weight: 500; color: var(--ink); }
+.tr-sig-v i { font-style: normal; }
+.tr-sig.in .tr-sig-v b { color: var(--gold-2); }
+.tr-meter { position: relative; height: 14px; border-radius: var(--pill); background: var(--fill-2); overflow: hidden; }
+.tr-meter span { position: absolute; inset: 0; display: block; transform-origin: left; transform: scaleX(0); background: var(--blue); border-radius: var(--pill); transition: background var(--t); }
+.tr-sig.in .tr-meter span { background: var(--gold); }
+.tr-zone { position: absolute; top: 0; bottom: 0; right: 0; display: grid; place-items: center; border-left: 2px solid var(--gold); background: repeating-linear-gradient(-45deg, rgba(242, 181, 68, 0.3) 0 4px, rgba(242, 181, 68, 0.12) 4px 8px); z-index: 1; }
+.tr-zone em { font-style: normal; font-size: 9px; letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--gold-2); }
+.tr-sig.in .tr-zone em { color: var(--gold-ink); }
+.tr-sig-say { margin: 0; font-size: var(--fs-s); color: var(--ink-2); }
+
+/* celebration: gold bits fly out from the dot */
+.tr-burst { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.tr-burst i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 2px; background: var(--gold); opacity: 0; animation: tr-bit 1100ms var(--ease-out) forwards; }
+.tr-burst i.b1 { background: var(--gold-2); border-radius: 50%; width: 6px; height: 6px; }
+.tr-burst i.b2 { background: var(--blue-2); height: 4px; }
+@keyframes tr-bit { 0% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.5); } }
+
+.tr-banner {
+  position: absolute; left: 0; right: 0; bottom: 8%; margin: 0; text-align: center; pointer-events: none;
+  font: 600 clamp(32px, 4.4vw, 52px) / 1 var(--font); letter-spacing: -0.03em; color: var(--gold-2); text-shadow: 0 0 28px rgba(242, 181, 68, 0.55);
+  opacity: 0; transform: translateY(12px) scale(0.96);
+}
+.won .tr-banner { animation: tr-banner 600ms var(--ease-out) 260ms forwards; }
+.tr-banner.err { opacity: 1; transform: none; font-size: var(--fs-m); font-weight: 400; letter-spacing: 0; color: var(--ink-2); text-shadow: none; bottom: 46%; }
+@keyframes tr-banner { to { opacity: 1; transform: none; } }
+
+/* the "how it works" film over the sky */
+.tr-film { position: absolute; inset: 0; width: 100%; height: 100%; background: #04060a; }
+.tr-film-cap {
+  position: absolute; left: 24px; right: 24px; bottom: 26px; margin: 0; text-align: center;
+  font: 500 clamp(18px, 2.2vw, 24px) / 1.2 var(--font); letter-spacing: -0.02em; color: var(--ink); text-wrap: balance;
+}
+.tr-film-cap.in { animation: tr-cap 420ms var(--ease-out); }
+@keyframes tr-cap { from { opacity: 0; transform: translateY(8px); } }
+.tr-skip { position: absolute; top: 14px; right: 14px; }
+.tr-sky.filming .tr-corner, .tr.filming .tr-deck, .tr.filming .tr-clock { visibility: hidden; }
+.tr-film[hidden], .tr-film-cap[hidden], .tr-skip[hidden] { display: none; }
+
+/* the deck: controls, then the result card in the same place */
+.tr-deck { display: grid; align-content: start; min-height: 100%; }
+.tr-ctrl { display: grid; gap: var(--g4); }
+.tr-ctrl[hidden], .tr-result[hidden], .tr-guided[hidden] { display: none; }
+.tr-hint { justify-self: center; }
+.tr-c { display: grid; justify-items: center; gap: var(--g); }
+.tr-c-k { margin: 0; justify-self: start; font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+
+.tr-dial { position: relative; width: min(220px, 60vw); aspect-ratio: 1; display: grid; justify-items: center; touch-action: none; cursor: grab; outline: none; border-radius: 50%; }
+.tr-dial.drag { cursor: grabbing; }
+.tr-dial svg { width: 100%; height: 100%; overflow: visible; }
+.tr-dial-face { fill: rgba(255, 255, 255, 0.025); stroke: var(--line-2); stroke-width: 1; }
+.tr-dial-ticks line { stroke: var(--ink-3); stroke-width: 1; opacity: 0.55; }
+.tr-dial-ticks line.big { stroke: var(--ink-2); stroke-width: 1.6; opacity: 1; }
+.tr-dial text { fill: var(--ink-3); font: 500 10px var(--mono); text-anchor: middle; dominant-baseline: middle; }
+.tr-dial-arc { fill: none; stroke: var(--gold); stroke-width: 6; stroke-linecap: round; opacity: 0.9; }
+.tr-dial-hand { stroke: var(--gold); fill: var(--gold); }
+.tr-dial-hand line { stroke-width: 2; stroke-linecap: round; }
+.tr-dial-hub { fill: var(--space); stroke: var(--line-2); stroke-width: 1; }
+.tr-dial-knob { fill: var(--gold); stroke: var(--space); stroke-width: 3; transition: r var(--t-fast); }
+.tr-dial:hover .tr-dial-knob, .tr-dial.drag .tr-dial-knob { r: 11px; }
+.tr-dial:focus-visible .tr-dial-face { stroke: var(--gold); stroke-width: 2; }
+.tr-dial-val { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--fs-l); color: var(--ink); font-variant-numeric: tabular-nums; pointer-events: none; }
+
+.tr-tape { width: 100%; display: grid; gap: 10px; justify-items: center; touch-action: none; cursor: ew-resize; outline: none; }
+.tr-tape-win {
+  position: relative; width: 100%; height: 64px; overflow: hidden; border-radius: var(--r); background: rgba(255, 255, 255, 0.025); box-shadow: 0 0 0 1px var(--line-2);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+.tr-tape:focus-visible .tr-tape-win { box-shadow: 0 0 0 2px var(--gold); }
+.tr-tape-strip {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 480%;
+  background:
+    repeating-linear-gradient(90deg, var(--ink-2) 0 1.5px, transparent 1.5px 60px) left bottom / 100% 26px no-repeat,
+    repeating-linear-gradient(90deg, var(--ink-3) 0 1px, transparent 1px 12px) left bottom / 100% 14px no-repeat;
+  opacity: 0.8;
+}
+.tr-tape-index { position: absolute; left: calc(50% - 1px); top: 8px; bottom: 0; width: 2px; background: var(--gold); border-radius: 2px; box-shadow: 0 0 12px rgba(242, 181, 68, 0.6); }
+.tr-tape-index::before { content: ''; position: absolute; top: -6px; left: -5px; border: 6px solid transparent; border-top-color: var(--gold); }
+.tr-tape-fill { position: relative; width: 100%; height: 6px; background: var(--fill-2); border-radius: 3px; overflow: hidden; }
+.tr-tape-fill i { position: absolute; top: 0; bottom: 0; background: rgba(242, 181, 68, 0.35); box-shadow: inset 2px 0 var(--gold), inset -2px 0 var(--gold); }
+.tr-tape-fill i[hidden] { display: none; }
+.tr-tape-fill span { display: block; height: 100%; background: var(--ink-2); transform-origin: left; transform: scaleX(0); }
+.tr-tape-val { font-size: var(--fs-l); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* a reveal round: three ready-made stacks to step through */
+.tr-guided { display: grid; gap: var(--g); margin-bottom: var(--g3); }
+.tr-g { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; border: 0; border-radius: var(--r); background: var(--fill); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); font: 500 var(--fs-m) var(--font); text-align: left; cursor: pointer; transition: background var(--t-fast), box-shadow var(--t-fast); }
+.tr-g:hover { background: var(--fill-2); }
+.tr-g.on { box-shadow: inset 0 0 0 1.5px var(--gold); background: rgba(242, 181, 68, 0.1); }
+.tr-g span { color: var(--ink-3); font-size: var(--fs-xs); }
+.tr-foot { display: flex; flex-wrap: wrap; gap: var(--g2); align-items: center; }
+
+/* the result card, in the place of the controls */
+.tr-result { display: grid; gap: var(--g3); align-content: start; animation: tr-rise 520ms var(--ease-out); }
+@keyframes tr-rise { from { opacity: 0; transform: translateY(14px); } }
+.tr-res-top { display: grid; gap: var(--g); }
+.tr-res-time { margin: 0; display: grid; gap: 6px; font: 600 clamp(44px, 5vw, 64px) / 0.95 var(--font); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+.tr-res-time span, .tr-score-big span { font: 500 var(--fs-2xs) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--gold); }
+.tr-res-snr { margin: 0; color: var(--ink); font-size: var(--fs-s); }
+.tr-res-snr span { color: var(--ink-3); }
+.tr-res-say { margin: 0; color: var(--ink-2); font-size: var(--fs-m); line-height: var(--lh-text); max-width: 42ch; }
+.tr-result .btn { justify-self: start; }
+
+.tr-stars { display: inline-flex; gap: 6px; }
+.tr-stars i { width: 18px; height: 18px; background: var(--fill-2); clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.tr-stars i.on { background: var(--gold); }
+.tr-result .tr-stars i.on { animation: tr-star 420ms var(--ease-out) backwards; }
+.tr-result .tr-stars i.on:nth-child(2) { animation-delay: 120ms; }
+.tr-result .tr-stars i.on:nth-child(3) { animation-delay: 240ms; }
+@keyframes tr-star { from { transform: scale(0.2) rotate(-40deg); opacity: 0; } }
+
+/* the end: the real find */
+.tr-end { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: var(--g6); align-items: center; animation: tr-rise 700ms var(--ease-out); }
+.tr-end-art { position: relative; aspect-ratio: 1; border-radius: var(--r2); overflow: hidden; background: #04060a; box-shadow: 0 0 0 1.5px var(--gold), 0 0 90px rgba(242, 181, 68, 0.25); }
+.tr-end-art canvas, .tr-end-art img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.tr-end-text { display: grid; gap: var(--g3); align-content: start; }
+.tr-end-text .kicker { color: var(--gold); margin: 0; }
+.tr-end-h { margin: 0; font: 600 clamp(34px, 4.4vw, 56px) / 1.02 var(--font); letter-spacing: -0.035em; text-wrap: balance; }
+.tr-end-lead { margin: 0; font-size: var(--fs-l); line-height: var(--lh-text); color: var(--ink-2); max-width: 44ch; }
+.tr-end-lead b { color: var(--gold-2); font-weight: 500; }
+.tr-end-text > .btn { justify-self: start; }
+.tr-score { display: grid; gap: var(--g); padding-top: var(--g3); border-top: 1px solid var(--line); }
+.tr-score-big { margin: 0; display: grid; gap: 6px; font: 600 var(--fs-3xl) / 1 var(--font); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.tr-laps { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 0; padding: 0; list-style: none; font-size: var(--fs-s); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tr-laps span { color: var(--ink-3); font-size: var(--fs-2xs); margin-right: 5px; }
+.tr-score .hint { margin: 0; }
+.tr-end-btns { display: flex; flex-wrap: wrap; gap: var(--g2); }
+
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .tr-stage { grid-template-columns: 1fr; gap: var(--g3); }
+  .tr-sky { width: min(100%, 560px); justify-self: center; }
+  .tr-ctrl { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--g3); }
+  .tr-hint { grid-column: 1 / -1; }
+  .tr-sig { margin-bottom: var(--g2); }
+  .tr-dial { width: min(170px, 40vw); }
+  .tr-end { grid-template-columns: 1fr; gap: var(--g4); }
+  .tr-end-art { max-width: 520px; }
+}
+@media (max-width: 560px) {
+  .page-inner:has(.gm-on) { padding-top: 72px; }
+  .tr-top { gap: var(--g2); }
+  .tr-prog { display: none; }
+  .tr-how { grid-template-columns: 1fr; gap: 4px; }
+  .tr-how li { padding: 7px 10px; }
+  .tr-ctrl { gap: var(--g2); }
+  .tr-dial { width: 38vw; }
+  .tr-tape-win { height: 54px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .won .tr-ring { animation: none; opacity: 1; }
+  .won .tr-ring-2 { animation: none; opacity: 0; }
+  .won .tr-banner { animation: none; opacity: 1; transform: none; }
+  .tr-result, .tr-end, .tr-film-cap.in, .tr-result .tr-stars i.on { animation: none; }
+}

@@ -1,0 +1,139 @@
+/* Object panel: an info card. A fixed first screen (name, type, verdict, one big number),
+   five icon tabs, and one scrolling pane. The frame (.panel, .pn-body, .pn-close, the phone
+   sheet) is in app.css; everything inside is here. Fonts come from the tokens only. */
+.panel .pn-body.op { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.panel .pn-close { top: 14px; right: 14px; }
+
+/* ---------- first screen ---------- */
+.op-head { flex: none; padding: 18px var(--g3) 0; }
+.op-title { display: flex; align-items: center; gap: 12px; margin-right: 44px; min-width: 0; }
+.op-name { margin: 0; font: var(--w-semi) 32px / 1.05 var(--font-display); letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.op-title .verdict-chip { flex: none; }
+.op-type { margin: 6px 0 0; font-size: var(--fs-s); color: var(--ink-3); line-height: 1.4; }
+.op-type span { margin: 0 3px; color: var(--line-2); }
+.op-stat { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--fill); }
+.op-stat-gold { border-color: var(--gold-line); background: rgba(242, 181, 68, 0.06); }
+.op-num { flex: none; font: var(--w-semi) 52px / 0.9 var(--font-display); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.op-stat-gold .op-num { color: var(--gold); }
+.op-stat-text { flex: 1 1 auto; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.op-stat-text strong { font-size: var(--fs-m); font-weight: var(--w-semi); line-height: 1.25; letter-spacing: -0.01em; }
+.op-stat-text span { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.35; }
+.op-view { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px 0 10px; border: 1px solid var(--line-2); border-radius: var(--pill); font-size: var(--fs-xs); font-weight: var(--w-medium); color: var(--ink); white-space: nowrap; transition: background var(--t-fast), border-color var(--t-fast); }
+.op-view:hover { background: var(--fill-2); border-color: var(--ink-3); }
+.op-view svg, .op-tabs svg, .op-ck svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.op-fail { margin: var(--g2) var(--g3); }
+
+/* ---------- tabs ---------- */
+.op-tabs { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin: 10px var(--g3) 0; border-bottom: 1px solid var(--line); }
+.op-tabs button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0 7px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: var(--fs-xs); font-weight: var(--w-medium); color: var(--ink-3); transition: color var(--t-fast), border-color var(--t-fast); }
+.op-tabs button:hover { color: var(--ink); }
+.op-tabs button[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--gold); }
+.op-tabs button[aria-selected='true'] svg { color: var(--gold); }
+.op-tabs button:focus-visible { outline: 2px solid var(--blue-2); outline-offset: -2px; border-radius: var(--r-s); }
+
+/* ---------- the pane ---------- */
+.op-panes { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px var(--g3) var(--g2); scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; line-height: 1.5; }
+.op-pane[hidden] { display: none; }
+.op-pane { animation: fade var(--t) var(--ease); }
+.op-pane p { margin: 0 0 10px; font-size: var(--fs-s); color: var(--ink-2); }
+.op-pane p strong { color: var(--ink); font-weight: var(--w-semi); }
+.op-h { margin: 0 0 10px; font: var(--w-semi) var(--fs-l) / 1.2 var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
+.op-pane .op-lead { font-size: var(--fs-m); color: var(--ink); line-height: 1.45; }
+.op-pane .op-note { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin: 6px 0 0; font-size: var(--fs-xs); color: var(--ink-3); }
+.op-pane .op-empty { padding: var(--g2); border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--ink-3); }
+.op-more { margin-top: 12px; border-top: 1px solid var(--line); }
+.op-more summary { padding: 10px 0 0; font-size: var(--fs-xs); color: var(--ink-3); cursor: pointer; }
+.op-more summary:hover { color: var(--ink); }
+.op-more p { margin: 8px 0 0; font-size: var(--fs-xs); color: var(--ink-3); }
+
+/* photos: one still picture, the days beside it */
+.op-photo { display: grid; grid-template-columns: minmax(0, 212px) minmax(0, 1fr); gap: 12px; align-items: start; }
+.op-photo-one { grid-template-columns: minmax(0, 260px); }
+.op-big { max-width: none; margin: 0; box-shadow: 0 0 0 1px var(--line); }
+.op-big img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.op-big .stamp-cross { width: 20%; height: 20%; box-shadow: 0 0 10px rgba(242, 181, 68, 0.3); }
+.op-strip { display: grid; grid-template-columns: repeat(auto-fill, 48px); gap: 8px; align-content: start; max-height: 212px; overflow-y: auto; padding: 2px; scrollbar-width: none; -webkit-mask-image: linear-gradient(#000 200px, transparent 212px); mask-image: linear-gradient(#000 200px, transparent 212px); }
+.op-strip button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0; font: var(--fs-2xs) / 1 var(--mono); color: var(--ink-3); }
+.op-strip img { width: 48px; height: 48px; display: block; border-radius: 6px; image-rendering: pixelated; opacity: 0.55; outline: 1px solid var(--line); outline-offset: -1px; transition: opacity var(--t-fast); }
+.op-strip button:hover img { opacity: 0.9; }
+.op-strip button[aria-selected='true'] { color: var(--gold-2); }
+.op-strip button[aria-selected='true'] img { opacity: 1; outline: 2px solid var(--gold); }
+.op-pane .op-cap { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 8px 0 0; font-size: var(--fs-xs); color: var(--ink-2); }
+
+/* found? */
+.op-pane .op-score { margin: 0 0 4px; font-size: var(--fs-xs); letter-spacing: 0.04em; color: var(--ok); }
+.op-checks { list-style: none; margin: 0 0 12px; padding: 0; }
+.op-checks li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.op-checks li:last-child { border-bottom: 0; }
+.op-checks strong { font-size: var(--fs-s); font-weight: var(--w-semi); color: var(--ink); }
+.op-checks p { margin: 1px 0 0; font-size: var(--fs-xs); line-height: 1.45; color: var(--ink-3); }
+.op-ck { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, currentColor 14%, transparent); }
+.op-ck svg { width: 14px; height: 14px; stroke-width: 1.8; }
+.ck-ok .op-ck { color: var(--ok); }
+.ck-warn .op-ck { color: var(--warn); }
+.ck-bad .op-ck { color: var(--bad); }
+.ck-na .op-ck { color: var(--ink-3); }
+.ck-na strong { color: var(--ink-2); }
+
+/* future */
+.op-block { padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--fill); }
+.op-block + .op-block { margin-top: 8px; }
+.op-block p:last-child { margin-bottom: 0; }
+.op-k { margin: 0 0 8px; font: var(--w-medium) var(--fs-2xs) / 1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.op-pane .op-big-line { margin: 0 0 4px; }
+.op-big-line strong { font: var(--w-semi) var(--fs-2xl) / 1.1 var(--font-display); letter-spacing: -0.03em; }
+.op-unc { display: grid; gap: 8px; margin-bottom: 10px; }
+.op-unc-row { display: grid; grid-template-columns: 92px 1fr auto; gap: 10px; align-items: center; font-size: var(--fs-xs); color: var(--ink-2); }
+.op-unc-row strong { font-size: var(--fs-s); font-weight: var(--w-medium); color: var(--ink); white-space: nowrap; }
+.op-bar { height: 6px; border-radius: 3px; background: var(--fill-2); overflow: hidden; }
+.op-bar i { display: block; height: 100%; border-radius: 3px; background: var(--ink-3); }
+.unc-after .op-bar i { background: var(--gold); }
+.unc-after strong { color: var(--gold-2); }
+
+/* made of */
+.op-chart { width: 100%; height: auto; display: block; margin: 4px 0 8px; }
+.op-chart text { fill: var(--ink-3); font: var(--fs-2xs) var(--mono); }
+.op-chart .sp-axis { stroke: var(--line-2); }
+.op-chart .sp-other { fill: none; stroke: var(--line-2); stroke-width: 1; }
+.op-chart .sp-best { fill: none; stroke: var(--blue); stroke-width: 2; }
+.op-chart .sp-pt line { stroke: var(--gold); stroke-width: 1.2; opacity: 0.7; }
+.op-chart .sp-pt circle { fill: var(--gold); }
+.op-legend { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--fs-xs); color: var(--ink-3); }
+.op-legend li { display: flex; align-items: center; gap: 6px; }
+.sp-k-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+.sp-k-best { width: 16px; border-top: 2px solid var(--blue); }
+.sp-k-other { width: 16px; border-top: 1px solid var(--line-2); }
+
+/* story */
+.op-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--g); margin: 14px 0 12px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.op-facts dt { margin-bottom: 4px; font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.3; }
+.op-facts dd { margin: 0; font-size: var(--fs-s); color: var(--ink); }
+.op-pane .op-sources { font-size: var(--fs-xs); color: var(--ink-3); }
+.op-sources a { color: var(--blue-2); }
+
+/* short windows: tighten the first screen so the Photos tab still fits */
+@media (min-width: 721px) and (max-height: 820px) {
+  .op-head { padding-top: 16px; }
+  .op-name { font-size: 28px; }
+  .op-num { font-size: 44px; }
+  .op-stat { margin-top: 10px; padding: 10px 12px; }
+  .op-tabs { margin-top: 10px; }
+}
+
+/* phones: the whole sheet scrolls and the tabs stick to its top */
+@media (max-width: 720px) {
+  .panel .pn-body.op { display: block; overflow-y: auto; }
+  .op-head { padding: 0 var(--g2); }
+  .op-name { font-size: var(--fs-2xl); }
+  .op-num { font-size: 44px; }
+  .op-tabs { position: sticky; top: 0; z-index: 1; margin: 12px 0 0; padding: 0 var(--g2); background: #090b10; }
+  .op-panes { overflow: visible; padding: var(--g2) var(--g2) var(--g4); }
+  .op-tabs button { min-height: 48px; }
+}
+
+/* ---------- distance readout and the 3D dock: the readout sits on its own row above the dock,
+   and the close-up note above both, so none of them can overlap at any width ---------- */
+@media (min-width: 721px) {
+  body .earth-dist { bottom: calc(var(--tb-h, 170px) + var(--g2) + 52px); }
+  body .focus-note { bottom: calc(var(--tb-h, 170px) + var(--g2) + 104px); }
+}

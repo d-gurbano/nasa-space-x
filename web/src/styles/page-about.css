@@ -1,0 +1,115 @@
+/* About page. Built from the tokens and the shared components; local pieces start with "ab-". */
+.ab-text, .page-content .ab-text { max-width: 720px; margin: 0 0 var(--g3); color: var(--ink-2); }
+
+/* more air between sections, now that each holds less text */
+.ab-nums ~ .sec { padding: var(--g6) 0; }
+
+/* the results in numbers */
+.ab-nums { display: grid; gap: var(--g3); margin: var(--g3) 0 var(--g6); padding: var(--g4); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
+.ab-nums-top { gap: var(--g3) var(--g8); }
+.ab-nums-top .stat { flex: 0 1 300px; }
+.ab-nums-top .stat-label { font-size: var(--fs-m); color: var(--ink-2); }
+.ab-nums-rest { padding-top: var(--g3); border-top: 1px solid var(--line); }
+.ab-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g) var(--g2); }
+
+/* hero: the telescope, full width, the one-line story over it */
+.ab-hero { position: relative; margin: 0 0 var(--g3); border-radius: var(--r2); overflow: hidden; border: 1px solid var(--line); background: var(--space); animation: fade var(--t-enter) var(--ease) both; }
+.ab-hero img { display: block; width: 100%; aspect-ratio: 16 / 7.4; object-fit: cover; object-position: 50% 62%; }
+.ab-hero figcaption { position: absolute; inset: auto 0 0 0; display: grid; gap: var(--g2); padding: var(--g8) var(--g4) var(--g3); background: linear-gradient(180deg, transparent, rgba(3, 4, 7, 0.86) 55%); }
+.page-content .ab-hero-lead { max-width: 640px; margin: 0; font: var(--w-semi) clamp(var(--fs-xl), 2.8vw, var(--fs-3xl)) / 1.15 var(--font-display); letter-spacing: var(--track-display); color: var(--ink); text-wrap: balance; }
+.ab-credit { font-size: var(--fs-2xs); letter-spacing: 0.04em; color: var(--ink-3); }
+
+/* how Rewind works: three real pictures of one find */
+.ab-how { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--g3); }
+.page-content .ab-how li { max-width: none; }
+.ab-how-media { position: relative; aspect-ratio: 1; margin-bottom: var(--g2); border: 1px solid var(--line); border-radius: var(--r2); overflow: hidden; background: #000; }
+.ab-how-media img, .ab-how-media canvas { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: auto; }
+.ab-stack-box { border-color: var(--gold-line); box-shadow: 0 0 40px -12px rgba(242, 181, 68, 0.35); }
+.ab-tag { position: absolute; left: 10px; top: 10px; padding: 3px 8px; border-radius: var(--pill); font-size: var(--fs-2xs); white-space: pre; color: var(--ink-2); background: rgba(3, 4, 7, 0.72); }
+.ab-tag:empty { display: none; }
+.ab-dots { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 4px; }
+.ab-dots button { flex: 1; height: 3px; padding: 0; border: 0; border-radius: 2px; background: rgba(255, 255, 255, 0.22); transition: background var(--t-fast); }
+.ab-dots button[data-on] { background: var(--gold); }
+.ab-dots button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ab-how h3 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 6px; font: var(--w-semi) var(--fs-l) / 1.2 var(--font-display); letter-spacing: var(--track-display); }
+.ab-how h3 span { font: var(--w-medium) var(--fs-s) / 1 var(--mono); letter-spacing: 0; color: var(--gold); }
+.ab-how p { margin: 0; font-size: var(--fs-m); color: var(--ink-2); }
+.page-content .ab-how-more { margin: var(--g3) 0 0; font-size: var(--fs-s); }
+.ab-how-more a { color: var(--gold); text-underline-offset: 3px; }
+
+/* the telescope: NASA images */
+.ab-gallery { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: var(--g2); }
+.page-content .ab-gallery li { max-width: none; }
+.ab-gallery figure { margin: 0; }
+.ab-gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--line); border-radius: var(--r2); transition: transform var(--t-slow) var(--ease-out), border-color var(--t); }
+.ab-gallery li:hover img { transform: scale(1.015); border-color: var(--line-2); }
+.ab-gallery figcaption { display: grid; gap: 4px; padding-top: 12px; }
+.ab-gallery b { font: var(--w-medium) var(--fs-m) / 1.3 var(--font); color: var(--ink); }
+
+/* why it matters: computed gains */
+.ab-impact { min-height: 216px; }
+.ab-impact:empty { min-height: 0; }
+.ab-gains { list-style: none; padding: 0; margin: 0 0 var(--g2); display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--g2); animation: fade var(--t-slow) var(--ease) both; }
+.ab-gain { display: flex; flex-direction: column; gap: var(--g); padding: var(--g3); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
+.ab-gain p { margin: 0; }
+.ab-gain .kicker a { color: var(--ink-2); text-underline-offset: 3px; }
+.ab-gain .kicker a:hover { color: var(--ink); }
+.ab-gain-num { font: var(--w-semi) var(--fs-5xl) / 1 var(--font-display); letter-spacing: var(--track-display); font-variant-numeric: lining-nums; color: var(--gold); }
+.ab-gain-num small { margin-right: var(--g); font: 400 var(--fs-l) / 1 var(--font); letter-spacing: 0; color: var(--ink-3); }
+.ab-gain-now .ab-gain-num { color: var(--ink); }
+.ab-gain-what { color: var(--ink); }
+.ab-gain .hint { margin-top: auto; padding-top: var(--g); }
+.ab-method { display: flex; align-items: flex-start; gap: var(--g2); max-width: 820px; margin: 0; }
+.ab-method .chip { flex: none; }
+
+/* team */
+.ab-team { list-style: none; padding: 0; margin: 0 0 var(--g3); display: flex; flex-wrap: wrap; gap: var(--g2); }
+.ab-team li { flex: 1 1 280px; max-width: 400px; display: flex; align-items: center; gap: var(--g2); padding: var(--g2) var(--g3) var(--g2) var(--g2); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
+.ab-initials { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--gold-line); border-radius: 50%; font: var(--w-medium) var(--fs-s) / 1 var(--mono); color: var(--gold); }
+.ab-name { font: var(--w-semi) var(--fs-xl) / 1.15 var(--font-display); letter-spacing: var(--track-display); }
+.ab-team + .ab-text { margin-bottom: 0; }
+
+/* rows that are links: data credits and "go further", two columns */
+.ab-credits, .ab-links { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, 1fr); column-gap: var(--g5); border-top: 1px solid var(--line); }
+.page-content .ab-credits li, .page-content .ab-links li { max-width: none; }
+.ab-credits a, .ab-links a { display: grid; grid-template-columns: 1fr 16px; align-items: center; gap: 2px var(--g2); height: 100%; padding: 14px var(--g) 14px 0; border-bottom: 1px solid var(--line); text-decoration: none; transition: background var(--t-fast), padding var(--t-fast); }
+.ab-credits a:hover, .ab-links a:hover { background: var(--fill); padding-left: var(--g); }
+.ab-credit-name, .ab-link-name { grid-column: 1; color: var(--ink); font-weight: var(--w-medium); }
+.ab-credit-what { grid-column: 1; font-size: var(--fs-s); color: var(--ink-3); }
+.ab-credits svg, .ab-links svg { grid-column: 2; grid-row: 1 / span 2; width: 16px; height: 16px; color: var(--ink-3); transition: color var(--t-fast); }
+.ab-links svg { grid-row: 1; }
+.ab-credits svg, .ab-out svg { transform: rotate(-45deg); }
+.ab-credits a:hover svg, .ab-links a:hover svg { color: var(--gold); }
+.ab-link-name { font-size: var(--fs-l); }
+
+.ab-legend { margin: var(--g3) 0 0; display: flex; flex-wrap: wrap; gap: var(--g) var(--g5); }
+.ab-legend div { display: flex; align-items: center; gap: var(--g2); }
+.ab-legend dd { margin: 0; font-size: var(--fs-s); color: var(--ink-2); }
+.ab-ack { margin-top: var(--g3); font-size: var(--fs-s); color: var(--ink-2); }
+.ab-ack summary { width: fit-content; color: var(--ink); cursor: pointer; transition: color var(--t-fast); }
+.ab-ack summary:hover { color: var(--gold); }
+.ab-ack p { max-width: 720px; margin: var(--g) 0 0; }
+.page-content .ab-not-nasa { margin: var(--g2) 0 0; font-size: var(--fs-s); color: var(--ink-3); }
+
+/* AI use */
+.ab-ai { padding: var(--g3); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
+.ab-ai dl { margin: var(--g3) 0 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--g3) var(--g5); }
+.ab-ai dt { margin-bottom: 4px; font-weight: var(--w-semi); }
+.ab-ai dd { margin: 0; font-size: var(--fs-s); color: var(--ink-2); }
+
+@media (max-width: 720px) {
+  .ab-nums { padding: var(--g3) var(--g2); margin-top: var(--g3); }
+  .ab-nums-rest { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g2); }
+  .ab-gains, .ab-links, .ab-credits, .ab-ai dl, .ab-gallery { grid-template-columns: 1fr; }
+  .ab-hero img { aspect-ratio: 4 / 5; object-position: 40% 50%; }
+  .ab-hero figcaption { padding: var(--g6) var(--g2) var(--g2); }
+  .ab-how { grid-template-columns: 1fr; gap: var(--g3); }
+  .ab-how li { display: grid; grid-template-columns: 112px 1fr; column-gap: var(--g2); align-items: start; }
+  .ab-how-media { grid-row: span 2; margin: 0; }
+  .ab-how .ab-tag { left: 4px; top: 4px; padding: 2px 5px; font-size: 9px; }
+  .ab-impact { min-height: 0; }
+  .ab-gain { padding: var(--g2); }
+  .ab-method { flex-direction: column; gap: var(--g); }
+  .ab-ai { padding: var(--g2); }
+  .ab-legend div { align-items: flex-start; flex-direction: column; gap: var(--g); }
+}

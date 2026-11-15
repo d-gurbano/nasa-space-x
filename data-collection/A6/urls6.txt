@@ -1,0 +1,1 @@
+solar https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/sun_mod_001.fits

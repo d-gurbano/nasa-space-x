@@ -1,0 +1,3 @@
+usgs_splib07 https://www.sciencebase.gov/catalog/file/get/586e8c88e4b0f5ce109fccae?f=__disk__a7%2F4f%2F91%2Fa74f913e0b7d1b8123ad059e52506a02b75a2832 ASCIIdata_splib07a.zip
+usgs_splib07 https://www.sciencebase.gov/catalog/file/get/586e8c88e4b0f5ce109fccae?f=__disk__16%2F2d%2F23%2F162d23dc18d9885b308b7275314a87ddab73a37f ASCIIdata.xml
+solar https://www.nrel.gov/grid/solar-resource/assets/data/e490_00a_amo.xls

@@ -1,0 +1,153 @@
+{
+ "sample": true,
+ "slug": "barnard",
+ "name": "Barnard's Star",
+ "ra": 269.452,
+ "dec": 4.693,
+ "pm": {
+  "ra_mas_yr": -802.8,
+  "dec_mas_yr": 10362.5
+ },
+ "seasons": [
+  {
+   "iso": "2025-05-01",
+   "png": "seasons/s0.png"
+  },
+  {
+   "iso": "2025-10-28",
+   "png": "seasons/s1.png"
+  },
+  {
+   "iso": "2026-04-26",
+   "png": "seasons/s2.png"
+  }
+ ],
+ "frames": [
+  {
+   "iso": "2025-05-01",
+   "mjd": 60796,
+   "wavelength_um": 0.75,
+   "png": "frames/f00.png",
+   "pred_xy": [
+    32,
+    32
+   ]
+  },
+  {
+   "iso": "2025-06-18",
+   "mjd": 60844,
+   "wavelength_um": 2.94,
+   "png": "frames/f01.png",
+   "pred_xy": [
+    32.07,
+    31.12
+   ]
+  },
+  {
+   "iso": "2025-07-30",
+   "mjd": 60886,
+   "wavelength_um": 1.11,
+   "png": "frames/f02.png",
+   "pred_xy": [
+    32.13,
+    30.35
+   ]
+  },
+  {
+   "iso": "2025-09-16",
+   "mjd": 60934,
+   "wavelength_um": 3.95,
+   "png": "frames/f03.png",
+   "pred_xy": [
+    32.2,
+    29.47
+   ]
+  },
+  {
+   "iso": "2025-10-28",
+   "mjd": 60976,
+   "wavelength_um": 1.64,
+   "png": "frames/f04.png",
+   "pred_xy": [
+    32.26,
+    28.71
+   ]
+  },
+  {
+   "iso": "2025-12-15",
+   "mjd": 61024,
+   "wavelength_um": 4.92,
+   "png": "frames/f05.png",
+   "pred_xy": [
+    32.32,
+    27.83
+   ]
+  },
+  {
+   "iso": "2026-01-26",
+   "mjd": 61066,
+   "wavelength_um": 2.42,
+   "png": "frames/f06.png",
+   "pred_xy": [
+    32.38,
+    27.06
+   ]
+  },
+  {
+   "iso": "2026-03-15",
+   "mjd": 61114,
+   "wavelength_um": 0.93,
+   "png": "frames/f07.png",
+   "pred_xy": [
+    32.45,
+    26.18
+   ]
+  },
+  {
+   "iso": "2026-04-26",
+   "mjd": 61156,
+   "wavelength_um": 3.52,
+   "png": "frames/f08.png",
+   "pred_xy": [
+    32.51,
+    25.41
+   ]
+  },
+  {
+   "iso": "2026-06-13",
+   "mjd": 61204,
+   "wavelength_um": 1.33,
+   "png": "frames/f09.png",
+   "pred_xy": [
+    32.58,
+    24.53
+   ]
+  },
+  {
+   "iso": "2026-07-25",
+   "mjd": 61246,
+   "wavelength_um": 4.45,
+   "png": "frames/f10.png",
+   "pred_xy": [
+    32.64,
+    23.76
+   ]
+  },
+  {
+   "iso": "2026-09-11",
+   "mjd": 61294,
+   "wavelength_um": 1.98,
+   "png": "frames/f11.png",
+   "pred_xy": [
+    32.71,
+    22.88
+   ]
+  }
+ ],
+ "stack": {
+  "png": "stack.png",
+  "snr": 140
+ },
+ "motion_caption": "Moves 10.4 arcsec per year, about 1.7 pixels per year",
+ "note": "Sample: synthetic noise images. Real SPHEREx cutouts replace these when the engine runs. Motion is exaggerated 4 times in this sample."
+}

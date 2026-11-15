@@ -1,0 +1,26 @@
+# Pilot lessons (from data/00-pilot/REPORT.md) - every photo agent must follow these
+
+- **Reading pixels.** Use HTTPS byte-range reads from the public S3 bucket `https://nasa-irsa-spherex.s3.amazonaws.com/<key>`.
+  - Reuse `read_stamp_http` in `code/A0/rewind.py`: about 1.45 MB per 41x41 stamp with all needed layers, about 50 stamps/min with 6 threads.
+  - Do NOT use s3fs/astropy lazy reads (about 52 s per stamp).
+  - Full files are about 65 MB (about 60 s each); download them only when truly needed.
+- **No curl.** Shell `curl` fails on this Mac (TLS interception). Use Python requests.
+- **Finding frames.**
+  - For a moving object: IRSA MOST, `catalog=spherex`, program interface.
+  - For a fixed position: SIA2 (`https://irsa.ipac.caltech.edu/SIA?COLLECTION=spherex_qr3|spherex_dr1|..._deep&POS=CIRCLE+ra+dec+r&RESPONSEFORMAT=VOTABLE`). Parse with `use_names_over_ids=True`.
+  - The `cloud_access` column gives the S3 key. MOST uri `ibe/data/spherex/...` maps to key `.../` without the `ibe/data/spherex/` prefix.
+- **Positions as seen from SPHEREx.**
+  - Horizons: `CENTER='500@-163182'` (SPHEREx spacecraft).
+  - kete: `code/A2/positions.py predict(..., observer='spherex')`. Matches Horizons to about 0.01". kete's bundled SPHEREx kernel ends 2025-12-09; after that, use Horizons.
+  - Never use geocentric positions. That cost 24% of the signal on a main-belt asteroid, and NEOs are off by 9-90".
+- **Exposure mid-time.** Use header MJD-AVG (= MJD-BEG + 57.56 s), not MOST mjd_start.
+- **Wavelength.** Every frame sees a different wavelength at the target. Read it from the per-pixel wavelength table (WCS-WAVE, or the spectral calibration files in `data/06-composition`).
+- **Flags.**
+  - SOURCE covers 55-98% of pixels, so never use it as a mask.
+  - OUTLIER fires on the moving object itself, so do not mask it at the target.
+- **Comet brightness.** MOST comet magnitudes are useless. Use Horizons T-mag.
+- **Stacking.**
+  - Weighted stacks of faint movers are dominated by passing stars. Use clipped or median stacks.
+  - Always run controls: null paths, time-shifted paths, per-day splits, and static-sky subtraction (the same spot at another epoch).
+  - Scale errors from the null paths (formal errors are about 30% too small).
+- **Disk.** Keep at least 20 GB free. Check `df -h ~` before each big batch and stop if it drops below that.

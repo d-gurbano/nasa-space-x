@@ -1,0 +1,11 @@
+busdemeo https://sbnarchive.psi.edu/pds4/non_mission/ast.bus-demeo.taxonomy.zip
+busdemeo http://smass.mit.edu/_documents/busdemeo-meanspectra.xlsx
+smass2 https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.smass2.spectra.zip
+s3os2 https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.s3os2.spectra.zip
+mithneos https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.mithneos.spectra_2000-2021_V1_0.zip
+3micron https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.rivkin.3-micron-spectra.zip
+3micron https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.lebofsky-etal.3-micron-spectra.zip
+neowise https://sbnarchive.psi.edu/pds4/non_mission/neowise_diameters_albedos_V2_0.zip
+lcdb https://sbnarchive.psi.edu/pds4/non_mission/ast-lightcurve-database_V4_0.zip
+alcdef https://sbnarchive.psi.edu/pds4/non_mission/gbo.ast.alcdef-database_V1_0.zip
+solar https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/sun_reference_stis_002.fits

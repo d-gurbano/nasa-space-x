@@ -1,0 +1,108 @@
+{
+ "sample": true,
+ "cases": [
+  {
+   "name": "2025 MA12",
+   "hidden_until_iso": "2025-08-13",
+   "truth": "seen",
+   "rewind_verdict": "FOUND",
+   "snr": 8.1,
+   "pos_err_arcsec": 1.9
+  },
+  {
+   "name": "2025 OK3",
+   "hidden_until_iso": "2025-09-12",
+   "truth": "seen",
+   "rewind_verdict": "FOUND",
+   "snr": 11.4,
+   "pos_err_arcsec": 1.2
+  },
+  {
+   "name": "2025 QP",
+   "hidden_until_iso": "2025-10-12",
+   "truth": "seen",
+   "rewind_verdict": "HINT",
+   "snr": 4.2,
+   "pos_err_arcsec": 3.8
+  },
+  {
+   "name": "2025 RS9",
+   "hidden_until_iso": "2025-11-11",
+   "truth": "seen",
+   "rewind_verdict": "FOUND",
+   "snr": 6.7,
+   "pos_err_arcsec": 2.4
+  },
+  {
+   "name": "2025 TJ",
+   "hidden_until_iso": "2025-12-11",
+   "truth": "not seen",
+   "rewind_verdict": "TOO_FAINT",
+   "snr": 1.1,
+   "pos_err_arcsec": 0
+  },
+  {
+   "name": "2025 UQ1",
+   "hidden_until_iso": "2026-01-10",
+   "truth": "seen",
+   "rewind_verdict": "TOO_FAINT",
+   "snr": 2.3,
+   "pos_err_arcsec": 0
+  },
+  {
+   "name": "2025 VB4",
+   "hidden_until_iso": "2026-02-09",
+   "truth": "not seen",
+   "rewind_verdict": "TOO_FAINT",
+   "snr": 0.4,
+   "pos_err_arcsec": 0
+  },
+  {
+   "name": "2026 AF",
+   "hidden_until_iso": "2026-03-11",
+   "truth": "seen",
+   "rewind_verdict": "FOUND",
+   "snr": 9.9,
+   "pos_err_arcsec": 1.5
+  },
+  {
+   "name": "2026 CE2",
+   "hidden_until_iso": "2026-04-10",
+   "truth": "not seen",
+   "rewind_verdict": "HINT",
+   "snr": 4,
+   "pos_err_arcsec": 5.1
+  },
+  {
+   "name": "2026 DM",
+   "hidden_until_iso": "2026-05-10",
+   "truth": "seen",
+   "rewind_verdict": "FOUND",
+   "snr": 13.2,
+   "pos_err_arcsec": 0.9
+  },
+  {
+   "name": "2026 FT1",
+   "hidden_until_iso": "2026-06-09",
+   "truth": "not seen",
+   "rewind_verdict": "TOO_FAINT",
+   "snr": 0.8,
+   "pos_err_arcsec": 0
+  },
+  {
+   "name": "2026 GN",
+   "hidden_until_iso": "2026-07-09",
+   "truth": "seen",
+   "rewind_verdict": "HINT",
+   "snr": 4.6,
+   "pos_err_arcsec": 2.9
+  }
+ ],
+ "summary": {
+  "n": 12,
+  "found": 5,
+  "missed": 3,
+  "false_alarms": 0,
+  "plain": "Rewind found 5 of 8 known cases, with 0 false alarms (sample numbers)"
+ }
+}

@@ -1,0 +1,279 @@
+{
+ "schema": "rewind-site-v1",
+ "generated": "2026-11-15T09:27:55.080Z",
+ "sample": true,
+ "headline_stats": {
+  "objects_searched": 8,
+  "found": 4,
+  "hints": 2,
+  "too_faint": 1,
+  "frames_read": 112
+ },
+ "benchmark": "benchmark.json",
+ "objects": [
+  {
+   "slug": "2026kc3",
+   "name": "2026 KC3",
+   "kind": "neo",
+   "verdict": "FOUND",
+   "verdict_text": "Clearly seen in SPHEREx photos 38 days before anyone found it.",
+   "discovered": {
+    "mjd": 61184,
+    "iso": "2026-05-24",
+    "by": "Catalina Sky Survey",
+    "site": "Mount Lemmon, Arizona"
+   },
+   "first_spherex_hint": {
+    "mjd": 61146,
+    "iso": "2026-04-16",
+    "days_before_discovery": 38
+   },
+   "best_snr": 9.4,
+   "n_frames": 16,
+   "thumb": "objects/2026kc3/thumb.png",
+   "page": "objects/2026kc3/object.json"
+  },
+  {
+   "slug": "2026rd39",
+   "name": "2026 RD39",
+   "kind": "neo",
+   "verdict": "FOUND",
+   "verdict_text": "Clearly seen in SPHEREx photos 60 days before anyone found it.",
+   "discovered": {
+    "mjd": 61296,
+    "iso": "2026-09-13",
+    "by": "ATLAS",
+    "site": "Haleakala, Hawaii"
+   },
+   "first_spherex_hint": {
+    "mjd": 61236,
+    "iso": "2026-07-15",
+    "days_before_discovery": 60
+   },
+   "best_snr": 7.2,
+   "n_frames": 16,
+   "thumb": "objects/2026rd39/thumb.png",
+   "page": "objects/2026rd39/object.json"
+  },
+  {
+   "slug": "2026mm",
+   "name": "2026 MM",
+   "kind": "neo",
+   "verdict": "HINT",
+   "verdict_text": "A faint spot in the right place, but not strong enough to be sure.",
+   "discovered": {
+    "mjd": 61209,
+    "iso": "2026-06-18",
+    "by": "Pan-STARRS",
+    "site": "Haleakala, Hawaii"
+   },
+   "first_spherex_hint": {
+    "mjd": 61188,
+    "iso": "2026-05-28",
+    "days_before_discovery": 21
+   },
+   "best_snr": 4.1,
+   "n_frames": 16,
+   "thumb": "objects/2026mm/thumb.png",
+   "page": "objects/2026mm/object.json"
+  },
+  {
+   "slug": "c2026j1",
+   "name": "C/2026 J1 (PANSTARRS)",
+   "kind": "comet",
+   "verdict": "FOUND",
+   "verdict_text": "Clearly seen in SPHEREx photos 95 days before anyone found it.",
+   "discovered": {
+    "mjd": 61168,
+    "iso": "2026-05-08",
+    "by": "Pan-STARRS",
+    "site": "Haleakala, Hawaii"
+   },
+   "first_spherex_hint": {
+    "mjd": 61073,
+    "iso": "2026-02-02",
+    "days_before_discovery": 95
+   },
+   "best_snr": 12.5,
+   "n_frames": 16,
+   "thumb": "objects/c2026j1/thumb.png",
+   "page": "objects/c2026j1/object.json"
+  },
+  {
+   "slug": "c2026m5",
+   "name": "C/2026 M5 (PANSTARRS)",
+   "kind": "comet",
+   "verdict": "TOO_FAINT",
+   "verdict_text": "SPHEREx looked at the right spot, but the object was too faint to see.",
+   "discovered": {
+    "mjd": 61213,
+    "iso": "2026-06-22",
+    "by": "Pan-STARRS",
+    "site": "Haleakala, Hawaii"
+   },
+   "first_spherex_hint": null,
+   "best_snr": 1.2,
+   "n_frames": 16,
+   "thumb": "objects/c2026m5/thumb.png",
+   "page": "objects/c2026m5/object.json"
+  },
+  {
+   "slug": "1988rh9",
+   "name": "1988 RH9",
+   "kind": "lost",
+   "verdict": "HINT",
+   "verdict_text": "A faint spot in the right place, but not strong enough to be sure.",
+   "discovered": {
+    "mjd": 47405,
+    "iso": "1988-09-01",
+    "by": "Palomar",
+    "site": "Palomar Mountain, California"
+   },
+   "first_spherex_hint": null,
+   "best_snr": 4.6,
+   "n_frames": 16,
+   "thumb": "objects/1988rh9/thumb.png",
+   "page": "objects/1988rh9/object.json"
+  },
+  {
+   "slug": "apophis",
+   "name": "(99942) Apophis",
+   "kind": "famous",
+   "verdict": "FOUND",
+   "verdict_text": "Clearly seen in SPHEREx photos, right where its orbit predicts.",
+   "discovered": {
+    "mjd": 53175,
+    "iso": "2004-06-19",
+    "by": "R. Tucker, D. Tholen, F. Bernardi",
+    "site": "Kitt Peak, Arizona"
+   },
+   "first_spherex_hint": null,
+   "best_snr": 15.8,
+   "n_frames": 16,
+   "thumb": "objects/apophis/thumb.png",
+   "page": "objects/apophis/object.json"
+  },
+  {
+   "slug": "2024yr4",
+   "name": "2024 YR4",
+   "kind": "famous",
+   "verdict": "NO_PHOTOS",
+   "verdict_text": "SPHEREx never photographed the right spot at the right time.",
+   "discovered": {
+    "mjd": 60671,
+    "iso": "2024-12-27",
+    "by": "ATLAS",
+    "site": "Rio Hurtado, Chile"
+   },
+   "first_spherex_hint": null,
+   "best_snr": 0,
+   "n_frames": 0,
+   "thumb": "objects/2024yr4/thumb.png",
+   "page": "objects/2024yr4/object.json"
+  }
+ ],
+ "flash_events": [
+  {
+   "slug": "2026kc3",
+   "mjd": 61146,
+   "iso": "2026-04-16",
+   "photo": "objects/2026kc3/flash_01.png",
+   "spherex_xyz_au": [
+    -0.90442,
+    -0.43454,
+    0.00003
+   ],
+   "object_xyz_au": [
+    -0.92749,
+    -0.75279,
+    -0.46373
+   ],
+   "label": "SPHEREx photo, 38 days before discovery"
+  },
+  {
+   "slug": "2026rd39",
+   "mjd": 61236,
+   "iso": "2026-07-15",
+   "photo": "objects/2026rd39/flash_01.png",
+   "spherex_xyz_au": [
+    0.38385,
+    -0.94122,
+    0.00006
+   ],
+   "object_xyz_au": [
+    1.44157,
+    -1.03929,
+    -0.20951
+   ],
+   "label": "SPHEREx photo, 60 days before discovery"
+  },
+  {
+   "slug": "2026mm",
+   "mjd": 61188,
+   "iso": "2026-05-28",
+   "photo": "objects/2026mm/flash_01.png",
+   "spherex_xyz_au": [
+    -0.40663,
+    -0.92813,
+    0.00006
+   ],
+   "object_xyz_au": [
+    -0.07681,
+    -1.25542,
+    0.27044
+   ],
+   "label": "SPHEREx photo, 21 days before discovery"
+  },
+  {
+   "slug": "c2026j1",
+   "mjd": 61073,
+   "iso": "2026-02-02",
+   "photo": "objects/c2026j1/flash_01.png",
+   "spherex_xyz_au": [
+    -0.6693,
+    0.72327,
+    -0.00004
+   ],
+   "object_xyz_au": [
+    -0.88808,
+    0.13883,
+    2.79577
+   ],
+   "label": "SPHEREx photo, 95 days before discovery"
+  },
+  {
+   "slug": "1988rh9",
+   "mjd": 60951,
+   "iso": "2025-10-03",
+   "photo": "objects/1988rh9/flash_01.png",
+   "spherex_xyz_au": [
+    0.98644,
+    0.16835,
+    -0.00001
+   ],
+   "object_xyz_au": [
+    -1.79286,
+    0.63332,
+    0.07882
+   ],
+   "label": "SPHEREx photo of a lost asteroid"
+  },
+  {
+   "slug": "apophis",
+   "mjd": 61020,
+   "iso": "2025-12-11",
+   "photo": "objects/apophis/flash_01.png",
+   "spherex_xyz_au": [
+    0.19079,
+    0.96607,
+    -0.00006
+   ],
+   "object_xyz_au": [
+    0.3123,
+    -0.70289,
+    0.0449
+   ],
+   "label": "SPHEREx photo of a famous asteroid"
+  }
+ ]
+}

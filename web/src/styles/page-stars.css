@@ -1,0 +1,264 @@
+/* Challenge stars: the 3D neighbourhood (s3-), its floating star card (s3c-), the SPHEREx
+   viewer (s3v-), and the charts kept from the earlier page (st-, lc-). Built on the shared tokens. */
+
+/* this page gives its room to the 3D view: a compact header */
+.page-inner:has(.s3) .page-back { margin-bottom: var(--g2); }
+.page-body:has(.s3) .ph { margin-bottom: var(--g2); }
+.page-body:has(.s3) .ph-title { font-size: clamp(34px, 4vw, 52px); }
+
+/* ---------- the stage ---------- */
+.s3-stage {
+  --bw: min(880px, calc(100% - 2 * var(--g2))); /* the bottom column: the card and the time bar */
+  --time-h: 58px;
+  position: relative; overflow: hidden; isolation: isolate;
+  width: min(100vw - 48px, 1440px); margin-left: calc(50% - min(50vw - 24px, 720px));
+  height: clamp(600px, calc(100svh - 200px), 980px);
+  border: 1px solid var(--line); border-radius: var(--r2);
+  background: radial-gradient(ellipse at 50% 55%, #0a0d16 0%, #030407 70%);
+}
+.s3-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; animation: s3-fade 1.4s var(--ease-out) both; }
+.s3-canvas:active { cursor: grabbing; }
+@keyframes s3-fade { from { opacity: 0; } }
+@keyframes s3-up { from { opacity: 0; transform: translateY(10px); } }
+@keyframes s3-sheet { from { opacity: 0; transform: translateY(24px); } }
+
+/* labels over the canvas, placed by the scene */
+.s3-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.s3-lab, .s3-tag { position: absolute; left: 0; top: 0; white-space: nowrap; will-change: transform; }
+.s3-lab {
+  display: flex; align-items: baseline; gap: 6px; translate: 0 -50%;
+  padding: 3px 7px; border-radius: var(--r-s); pointer-events: auto; cursor: pointer;
+  font: var(--w-medium) var(--fs-s) / 1.2 var(--font); color: var(--ink);
+  text-shadow: 0 1px 6px rgba(3, 4, 7, 0.95); transition: color var(--t-fast), background var(--t-fast);
+}
+.s3-lab[hidden] { display: none; }
+.s3-leader { position: absolute; left: 0; top: 0; height: 1px; background: var(--ink-3); opacity: 0.5; transform-origin: 0 50%; pointer-events: none; will-change: transform; }
+.s3-leader[hidden] { display: none; }
+.s3-lab:hover { background: rgba(255, 255, 255, 0.06); }
+.s3-lab:focus-visible { outline: 2px solid var(--ink-2); outline-offset: 1px; }
+.s3-lab.on { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.s3-lab small { font: var(--fs-2xs) var(--mono); color: var(--ink-3); }
+.s3-lab-ctx { font-size: var(--fs-xs); font-weight: var(--w-regular); color: var(--ink-3); }
+.s3-lab-sun { color: var(--ink); }
+.s3-tag { pointer-events: none; font-size: var(--fs-2xs); color: var(--ink-3); }
+.s3-ring { translate: 6px -50%; opacity: 0.8; }
+.s3-today { translate: 10px -50%; font-size: var(--fs-2xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); text-shadow: 0 1px 6px rgba(3, 4, 7, 0.95); }
+.s3-today[hidden] { display: none; }
+.s3-far { translate: -50% -130%; font: var(--fs-2xs) var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+.s3-dist { translate: -50% -50%; padding: 2px 8px; border-radius: var(--pill); background: rgba(3, 4, 7, 0.8); border: 1px solid var(--line-2); color: var(--ink); font-size: var(--fs-xs); }
+.s3-cmp { translate: -50% -150%; font: var(--w-medium) var(--fs-xs) / 1 var(--font); color: var(--ink-2); text-shadow: 0 1px 6px rgba(3, 4, 7, 0.95); }
+
+/* one line and a small legend, top left; they step aside for a close-up or the closest-approach moment */
+.s3-intro { position: absolute; top: var(--g3); left: var(--g3); z-index: 2; max-width: 340px; pointer-events: none; animation: s3-up var(--t-enter) var(--ease-out) 0.3s both; transition: opacity var(--t); }
+.s3-open .s3-intro, .s3-near .s3-intro { opacity: 0; }
+.s3-lead { margin: 0 0 var(--g2); font: var(--w-semi) var(--fs-2xl) / 1.1 var(--font); letter-spacing: -0.03em; color: var(--ink); text-wrap: balance; text-shadow: 0 1px 12px rgba(3, 4, 7, 0.9); }
+.s3-lead b { font-weight: inherit; color: var(--ink-2); }
+.s3-legend { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-xs); color: var(--ink-2); }
+.s3-legend li { display: flex; align-items: center; gap: 10px; }
+.s3-legend i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px 1px var(--c); }
+.s3-legend .s3-lg-trace { width: 22px; height: 1px; margin-right: -14px; translate: -7px 0; border-radius: 0; box-shadow: none; background: linear-gradient(90deg, transparent, var(--ink-2) 50%, transparent); }
+
+/* the closest-approach moment */
+.s3-moment {
+  position: absolute; top: var(--g3); left: 50%; z-index: 2; translate: -50% 0; width: min(420px, calc(100% - 32px));
+  padding: 14px var(--g3); border: 1px solid rgba(255, 106, 61, 0.4); border-radius: var(--r2);
+  background: rgba(8, 10, 15, 0.78); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  text-align: center; box-shadow: 0 0 60px rgba(255, 106, 61, 0.18); animation: s3-up var(--t-slow) var(--ease-out) both;
+}
+.s3-moment p { margin: 0; }
+.s3-moment .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: #ff8a66; }
+.s3-moment .s3-moment-big { margin-top: 6px; font: var(--w-semi) var(--fs-xl) / 1.15 var(--font); letter-spacing: -0.025em; color: var(--ink); text-wrap: balance; }
+.s3-moment-big b { font-weight: inherit; color: #ff8a66; }
+
+/* ---------- the time bar ---------- */
+.s3-time {
+  position: absolute; left: 50%; translate: -50% 0; bottom: var(--g2); z-index: 2; width: var(--bw); height: var(--time-h);
+  display: flex; align-items: center; gap: var(--g2); padding: 0 var(--g3) 0 10px;
+  border: 1px solid var(--line); border-radius: var(--pill);
+  background: rgba(8, 10, 15, 0.66); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  animation: s3-up var(--t-enter) var(--ease-out) 0.5s both;
+}
+.s3-play { flex: none; width: 40px; height: 40px; border-radius: 50%; }
+.s3-play svg { width: 16px; height: 16px; }
+/* a fixed width, so the track does not jump when the year grows to "10,000 BCE" */
+.s3-year { flex: none; display: flex; flex-direction: column; gap: 4px; width: 164px; }
+.s3-year-n { font: var(--w-semi) var(--fs-2xl) / 0.95 var(--font); letter-spacing: -0.03em; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.s3-near .s3-year-n { color: var(--gold-2); }
+.s3-year-rel { font-size: var(--fs-2xs); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.s3-track { --th: 16px; position: relative; flex: 1; min-width: 0; height: 40px; }
+.s3-range { position: absolute; left: 0; right: 0; top: 20px; width: 100%; height: 16px; margin: 0; -webkit-appearance: none; appearance: none; background: none; cursor: pointer; touch-action: pan-y; }
+.s3-range::-webkit-slider-runnable-track { height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.3) 55%, rgba(255, 255, 255, 0.08)); }
+.s3-range::-moz-range-track { height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.3) 55%, rgba(255, 255, 255, 0.08)); }
+.s3-range::-webkit-slider-thumb { -webkit-appearance: none; width: var(--th); height: var(--th); margin-top: -7px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 4px rgba(243, 241, 236, 0.12), 0 0 16px rgba(243, 241, 236, 0.4); }
+.s3-range::-moz-range-thumb { width: var(--th); height: var(--th); border: 0; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 4px rgba(243, 241, 236, 0.12), 0 0 16px rgba(243, 241, 236, 0.4); }
+.s3-range:focus-visible { outline: none; }
+.s3-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--gold); }
+.s3-near .s3-range::-webkit-slider-thumb { background: var(--gold-2); }
+.s3-mark { position: absolute; top: 0; left: calc(var(--th) / 2 + (100% - var(--th)) * var(--at)); translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0 4px; white-space: nowrap; font: var(--fs-2xs) / 1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); transition: color var(--t-fast); }
+.s3-mark::after { content: ''; width: 1px; height: 8px; background: currentColor; }
+.s3-mark:hover, .s3-mark:focus-visible { color: var(--ink); }
+/* the closest pass sits at the far right: its label hangs to the left of its dot, inside the track */
+.s3-mark-gold { translate: calc(-100% + 7px) 0; align-items: flex-end; color: var(--gold); }
+.s3-mark-gold::after { width: 6px; height: 6px; margin-top: 1px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px 2px rgba(242, 181, 68, 0.7); animation: s3-beat 2.4s ease-in-out infinite; }
+.s3-mark-gold:hover { color: var(--gold-2); }
+@keyframes s3-beat { 50% { box-shadow: 0 0 16px 5px rgba(242, 181, 68, 0.45); } }
+
+/* ---------- the star card: floating glass above the time bar ---------- */
+.s3-card {
+  position: absolute; left: 50%; translate: -50% 0; bottom: calc(var(--g2) + var(--time-h) + 10px); z-index: 3; width: var(--bw);
+  border: 1px solid var(--line-2); border-radius: var(--r2);
+  background: rgba(8, 10, 15, 0.72); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: s3-sheet var(--t-slow) var(--ease-out) both;
+}
+.s3-card[hidden] { display: none; }
+.s3c-head { display: flex; align-items: center; gap: var(--g) var(--g2); padding: 12px 12px 12px 18px; border-bottom: 1px solid var(--line); }
+.s3c-id { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 3px 10px; }
+.s3c-id i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px 2px var(--c); }
+.s3c-name { margin: 0; font: var(--w-semi) var(--fs-xl) / 1.1 var(--font); letter-spacing: -0.03em; }
+.s3c-meta { grid-column: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0; font-size: var(--fs-s); }
+.s3c-meta .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.s3c-size { color: var(--gold-2); }
+.s3-card .s3c-tabs { flex: none; margin: 0; }
+.s3c-tabs[hidden] { display: none; }
+.s3c-tabs button { height: 28px; padding: 0 13px; font-size: var(--fs-xs); white-space: nowrap; }
+.s3c-close { flex: none; width: 32px; height: 32px; border-radius: 50%; font-size: 20px; line-height: 1; color: var(--ink-2); background: var(--fill); border: 1px solid var(--line); transition: color var(--t-fast), background var(--t-fast); }
+.s3c-close:hover { color: var(--ink); background: var(--fill-2); }
+.s3c-body { height: 232px; padding: 14px 18px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.s3c-big { margin: 0; font: var(--w-semi) var(--fs-l) / 1.2 var(--font); letter-spacing: -0.02em; color: var(--ink); text-wrap: balance; }
+.s3c-big b { font-weight: inherit; color: var(--gold-2); }
+.s3c-small { margin: 0; font-size: var(--fs-s); line-height: 1.45; color: var(--ink-3); }
+.s3c-small a { color: var(--blue-2); }
+.s3c-note { margin: 0; padding-left: 10px; border-left: 2px solid var(--line-2); font-size: var(--fs-s); line-height: 1.45; color: var(--ink-2); }
+.s3c-note b { display: block; margin-bottom: 2px; font: var(--w-medium) var(--fs-2xs) / 1.2 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ok); }
+.s3c-note-warn { border-color: var(--gold-line); }
+.s3c-note-warn b { color: var(--gold); }
+.s3c-load { height: 100%; border-radius: var(--r); background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 70%) 0 0 / 300% 100%; animation: s3-shimmer 1.4s linear infinite; }
+@keyframes s3-shimmer { to { background-position: -150% 0; } }
+
+/* Facts */
+.s3-card .s3c-stats { gap: var(--g2) var(--g5); margin: 6px 0 var(--g3); }
+.s3c-stats .stat-num { font: var(--w-semi) var(--fs-2xl) / 1 var(--font); letter-spacing: -0.03em; white-space: nowrap; }
+.s3c-why { max-width: 62ch; margin: 0 0 var(--g); font-size: var(--fs-m); line-height: 1.45; color: var(--ink); text-wrap: pretty; }
+.s3c-foot { margin: 0; font-size: var(--fs-xs); color: var(--ink-3); }
+
+/* Motion or Brightness: one line beside a compact chart */
+.s3c-chart { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: var(--g3); }
+.s3c-chart-say { display: grid; align-content: start; gap: var(--g); }
+.s3c-chart .st-chart { margin: 0; }
+.s3c-chart .st-legend { margin-bottom: 2px; }
+.s3c-chart .st-read { min-height: 0; margin-top: 2px; font-size: var(--fs-xs); }
+
+/* ---------- the SPHEREx viewer: the picture, with its controls beside it ---------- */
+.s3v { display: grid; grid-template-columns: 204px minmax(0, 1fr); gap: 18px; }
+.s3v-side { display: grid; align-content: start; gap: 10px; min-width: 0; }
+.s3v-side .chip { justify-self: start; }
+.s3v-stage { position: relative; margin: 0; aspect-ratio: 1; background: #000; border-radius: var(--r); overflow: hidden; }
+.s3v-img, .s3v-over { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.s3v-over { pointer-events: none; }
+.s3v-tag { position: absolute; left: 6px; top: 6px; padding: 3px 7px; border-radius: var(--r-s); background: rgba(3, 4, 7, 0.75); font-size: var(--fs-2xs); color: var(--ink-2); pointer-events: none; }
+.s3v-tag b { margin-right: 6px; font-weight: var(--w-medium); color: var(--gold-2); }
+.s3v-over path { fill: none; }
+.s3v-over text { fill: var(--ink-2); font: 26px var(--mono); paint-order: stroke; stroke: rgba(3, 4, 7, 0.7); stroke-width: 5px; }
+.s3v-scale path { stroke: var(--ink-2); stroke-width: 2.5; }
+.s3v-arrow .s3v-shaft { stroke: var(--gold); stroke-width: 4; stroke-linecap: round; }
+.s3v-arrow .s3v-ext { stroke: var(--gold); stroke-width: 1.5; opacity: 0.55; }
+.s3v-arrow .s3v-tip { fill: var(--gold); stroke: var(--gold); stroke-width: 2; stroke-linejoin: round; }
+.s3v-arrow text { fill: var(--gold-2); font: var(--w-medium) 30px var(--font); }
+.s3v-arrow .s3v-then { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; opacity: 0.75; }
+.s3v-ring { fill: none; stroke: var(--gold); stroke-width: 3; stroke-dasharray: 8 8; opacity: 0.8; }
+.s3v-ring.on { stroke-dasharray: none; opacity: 1; }
+.s3v-bar { display: flex; align-items: center; gap: var(--g); }
+.s3v-bar .seg { margin: 0; }
+.s3v-bar .seg button { height: 26px; padding: 0 11px; font-size: var(--fs-xs); white-space: nowrap; }
+.s3v-bar .s3v-play { flex: none; width: 32px; height: 32px; }
+.s3v-range { flex: 1; min-width: 60px; height: 28px; margin: 0; accent-color: var(--gold); cursor: pointer; }
+.s3v-range[hidden] { display: none; }
+.s3v-read { margin: 0; font-size: var(--fs-s); line-height: 1.45; color: var(--ink-2); }
+.s3v-read:empty { display: none; }
+.s3v-read .chip { margin-right: 6px; vertical-align: 1px; }
+
+/* without WebGL */
+.s3-fallback { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: var(--g); padding: var(--g4); }
+.s3-fallback p { flex-basis: 100%; text-align: center; color: var(--ink-2); }
+.s3-flat .s3-intro, .s3-flat .s3-time { display: none; }
+
+/* ---------- charts (kept from the earlier page) ---------- */
+.st-chart { margin: var(--g2) 0 var(--g); }
+.st-legend { margin-bottom: var(--g); font-size: var(--fs-xs); }
+.st-plot { cursor: crosshair; touch-action: pan-y; border-radius: var(--r-s); }
+.st-plot .chart { margin: 0; }
+.st-read { min-height: 3em; margin: var(--g) 0 0; font-size: var(--fs-s); color: var(--ink-2); }
+.st-read b { color: var(--ink); font-weight: var(--w-semi); }
+.chart .st-on { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.chart .st-line { fill: none; stroke: #6b7280; stroke-width: 2; }
+.chart .st-pt { fill: var(--blue); stroke: var(--space); stroke-width: 2; }
+.chart .st-sx { fill: var(--gold); }
+.chart .st-lead { stroke: var(--ink-3); }
+.chart .st-lab { fill: var(--ink-2); font: var(--fs-xs) var(--font); }
+.st-lg-old, .lc-lg0 { background: var(--blue); }
+.st-lg-sx { width: 11px; height: 11px; }
+.st-lg-pred { border-top: 2px solid #6b7280; }
+.lg-tick { width: 1px; height: 9px; background: var(--ink-2); }
+.lc-lg-sat, .lc-lg-ok { width: 6px; height: 6px; background: var(--ink-3); }
+.lc-lg-sat { background: none; border: 1px solid var(--ink-3); }
+.chart .lc-pass { stroke: var(--ink-2); }
+.chart .lc-b0 { fill: var(--blue); stroke: var(--blue); }
+.chart .lc-b1 { fill: var(--gold); stroke: var(--gold); }
+.chart .lc-pt.lc-sat { fill: none; opacity: 0.6; }
+.chart .lc-line { fill: none; stroke-width: 2; }
+.chart .lc-md { stroke: var(--space); stroke-width: 2; }
+.chart .lc-period path { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
+.st-meter { height: 8px; margin: var(--g) 0; border-radius: var(--pill); background: var(--fill-2); overflow: hidden; }
+.st-meter span { display: block; height: 100%; background: var(--gold); border-right: 2px solid var(--space); }
+.st-fold { margin: var(--g) 0; border-block: 1px solid var(--line); overflow-x: auto; }
+.st-fold summary { display: flex; align-items: center; gap: var(--g); padding: 12px 0; font-size: var(--fs-s); color: var(--ink-2); cursor: pointer; list-style: none; }
+.st-fold summary::-webkit-details-marker { display: none; }
+.st-fold summary::before { content: ''; width: 6px; height: 6px; margin: 0 4px; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: rotate(-45deg); transition: transform var(--t-fast); }
+.st-fold[open] summary::before { transform: rotate(45deg); }
+.st-fold summary:hover { color: var(--ink); }
+.st-fold p { margin: var(--g) 0 var(--g2); font-size: var(--fs-s); color: var(--ink-3); }
+.st-fold a { color: var(--blue-2); }
+
+/* ---------- phone: the card is a bottom sheet, and the time bar steps aside for it ---------- */
+@media (max-width: 720px) {
+  .s3-stage { --bw: calc(100% - 2 * var(--g)); --time-h: 54px; width: auto; margin: 0 calc(-1 * var(--g2)); height: max(560px, calc(100svh - 128px)); border-radius: 0; border-inline: 0; }
+  .s3-intro { top: var(--g2); left: var(--g2); right: var(--g2); max-width: none; }
+  .s3-lead { font-size: var(--fs-xl); margin-bottom: var(--g); }
+  .s3-legend { grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: var(--fs-2xs); }
+  .s3-legend li:last-child { grid-column: 1 / -1; }
+  .s3-time { bottom: var(--g); gap: 10px; padding: 0 var(--g2) 0 7px; transition: opacity var(--t); }
+  .s3-open .s3-time { opacity: 0; pointer-events: none; }
+  .s3-year { width: 112px; }
+  .s3-year-n { font-size: var(--fs-l); }
+  .s3-year-rel { font-size: 9px; letter-spacing: 0; }
+  .s3-moment { top: var(--g2); }
+  .s3-card { bottom: var(--g); }
+  .s3c-head { flex-wrap: wrap; padding: 10px 10px 10px 14px; }
+  .s3c-tabs { order: 3; width: 100%; }
+  .s3c-tabs button { flex: 1; padding: 0 6px; }
+  .s3c-body { height: auto; max-height: min(300px, 42svh); padding: 12px 14px; }
+  .s3v { grid-template-columns: 116px minmax(0, 1fr); gap: 12px; }
+  .s3v-bar { flex-wrap: wrap; }
+  .s3c-chart { grid-template-columns: 1fr; gap: var(--g2); }
+  .s3c-stats { gap: 12px var(--g3); margin-bottom: var(--g2); }
+  .s3c-stats .stat-num { font-size: var(--fs-xl); }
+  .s3-lab { font-size: var(--fs-xs); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .s3-canvas, .s3-intro, .s3-time, .s3-card, .s3-moment { animation: none; }
+  .s3-mark-gold::after { animation: none; }
+}
+
+/* ---------- zoom: buttons and pinch; the wheel scrolls the page until the map is clicked ---------- */
+.s3-zoom { position: absolute; top: var(--g3); right: var(--g3); z-index: 2; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.s3-zoom[hidden] { display: none; }
+.s3-zoom .icon-btn { width: 36px; height: 36px; border-radius: 50%; font: var(--w-semi) 18px / 1 var(--font); background: rgba(8, 10, 15, 0.66); border: 1px solid var(--line); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); }
+.s3-zoom-hint { margin: 2px 0 0; max-width: 14ch; font-size: var(--fs-2xs); line-height: 1.35; text-align: right; color: var(--ink-3); transition: opacity var(--t); }
+.s3-armed .s3-zoom-hint { opacity: 0; }
+@media (hover: none) { .s3-zoom-hint { display: none; } }
+@media (max-width: 720px) {
+  .s3-zoom { top: auto; right: var(--g); bottom: calc(var(--g) + var(--time-h) + 10px); }
+  .s3-open .s3-zoom { opacity: 0; pointer-events: none; }
+}

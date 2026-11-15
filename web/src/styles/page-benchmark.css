@@ -1,0 +1,134 @@
+/* "Does it work?": one sentence, three small charts, a grid of flip cards (real orbit in front, result behind),
+   how the test works, and the details folded away.
+   Tokens and shared components only (note, chip, kicker); local pieces start with "dw-". */
+.dw-card { --c: var(--ink-3); }
+.dw-found { --c: var(--gold); }
+.dw-hint { --c: var(--blue-2); }
+.dw-missed { --c: var(--ink-2); }
+.dw-quiet { --c: var(--ink-3); }
+.dw-false { --c: var(--bad); }
+
+.page-content > .dw-hero { max-width: 940px; margin: 0 0 var(--g3); font-size: clamp(var(--fs-2xl), 4.2vw, var(--fs-4xl)); font-weight: var(--w-semi); line-height: 1.08; text-wrap: balance; }
+.dw-hero em { font-style: normal; color: var(--gold); }
+
+.dw-tally { list-style: none; display: flex; flex-wrap: wrap; gap: var(--g) var(--g3); padding: 0; margin: 0 0 var(--g4); font-size: var(--fs-s); color: var(--ink-2); }
+.dw-tally li { display: flex; align-items: center; gap: var(--g); max-width: none; }
+.dw-tally i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.dw-tally b { font-weight: var(--w-medium); color: var(--ink); }
+.dw-tally .dw-quiet i { background: none; border: 1px dashed var(--c); box-shadow: none; }
+.dw-tally .dw-decoys { padding-left: var(--g3); border-left: 1px solid var(--line-2); }
+
+/* three small charts: by brightness, how close, by type */
+.dw-panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 0 0 var(--g4); }
+.dw-panel { display: flex; flex-direction: column; gap: var(--g2); padding: var(--g3); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
+.dw-panel p { margin: 0; }
+.dw-panel-foot { margin-top: auto; padding-top: var(--g); font-size: var(--fs-xs); line-height: 1.45; color: var(--ink-3); }
+
+.dw-curve { list-style: none; display: flex; align-items: flex-end; gap: var(--g); padding: 0; margin: 0; }
+.dw-curve li { flex: 1; max-width: none; display: grid; gap: 6px; text-align: center; }
+.dw-col { position: relative; display: flex; flex-direction: column; justify-content: flex-end; height: 84px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.dw-col i { flex: none; height: calc(var(--h) * 100%); }
+.dw-col-found { background: var(--gold); }
+.dw-col-hint { background: color-mix(in srgb, var(--blue-2) 45%, transparent); }
+.dw-col-num { font-size: var(--fs-xs); color: var(--ink); }
+.dw-col-label { font-size: var(--fs-2xs); color: var(--ink-3); white-space: nowrap; }
+
+.dw-big { font: var(--w-semi) var(--fs-4xl) / 1 var(--font-display); letter-spacing: var(--track-display); font-variant-numeric: lining-nums; color: var(--gold); }
+.dw-big small { margin-left: var(--g); font: 400 var(--fs-s) / 1 var(--font); letter-spacing: 0; color: var(--ink-3); }
+.dw-strip { position: relative; height: 22px; border-bottom: 1px solid var(--line-2); }
+.dw-strip i { position: absolute; left: calc(var(--x) * 100%); bottom: 5px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--gold); opacity: 0.6; }
+.dw-strip b { position: absolute; left: calc(var(--x) * 100%); top: 0; bottom: -1px; width: 1px; background: var(--ink); }
+.dw-strip-ends { display: flex; justify-content: space-between; margin-top: calc(var(--g) - var(--g2)) !important; font-size: var(--fs-2xs); color: var(--ink-3); }
+
+.dw-types { list-style: none; display: grid; gap: 14px; padding: 0; margin: 0; }
+.dw-types li { max-width: none; display: grid; grid-template-columns: 1fr auto; gap: 6px var(--g); font-size: var(--fs-s); }
+.dw-type-num { color: var(--ink-2); }
+.dw-seg { grid-column: 1 / -1; display: flex; gap: 2px; height: 6px; }
+.dw-seg i { border-radius: 2px; background: var(--c); }
+.dw-seg .dw-found { --c: var(--gold); }
+.dw-seg .dw-hint { --c: color-mix(in srgb, var(--blue-2) 55%, transparent); }
+.dw-seg .dw-missed { --c: var(--fill-2); }
+
+/* the grid of cards */
+.dw-grid { list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; }
+.dw-grid li { max-width: none; perspective: 900px; animation: rise var(--t-slow) var(--ease-out) both; animation-delay: calc(var(--i) * 50ms); }
+.dw-flip { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 0; background: none; color: inherit; text-align: left; transform-style: preserve-3d; transition: transform 620ms var(--ease-out); }
+.dw-flip[aria-pressed='true'] { transform: rotateY(180deg); }
+.dw-face {
+  position: absolute; inset: 0; display: flex; flex-direction: column; padding: 12px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r2); background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)), var(--panel-2);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: border-color var(--t);
+}
+.dw-flip:hover .dw-face, .dw-flip:focus-visible .dw-face { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
+.dw-flip:focus-visible { outline: none; }
+.dw-flip:focus-visible .dw-face { box-shadow: 0 0 0 2px var(--c); }
+.dw-back { transform: rotateY(180deg); gap: 10px; background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--panel-2); }
+
+.dw-orbit { display: block; flex: 1; min-height: 0; width: 100%; }
+.dw-no-orbit { background: radial-gradient(circle, rgba(242, 181, 68, 0.6) 0 3px, transparent 4px); }
+.dw-badge {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 7px; border-radius: var(--pill);
+  font: var(--w-medium) var(--fs-2xs) / 1.4 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase;
+  color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+}
+.dw-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.dw-quiet .dw-badge::before { background: none; border: 1px dashed var(--c); }
+.dw-front .dw-badge { position: absolute; top: 12px; left: 12px; }
+.dw-id { display: flex; align-items: baseline; justify-content: space-between; gap: var(--g); padding-top: 6px; }
+.dw-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--w-medium) var(--fs-l) / 1.2 var(--font-display); letter-spacing: var(--track-display); }
+.dw-num { flex: none; font-size: var(--fs-2xs); color: var(--ink-3); }
+
+.dw-sentence { font-size: var(--fs-s); line-height: 1.4; color: var(--ink); }
+.dw-bars { display: grid; gap: 6px; margin-top: auto; }
+.dw-bar { display: grid; grid-template-columns: 1fr 34px; grid-template-rows: auto auto; column-gap: var(--g); font-size: var(--fs-2xs); color: var(--ink-3); }
+.dw-bar-label { grid-column: 1 / -1; }
+.dw-bar-track { position: relative; height: 4px; align-self: center; border-radius: 2px; background: var(--fill-2); }
+.dw-bar-track i { position: absolute; inset: 0 auto 0 0; width: calc(var(--w) * 100%); border-radius: 2px; background: var(--c); }
+.dw-bar-track b { position: absolute; top: -3px; bottom: -3px; left: calc(var(--at) * 100%); width: 1px; background: var(--ink-2); }
+.dw-bar-num { text-align: right; color: var(--ink-2); }
+.dw-checks { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; font-size: var(--fs-2xs); color: var(--ink-3); }
+.dw-checks i { width: 7px; height: 7px; border-radius: 2px; background: var(--ok); opacity: 0.75; }
+.dw-checks i.no { background: var(--bad); opacity: 1; }
+.dw-checks span { margin-left: 6px; }
+.dw-when { font-size: var(--fs-2xs); color: var(--ink-3); }
+
+.page-content > .dw-hint-line { max-width: none; margin: var(--g2) 0 0; font-size: var(--fs-s); color: var(--ink-3); }
+
+/* how the test works: three steps in one strip */
+.dw-how { list-style: none; counter-reset: dw; display: grid; grid-template-columns: repeat(3, 1fr); padding: 0; margin: var(--g6) 0 var(--g4); border-block: 1px solid var(--line); }
+.dw-how li { counter-increment: dw; max-width: none; display: flex; gap: var(--g2); padding: var(--g3) var(--g3) var(--g3) 0; font-size: var(--fs-s); color: var(--ink-2); }
+.dw-how li + li { padding-left: var(--g3); border-left: 1px solid var(--line); }
+.dw-how svg { flex: none; width: 28px; height: 28px; fill: none; stroke: var(--gold); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.dw-how b { display: block; margin-bottom: 4px; font: var(--w-semi) var(--fs-l) / 1.2 var(--font-display); letter-spacing: var(--track-display); color: var(--ink); }
+.dw-how b::before { content: counter(dw) '. '; color: var(--ink-3); }
+
+/* details, folded: the first test, the cases that could not run, the exact method, the AI note */
+.dw-folds { margin: 0 0 var(--g3); border-top: 1px solid var(--line); }
+.dw-fold { border-bottom: 1px solid var(--line); font-size: var(--fs-s); color: var(--ink-2); }
+.dw-fold summary { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; font-size: var(--fs-m); color: var(--ink); cursor: pointer; list-style: none; transition: color var(--t-fast); }
+.dw-fold summary::-webkit-details-marker { display: none; }
+.dw-fold summary::after { content: '+'; font: 400 var(--fs-l) / 1 var(--mono); color: var(--ink-3); }
+.dw-fold[open] summary::after { content: '-'; }
+.dw-fold summary:hover { color: var(--gold); }
+.dw-fold > p { max-width: 720px; margin: 0 0 var(--g2); }
+.dw-v1 { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 var(--g4); padding: 0; margin: 0 0 var(--g2); }
+.dw-v1 li { max-width: none; display: grid; grid-template-columns: 104px 1fr auto; align-items: center; gap: var(--g); padding: 7px 0; border-top: 1px solid var(--line); color: var(--ink); }
+.dw-v1 .mono { font-size: var(--fs-xs); color: var(--ink-3); }
+.dw-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--g) var(--g2); }
+
+@media (max-width: 1000px) {
+  .dw-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .dw-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--g); }
+  .dw-flip { aspect-ratio: 3 / 4.2; }
+  .dw-name { font-size: var(--fs-m); }
+  .dw-tally .dw-decoys { flex-basis: 100%; padding-left: 0; border-left: 0; }
+  .dw-v1 { grid-template-columns: 1fr; }
+  .dw-how { grid-template-columns: 1fr; }
+  .dw-how li, .dw-how li + li { padding: var(--g2) 0; border-left: 0; }
+  .dw-how li + li { border-top: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dw-flip { transition: none; }
+}
