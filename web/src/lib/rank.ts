@@ -43,6 +43,11 @@ export function daysBefore(o: Pick<Early, 'first_spherex_hint' | 'days_before_fi
   return o.first_spherex_hint?.days_before_discovery ?? null;
 }
 
+/** A new find whose photos are not earlier than the first known observation (like C/2025 W2). */
+export function seenNotEarlier(o: Pick<IndexObject, 'verdict' | 'kind' | 'first_spherex_hint' | 'days_before_first_known_obs'>): boolean {
+  return o.verdict === 'FOUND' && !isKnown(o) && daysBefore(o) == null;
+}
+
 /** Counts for the results card and the opening. Known objects that SPHEREx sees are not finds. */
 export function tally(objects: Pick<IndexObject, 'verdict' | 'kind' | 'first_spherex_hint' | 'days_before_first_known_obs'>[]) {
   const n = (f: (o: (typeof objects)[number]) => boolean) => objects.filter(f).length;

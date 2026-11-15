@@ -46,7 +46,7 @@ const labelRoot = document.getElementById('labels')!;
 export const pages = new Map<string, Promise<ObjectPage>>();
 
 const VIEWS: Record<string, [string, string, View]> = {
-  sky: ['Sky', 'Any spot / SPHEREx time machine', skyView],
+  sky: ['Sky', 'Any spot in the sky', skyView],
   detectives: ['Tune the Rewind', 'Game / stack the photos', detectivesView],
   stars: ['Challenge stars', 'NASA challenge targets', starsView],
   benchmark: ['Does it work?', 'The "pretend it is new" test', benchmarkView],

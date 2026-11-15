@@ -5,7 +5,8 @@ import { getJson } from '../lib/data';
 import { mjdFromIso, plainDate } from '../lib/time';
 import type { ObjectPage } from '../lib/types';
 import { animateOrbits } from './visuals/orbit-mini';
-import { isKnown, tally } from '../lib/rank';
+import { beforeWhat, daysBefore, isKnown, tally } from '../lib/rank';
+import type { IndexObject } from '../lib/types';
 import { chip, icon, section, stat, stats } from '../ui/components';
 import { chipSample, esc, fmt, plural, provenance } from '../ui/dom';
 import { verdictWord } from '../ui/topbar';
@@ -92,7 +93,7 @@ function impactHtml(s: ImpactSummary): string {
 }
 
 // step 1 plays the day-by-day photos as a flipbook, step 2 shows the stack, step 3 the orbit moving
-function howItWorks(body: HTMLElement, base: string): () => void {
+function howItWorks(body: HTMLElement, base: string, row?: IndexObject): () => void {
   let timer = 0;
   let stopOrbit = () => {};
   const days = body.querySelector('.ab-days') as HTMLElement;
@@ -121,9 +122,12 @@ function howItWorks(body: HTMLElement, base: string): () => void {
 
     const s = o.spherex.stack;
     (stack.querySelector('img') as HTMLImageElement).src = base + YH5 + s.png;
-    (stack.querySelector('.ab-tag') as HTMLElement).textContent = `${s.n_frames} photos  S/N ${s.snr?.toFixed(1) ?? 'n/a'}`;
+    (stack.querySelector('.ab-tag') as HTMLElement).textContent = `${s.n_frames} photos stacked  S/N ${s.snr?.toFixed(1) ?? 'n/a'}`;
     (body.querySelector('.ab-days-text') as HTMLElement).textContent =
-      `SPHEREx photographed it on ${d.length} days before its discovery on ${plainDate(o.story.discovered_iso)}. Each day it is barely there.`;
+      // the same count as the object's own page and the results list (index.json)
+      row && (daysBefore(row) ?? 0) > 0
+        ? `SPHEREx photographed it on ${d.length} different days, starting ${plural(Math.round(daysBefore(row)!), 'day')} before ${beforeWhat(row)}. Each day it is barely there.`
+        : `SPHEREx photographed it on ${d.length} different days. Each day it is barely there.`;
     if (o.orbit) stopOrbit = animateOrbits([{ canvas, el: o.orbit, mjd0: mjdFromIso(o.story.discovered_iso) - 120, color: '#f2b544' }]);
   }).catch(() => body.querySelector('.ab-how')?.closest('.sec')?.remove());
   return () => {
@@ -177,12 +181,12 @@ export const aboutView: View = (body, ctx) => {
         <li>
           <div class="ab-how-media ab-stack-box"><img alt="The stack of SPHEREx photos along the path of 2025 YH5, with a clear dot in the middle" loading="lazy" /><span class="ab-tag mono"></span></div>
           <h3><span>2</span>The stack</h3>
-          <p>Rewind adds the photos up along its path. The dot adds up; the noise does not.</p>
+          <p>Added along the asteroid's path, its faint light builds up while random noise averages out.</p>
         </li>
         <li>
           <div class="ab-how-media ab-orbit-box"><canvas aria-hidden="true"></canvas><span class="ab-tag mono">orbit</span></div>
           <h3><span>3</span>The orbit</h3>
-          <p>Earlier positions make where it goes next less of a guess.</p>
+          <p>Each earlier position narrows down where it will be next year.</p>
         </li>
       </ol>
       <p class="ab-how-more"><a href="#/object/2025yh5">Open 2025 YH5</a></p>`)}
@@ -220,7 +224,7 @@ export const aboutView: View = (body, ctx) => {
     ${section('Links', 'Go further', `
       <ul class="ab-links">${LINKS.map(([name, href, out]) => `<li><a href="${href}"${out ? ' target="_blank" rel="noopener" class="ab-out"' : ''}><span class="ab-link-name">${name}</span>${icon('arrow')}</a></li>`).join('')}</ul>`)}`;
 
-  stopHow = howItWorks(body, ctx.source.base);
+  stopHow = howItWorks(body, ctx.source.base, idx.objects.find((o) => o.slug === '2025yh5'));
 
   // the impact numbers live in the finds' object pages; the page does not wait for them
   const slot = body.querySelector('.ab-impact') as HTMLElement;

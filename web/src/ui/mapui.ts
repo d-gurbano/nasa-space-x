@@ -1,7 +1,7 @@
 // Small helpers on the 3D map: the layers panel, the cards for a dot or a planet under the
 // pointer, the first-visit hint and the selected object's distance from Earth.
 import { planetElements, planetPosition, type PlanetRow } from '../lib/kepler';
-import { daysBefore, isKnown } from '../lib/rank';
+import { daysBefore, isKnown, tally } from '../lib/rank';
 import type { IndexObject } from '../lib/types';
 import { dotPosition, type Layer, type Scene, type Target } from '../scene/Scene';
 import { isPhone, store } from '../state';
@@ -86,9 +86,11 @@ export function mountMapUi(root: HTMLElement, scene: Scene, objects: IndexObject
       scene.setLayer(b.dataset.layer as Layer, on);
     }),
   );
-  /** Counts come from what is really drawn; call again once the dots are loaded. */
+  /** Counts come from what is really drawn (call again once the dots are loaded); Rewind's own
+   * counts come from index.json, the same as everywhere else on the site. */
+  const t = tally(objects);
   const refresh = () => {
-    const n = scene.layerCounts();
+    const n = { ...scene.layerCounts(), found: t.before, searched: t.searched };
     layers.querySelectorAll<HTMLButtonElement>('[data-layer]').forEach((b) => ((b.lastElementChild as HTMLElement).textContent = fmt(n[b.dataset.layer as Layer])));
   };
   refresh();
@@ -100,7 +102,7 @@ export function mountMapUi(root: HTMLElement, scene: Scene, objects: IndexObject
   } catch {
     // no storage: skip the hint rather than show it on every visit
   }
-  const hint = seen ? null : root.appendChild(el('p', { class: 'map-hint chip chip-gold' }, 'Tap a glowing dot to open an asteroid'));
+  const hint = seen ? null : root.appendChild(el('p', { class: 'map-hint chip chip-gold' }, 'Click a glowing dot to open it'));
   const picked = () => {
     if (!hint?.isConnected || !store.selected) return;
     hint.remove();

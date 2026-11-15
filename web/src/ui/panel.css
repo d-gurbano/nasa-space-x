@@ -6,9 +6,9 @@
 
 /* ---------- first screen ---------- */
 .op-head { flex: none; padding: 18px var(--g3) 0; }
-.op-title { display: flex; align-items: center; gap: 12px; margin-right: 44px; min-width: 0; }
+.pn-title { display: flex; align-items: center; gap: 12px; margin-right: 44px; min-width: 0; }
 .op-name { margin: 0; font: var(--w-semi) 32px / 1.05 var(--font-display); letter-spacing: -0.03em; overflow-wrap: anywhere; }
-.op-title .verdict-chip { flex: none; }
+.pn-title .verdict-chip { flex: none; }
 .op-type { margin: 6px 0 0; font-size: var(--fs-s); color: var(--ink-3); line-height: 1.4; }
 .op-type span { margin: 0 3px; color: var(--line-2); }
 .op-stat { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--fill); }

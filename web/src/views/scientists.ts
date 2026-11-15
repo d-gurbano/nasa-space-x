@@ -2,8 +2,7 @@
 // the orbit, check definitions, validation, downloads, the data contract and positions in MPC
 // 80-column format for expert review. Nothing here is ever submitted anywhere.
 import '../styles/page-scientists.css';
-import type { Verdict } from '../lib/types';
-import { decoyTally, tally as benchTally, usable, type Bench } from './benchmark/logic';
+import { alarmLine, decoyTally, tally as benchTally, usable, type Bench } from './benchmark/logic';
 import { mpcLine } from '../lib/mpc';
 import { isKnown, tally } from '../lib/rank';
 import { getJson } from '../lib/data';
@@ -12,7 +11,7 @@ import { esc, fixPlural, fmt, plural, provenance } from '../ui/dom';
 import { verdictWord } from '../ui/topbar';
 import { reducedMotion } from '../state';
 import { rel, type View } from './page';
-import { bytes, filterRows, gainRange, km, lead, snrBar, sortRows, splitContract, toCsv, type Row, type Sort, type SortKey } from './scientists/logic';
+import { bytes, filterRows, gainRange, inTab, km, lead, notEarlier, snrBar, sortRows, splitContract, toCsv, type Row, type Sort, type SortKey, type Tab } from './scientists/logic';
 
 const PAGE = 25;
 const KIND: Record<string, string> = { neo: 'NEO', comet: 'Comet', mba: 'Main belt', lost: 'Lost', famous: 'Known' };
@@ -29,7 +28,7 @@ const CHECKS: [string, string, string][] = [
   ['not_one_day', 'Not one day', 'The S/N stays at 3 or more without the best day.'],
   ['orbit', 'Orbit fit', 'The orbit refit with the new positions stays good. Not required for known objects.'],
 ];
-const VERDICTS: [Verdict, string][] = [
+const VERDICTS: [string, string][] = [
   ['FOUND', 'Every check passes. For a known object this means "SPHEREx saw it", never a precovery.'],
   ['HINT', 'There is a signal (null-scaled S/N of 3 or more, or 2 or more with two core checks passed), but not every check passes. A hint is never upgraded.'],
   ['TOO_FAINT', 'Nothing significant at the predicted spot: the planted-source test puts the object below the limit there, or it was fainter than predicted.'],
@@ -97,8 +96,8 @@ export const scientistsView: View = (body, ctx) => {
   const rows = source.index.objects as Row[];
   const t = tally(rows);
   const early = rows.filter((o) => (o.days_before_first_known_obs ?? 0) > 0).length;
-  const counts = (v: Verdict) => rows.filter((o) => o.verdict === v).length;
-  const shown = (['FOUND', 'HINT', 'TOO_FAINT', 'NO_PHOTOS', 'PENDING'] as Verdict[]).filter((v) => counts(v) > 0);
+  const counts = (v: Tab) => rows.filter((o) => inTab(o, v)).length;
+  const shown = (['FOUND', 'KNOWN', 'HINT', 'TOO_FAINT', 'NO_PHOTOS', 'PENDING'] as Tab[]).filter((v) => counts(v) > 0);
   let alive = true;
 
   const nav: [string, string][] = [['method', 'Method'], ['results', 'Results'], ['impact', 'Orbit impact'], ['checks', 'Checks'], ['validation', 'Validation'], ['files', 'Downloads'], ['contract', 'Data contract'], ['mpc', 'Positions']];
@@ -125,7 +124,7 @@ export const scientistsView: View = (body, ctx) => {
 
     ${section('Results', `All ${fmt(rows.length)} objects`, `
       <div class="sci-bar">
-        <div class="sci-filters sci-tabs" role="group" aria-label="Show by verdict">${[['ALL', 'All', rows.length] as [string, string, number], ...shown.map((v) => [v, verdictWord(v), counts(v)] as [string, string, number])]
+        <div class="sci-filters sci-tabs" role="group" aria-label="Show by verdict">${[['ALL', 'All', rows.length] as [string, string, number], ...shown.map((v) => [v, v === 'KNOWN' ? 'Known' : verdictWord(v), counts(v)] as [string, string, number])]
           .map(([id, label, n]) => `<button type="button" class="sci-filter f-${id.toLowerCase()}" data-tab="${id}" aria-pressed="${id === 'ALL'}">${id === 'ALL' ? '' : '<i class="sci-dot" aria-hidden="true"></i>'}${esc(label)}<span class="sci-n">${fmt(n)}</span></button>`).join('')}</div>
         <label class="sci-search">${icon('search')}<input type="search" placeholder="Search by name" aria-label="Search objects by name" autocomplete="off" spellcheck="false"></label>
       </div>
@@ -261,7 +260,7 @@ export const scientistsView: View = (body, ctx) => {
   });
 
   // ---------- results table ----------
-  const state = { verdict: 'ALL' as Verdict | 'ALL', q: '', sort: { key: 'verdict', dir: 1 } as Sort, page: 0, open: '' };
+  const state = { verdict: 'ALL' as Tab, q: '', sort: { key: 'verdict', dir: 1 } as Sort, page: 0, open: '' };
   const tbody = $('.sci-table tbody');
   const list = () => sortRows(filterRows(rows, state.verdict, state.q), state.sort);
   // every S/N bar shares one scale, set by the strongest object; the tick marks S/N 5
@@ -273,7 +272,7 @@ export const scientistsView: View = (body, ctx) => {
     const main = `<tr class="sci-row r-${esc(o.verdict.toLowerCase())}${open ? ' open' : ''}" data-slug="${esc(o.slug)}">
       <td><a href="#/object/${esc(o.slug)}">${esc(o.name)}</a></td>
       <td class="sci-wide">${esc(KIND[o.kind] ?? o.kind)}</td>
-      <td class="sci-left">${chipFor(o.verdict)}</td>
+      <td class="sci-left">${notEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : chipFor(o.verdict)}</td>
       <td class="sci-snr">${o.best_snr == null ? '<span class="muted">-</span>' : `<span class="sci-spark" aria-hidden="true"><i style="width:${snrBar(o.best_snr, maxSnr).toFixed(1)}%"></i></span><span class="sci-snr-v">${o.best_snr.toFixed(1)}</span>`}</td>
       <td class="sci-wide">${fmt(o.n_frames ?? 0)}</td>
       <td class="sci-wide">${esc(o.discovered?.iso ?? '-')}</td>
@@ -312,7 +311,7 @@ export const scientistsView: View = (body, ctx) => {
   $('.sci-tabs').addEventListener('click', (e) => {
     const tab = (e.target as HTMLElement).closest<HTMLElement>('[data-tab]');
     if (!tab) return;
-    state.verdict = tab.dataset.tab as Verdict | 'ALL';
+    state.verdict = tab.dataset.tab as Tab;
     state.page = 0;
     body.querySelectorAll('.sci-tabs button').forEach((b) => b.setAttribute('aria-pressed', String(b === tab)));
     draw();
@@ -366,7 +365,7 @@ export const scientistsView: View = (body, ctx) => {
     const decoys = decoyTally(data.decoys ?? []);
     const err = data.summary?.pos_err_arcsec;
     $('.sci-bm').innerHTML = `<p class="kicker">Blind test</p>
-      <p class="sci-big">${bt.found} of ${bt.seen}<span>${plural(bt.false + decoys.false, 'false alarm')}</span></p>
+      <p class="sci-big">${bt.found} of ${bt.seen}<span>${alarmLine(bt, decoys)}</span></p>
       <p>${esc(data.summary?.plain ?? `Rewind found ${bt.found} of ${bt.seen} known objects that SPHEREx could see, in ${plural(bt.total, 'case')}.`)}</p>
       ${err?.median != null ? `<p class="mono">Position error: median ${err.median} arcsec${err.p90 != null ? `, 90% within ${err.p90}` : ''}${err.n ? ` (n = ${err.n})` : ''}.</p>` : ''}
       <p class="sci-card-foot"><a class="sci-link" href="#/benchmark">See every case</a>${provenance(sample, 'NASA SPHEREx')}</p>`;
@@ -424,14 +423,14 @@ export const scientistsView: View = (body, ctx) => {
     const cell = (s: Sigma | null | undefined, none: string) => {
       const v = sig(s);
       if (!v) return `<td colspan="2" class="sci-na">${esc(s?.error ? 'fit too weak to sample' : none)}</td>`;
-      return `<td>${arrow(km(v.sigma3_km_before!), km(v.sigma3_km_after!))}${v.converged === false ? '<small>fit did not converge: unreliable</small>' : ''}</td><td class="${v.factor! >= 2 && v.converged !== false ? 'gold' : ''}">${times(v.factor!)}</td>`;
+      return `<td>${arrow(km(v.sigma3_km_before!), km(v.sigma3_km_after!))}${v.converged === false ? '<sup title="Fit did not converge: unreliable">*</sup>' : ''}</td><td class="${v.factor! >= 2 && v.converged !== false ? 'gold' : ''}">${times(v.factor!)}</td>`;
     };
     box.innerHTML = `
       <dl class="stats sci-gain">
         ${best.map(({ f, s }) => stat(times(s!.factor!), `${f.o.name}, had Rewind run at discovery: ${km(s!.sigma3_km_before!)} to ${km(s!.sigma3_km_after!)} km`, 'stat-gold')).join('')}
         ${today.length ? stat(gainRange(today), 'today, now that weeks to a year of follow-up exist') : ''}
       </dl>
-      <p>Rewind's value is speed. Right after discovery, a few old SPHEREx positions can shrink the uncertainty of the future path several times over. After the follow-up they add little.</p>
+      <p>Old photos help most in the first days after discovery. Right then, a few old SPHEREx positions can shrink the uncertainty of the future path several times over. Once the follow-up is done they add little.</p>
       <div class="sci-scroll"><table class="data-table sci-impact-table">
         <thead><tr><th scope="col">Object</th><th scope="col">First known obs.</th><th scope="col">Earlier by</th><th scope="col">Positions</th><th scope="col">Arc, days</th><th scope="col" colspan="2">3 sigma in 1 yr, today (km)</th><th scope="col" colspan="2">At discovery (km)</th></tr></thead>
         <tbody>${finds.map(({ o, impact: m }) => `<tr>
@@ -444,6 +443,7 @@ export const scientistsView: View = (body, ctx) => {
           ${cell(m!.at_discovery_scenario, 'no earlier position')}
         </tr>`).join('')}</tbody>
       </table></div>
+      ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => sig(x)?.converged === false)) ? '<p class="hint"><span class="sci-foot">*</span> The fit did not converge, so this number is unreliable.</p>' : ''}
       <p class="hint">COMPUTED with kete least-squares fits of the real MPC observations, without and with the SPHEREx positions (each given an uncertainty of at least ${finds[0].impact!.sigma_floor_arcsec ?? 2} arcsec). 3 sigma is the largest axis of 300 covariance clones (linear, gravity only), one year after the last observation. "At discovery" uses only the MPC observations of the first 7 days plus the SPHEREx positions that are earlier than them. First known observation: JPL SBDB, 2026-11-15.</p>`;
   };
 

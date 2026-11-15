@@ -7,7 +7,7 @@ import '../styles/page-benchmark.css';
 import { mjdFromIso, plainDate } from '../lib/time';
 import { esc, plural, provenance } from '../ui/dom';
 import { chip } from '../ui/components';
-import { byOutcome, byType, curveBars, decoyTally, explain, median, orbitKey, outcome, posErrors, snrBar, tally, usable, type Bench, type BenchCase, type Outcome } from './benchmark/logic';
+import { alarmLine, byOutcome, byType, curveBars, decoyTally, explain, methodText, median, orbitKey, outcome, posErrors, snrBar, tally, usable, type Bench, type BenchCase, type Outcome } from './benchmark/logic';
 import { PIXEL_ARCSEC } from './sky/logic';
 import { BENCH_ORBITS } from './visuals/bench-orbits';
 import { animateOrbits, type OrbitMini } from './visuals/orbit-mini';
@@ -49,7 +49,7 @@ function card(c: BenchCase, i: number, hasOrbit: boolean): string {
       <span class="dw-face dw-back" aria-hidden="true">
         <span class="dw-badge">${BADGE[o]}</span>
         <span class="dw-sentence">${esc(explain(c))}</span>
-        <span class="dw-bars">${bar('Rewind, blind', c.snr)}${bar('True spot', c.oracle_snr)}</span>
+        <span class="dw-bars">${bar('S/N, Rewind blind', c.snr)}${bar('S/N at true position', c.oracle_snr)}</span>
         ${checks.length ? `<span class="dw-checks" title="${checks.map(([k, ok]) => `${ok ? 'Passed' : 'Failed'}: ${CHECK[k]}`).join('\n')}">${checks.map(([, ok]) => `<i class="${ok ? 'ok' : 'no'}"></i>`).join('')}<span class="mono">${checks.filter(([, ok]) => ok).length}/${checks.length} checks</span></span>` : ''}
         ${c.hidden_until_iso ? `<span class="dw-when mono">Hidden from ${esc(plainDate(c.hidden_until_iso))}</span>` : ''}
       </span>
@@ -63,11 +63,11 @@ function curveHtml(data: Bench): string {
   if (!bars.length) return '';
   return `<article class="dw-panel">
     <p class="kicker">Brighter is easier</p>
-    <ol class="dw-curve" aria-label="Share of test objects found, by brightness">${bars.map((b) => `<li aria-label="Magnitude ${b.label}: ${b.found} of ${b.n} found${b.hint ? `, ${plural(b.hint, 'hint')}` : ''}">
+    <ol class="dw-curve" aria-label="Share of visible test objects found, by brightness">${bars.map((b) => `<li aria-label="Magnitude ${b.label}: ${b.found} of ${b.n} found${b.hint ? `, ${plural(b.hint, 'hint')}` : ''}">
       <span class="dw-col-num mono">${b.found}/${b.n}</span>
       <span class="dw-col"><i class="dw-col-hint" style="--h:${b.hint / b.n}"></i><i class="dw-col-found" style="--h:${b.found / b.n}"></i></span>
       <span class="dw-col-label mono">${esc(b.label)}</span></li>`).join('')}</ol>
-    <p class="dw-panel-foot">Found per brightness step (magnitude; left is brighter). Blue is a hint.</p>
+    <p class="dw-panel-foot">Found, of those SPHEREx could see, per brightness step (magnitude; left is brighter). Blue is a hint.</p>
   </article>`;
 }
 
@@ -126,9 +126,10 @@ export const benchmarkView: View = async (body, ctx) => {
 
   body.innerHTML = `
     <p class="dw-hero display">We hid the answers and asked Rewind. It found <em>${t.found} of ${t.seen}</em> known ${what} it could see, with ${alarms}.</p>
-    <ul class="dw-tally" aria-label="Results">${counts.map((o) => `<li class="dw-${o}"><i></i><b class="mono">${t[o]}</b>${BADGE[o]}</li>`).join('')}${decoys.ran ? `<li class="dw-decoys"><b class="mono">${decoys.false}</b>${decoys.false === 1 ? 'false alarm' : 'false alarms'} on ${plural(decoys.ran, 'patch', 'patches')} of empty sky</li>` : ''}</ul>
+    <ul class="dw-tally" aria-label="Results">${counts.map((o) => `<li class="dw-${o}"><i></i><b class="mono">${t[o]}</b>${BADGE[o]}</li>`).join('')}<li class="dw-decoys">${alarmLine(t, decoys).replace(/^(\d+)/, '<b class="mono">$1</b>')}</li></ul>
     ${panels.length ? `<div class="dw-panels">${panels.join('')}</div>` : ''}
 
+    <p class="dw-hint-line dw-rule">Hint: Rewind saw a signal but did not call it a find; each hint card says why. Not visible: SPHEREx did not see it clearly and Rewind did not say Found, so there is no false alarm.</p>
     <ol class="dw-grid" aria-label="${plural(t.total, 'test object')}, found first">${cases.map((c, i) => card(c, i, !!orbits[i])).join('')}</ol>
     <p class="dw-hint-line">The real orbit of each test object, with Earth's orbit dotted. Hover or tap a card for the result.</p>
 
@@ -141,26 +142,36 @@ export const benchmarkView: View = async (body, ctx) => {
     <div class="dw-folds">
       ${firstTestHtml(data.v1)}
       ${skipped ? `<details class="dw-fold"><summary>${plural(skipped, 'more case')} could not be tested</summary><p>${esc(data.summary?.unusable_note ?? 'These had no usable "pretend it is new" test: ' + all.filter((c) => !usable(c)).map((c) => c.name).join(', ') + '.')}</p></details>` : ''}
-      ${data.summary?.method ? `<details class="dw-fold"><summary>How the test was run, exactly</summary><p>${esc(data.summary.method)}</p></details>` : ''}
+      ${data.summary?.method ? `<details class="dw-fold"><summary>How the test was run, exactly</summary><p>${esc(methodText(data.summary.method))}</p></details>` : ''}
       <!-- numbers from the Kaggle runs: MAIN/data/kaggle/SUMMARY.md, K2 -->
-      <details class="dw-fold"><summary>The AI, honestly</summary><p>On parts of the sky it had never seen, a small neural network told real asteroids from planted fakes with 0.974 accuracy, against 0.931 for gradient boosting. The fakes are planted, so this says nothing about real junk. A second network, the "Expected Sky" U-Net, did not beat the simple static-sky reference (about twice the false alarms at bright stars), so Rewind does not use it. No verdict depends on AI.</p></details>
+      <details class="dw-fold"><summary>Where we used machine learning</summary><p>On parts of the sky it had never seen, a small neural network told real asteroids from planted fakes with 0.974 accuracy, against 0.931 for gradient boosting. The fakes are planted, so this says nothing about real junk. A second network, the "Expected Sky" U-Net, did not beat the simple static-sky reference (about twice the false alarms at bright stars), so Rewind does not use it. No verdict depends on AI.</p></details>
     </div>
     <div class="dw-foot">${provenance(sample, 'Rewind test on NASA SPHEREx')}${data.summary?.label ? chip(data.summary.label) : ''}<span class="hint">Orbits: JPL Small-Body Database.</span></div>`;
 
-  // flip: hover on a mouse, tap or Enter anywhere; one card open at a time on touch
+  // flip: hover on a mouse, tap or Enter anywhere; one card open at a time on touch.
+  // Hover and taps land on the static <li>, never on the rotating button: its hit area narrows
+  // mid-flip, which made the card flip back and forth near its edges.
   const flips = [...body.querySelectorAll<HTMLButtonElement>('.dw-flip')];
   const set = (b: HTMLButtonElement, on: boolean) => {
     b.setAttribute('aria-pressed', String(on));
     b.querySelector('.dw-back')?.setAttribute('aria-hidden', String(!on));
   };
   flips.forEach((b) => {
-    b.addEventListener('click', () => {
+    const li = b.closest('li')!;
+    let leave = 0;
+    li.addEventListener('click', () => {
       const on = b.getAttribute('aria-pressed') !== 'true';
       flips.forEach((x) => x !== b && set(x, false));
       set(b, on);
     });
-    b.addEventListener('pointerenter', (e) => e.pointerType === 'mouse' && set(b, true));
-    b.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && set(b, false));
+    li.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(leave);
+      set(b, true);
+    });
+    li.addEventListener('pointerleave', (e) => {
+      if (e.pointerType === 'mouse') leave = window.setTimeout(() => set(b, false), 120);
+    });
   });
 
   const items: OrbitMini[] = [];

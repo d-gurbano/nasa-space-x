@@ -2,7 +2,7 @@
 // then the Rewind objects ranked by verdict: the strongest 20 first, the rest on request,
 // and one verdict at a time by pressing its count. All numbers are counted from the object list.
 import type { SiteIndex } from '../lib/types';
-import { beforeWhat, daysBefore, isKnown, rankObjects, tally } from '../lib/rank';
+import { beforeWhat, daysBefore, isKnown, rankObjects, seenNotEarlier, tally } from '../lib/rank';
 import { el, esc, plural, provenance } from './dom';
 import { verdictWord } from './topbar';
 
@@ -54,7 +54,7 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
       <div class="rs-hero"><span class="stat-num">${t.found}</span><p>${hero}</p></div>
       <div class="rs-bar" aria-hidden="true">${shown.map(([, n, c]) => `<i style="flex:${n};--c:${c}"></i>`).join('')}</div>
       <div class="rs-key" role="group" aria-label="Show one group">${shown.map(([w, n, c], k) => `<button data-k="${k}" aria-pressed="false" style="--c:${c}"><b>${n}</b>${w}</button>`).join('')}</div>
-      <p class="rs-honest">Rewind tells you honestly when an object is too faint.</p>
+      <p class="rs-honest">If an object is too faint to see, Rewind says so instead of guessing.</p>
       ${ranked.length ? '' : '<p class="empty">No objects searched yet. Results appear here as soon as Rewind has checked a new asteroid or comet.</p>'}
       <p class="rs-listhead mono" aria-live="polite"></p>
       <ol class="rs-list"></ol>
@@ -81,7 +81,7 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
     const rows = all ? list : list.slice(0, LIST_MAX);
     head.textContent = !list.length ? '' : rows.length < list.length ? `Strongest ${rows.length} of ${list.length}` : group < 0 ? `All ${list.length}, strongest first` : `${shown[group][0]}: ${list.length}`;
     listEl.innerHTML = rows
-      .map((o) => `<li><button data-slug="${esc(o.slug)}"><span class="rs-name">${esc(o.name)}</span><span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Known' : verdictWord(o.verdict)}</span><span class="rs-line">${esc(objectLine(o))}</span></button></li>`)
+      .map((o) => `<li><button data-slug="${esc(o.slug)}"><span class="rs-name">${esc(o.name)}</span>${seenNotEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : `<span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Known' : verdictWord(o.verdict)}</span>`}<span class="rs-line">${esc(objectLine(o))}</span></button></li>`)
       .join('');
     more.hidden = list.length <= LIST_MAX;
     more.textContent = all ? `Show the strongest ${LIST_MAX}` : `Show all ${list.length}`;

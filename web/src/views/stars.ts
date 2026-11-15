@@ -128,7 +128,7 @@ function facts(s: Star, why: string): string {
   const c = compare(s), sp = speeds(s);
   const wide = `${s.rsun >= 100 ? 'about ' : ''}${c.ratio >= 100 ? fmt(c.ratio) : c.ratio >= 10 ? c.ratio.toFixed(0) : c.ratio.toFixed(1)} ×`;
   return `${stats([
-    s.kind === 'sun' ? stat('8.3 light-minutes', 'from the Earth') : stat(`${lightYears(s)} light-years`, s.far ? 'away: not to scale on the map' : 'from the Sun'),
+    s.kind === 'sun' ? stat('8.3 light-minutes', 'from Earth') : stat(`${lightYears(s)} light-years`, s.far ? 'away: not to scale on the map' : 'from the Sun'),
     stat(tempLabel(s.temp), s.kind === 'brown dwarf' ? 'in its clouds' : 'at the surface'),
     stat(wide, c.body === 'Sun' ? "the Sun's width" : "Jupiter's width"),
     ...(s.kind === 'sun' ? [] : [stat(`${sp.total.toFixed(0)} km/s`, s.rv == null ? 'across the sky' : 'through space')]),
@@ -146,7 +146,7 @@ export const starsView: View = async (body, ctx) => {
     <div class="s3">
       <div class="s3-stage">
         <div class="s3-intro">
-          <p class="s3-lead">Five stars NASA picked to test Rewind. <b>Tap one.</b></p>
+          <p class="s3-lead">The five stars named in the NASA challenge. <b>Tap one.</b></p>
           <ul class="s3-legend">
             ${(['red dwarf', 'brown dwarf', 'young variable star', 'pulsating red giant'] as Kind[]).map((k) => `<li><i style="--c: ${hex(STARS.find((s) => s.kind === k)!.color)}"></i>${KIND[k]}</li>`).join('')}
             <li><i class="s3-lg-trace"></i>Tap a star to see its path</li>
@@ -167,7 +167,7 @@ export const starsView: View = async (body, ctx) => {
         <div class="s3-zoom">
           <button type="button" class="icon-btn" data-zoom="0.8" aria-label="Zoom in">+</button>
           <button type="button" class="icon-btn" data-zoom="1.25" aria-label="Zoom out">&minus;</button>
-          <p class="s3-zoom-hint">Click the map to zoom with the wheel</p>
+          <p class="s3-zoom-hint">Click the map, then scroll to zoom</p>
         </div>
         <div class="s3-time">
           <button type="button" class="icon-btn s3-play" aria-label="Play through time">${icon('play')}</button>
@@ -345,7 +345,7 @@ export const starsView: View = async (body, ctx) => {
           ${mv ? `<p class="s3c-big">${esc(mv.big)}</p><p class="s3c-small">${esc(mv.small)}</p>` : ''}
           ${sat ? `<p class="s3c-big"><b>${fmt(sat[0])} of ${fmt(sat[1])}</b> photos are saturated: too bright to measure.</p>
             <div class="st-meter" role="img" aria-label="${sat[0]} of ${sat[1]} photos are saturated"><span style="width: ${((sat[0] / sat[1]) * 100).toFixed(1)}%"></span></div>` : ''}
-          <p class="s3c-note s3c-note-${t.tone}"><b>${t.tone === 'warn' ? 'Honest note' : 'How well it worked'}</b>${esc(t.honest)}</p>
+          <p class="s3c-note s3c-note-${t.tone}"><b>${t.tone === 'warn' ? 'Caveat' : 'How well it worked'}</b>${esc(t.honest)}</p>
           ${provenance(sample, 'NASA SPHEREx')}`);
         cbody.replaceChildren(v.el);
         return;

@@ -37,7 +37,7 @@ const PREVIEW = {
 const GAMES: GameDef[] = [
   { id: 'tune', title: 'Tune the Rewind', promise: 'Line up real photos until a hidden asteroid appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
   { id: 'rainbow', title: 'Rainbow Detective', promise: 'Read an object\'s colours. Rocky, carbon, metal or ice?', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
-  { id: 'where', title: 'Where will it be?', promise: 'Guess where a find goes next. See old photos shrink the doubt.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
+  { id: 'where', title: 'Where will it be?', promise: 'Guess where a find goes next. Then see how old photos narrow it down.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
 ];
 
 /** The open game lives in ?game= (before the hash), so a link to one game can be shared. */
@@ -55,7 +55,7 @@ export const detectivesView: View = async (body, ctx) => {
     <div class="gm">
       <header class="gm-head">
         <h1 class="gm-h">Play with real space photos.</h1>
-        <p class="gm-lead">Three small games. Each one is a job Rewind does for real.</p>
+        <p class="gm-lead">Three small games. Each game is one step of the real pipeline.</p>
       </header>
       <nav class="gm-tabs" role="tablist" aria-label="Games" hidden>
         <button role="tab" data-game="hub" class="gm-tab gm-tab-all" aria-selected="false">All games</button>
@@ -63,7 +63,7 @@ export const detectivesView: View = async (body, ctx) => {
       </nav>
       <div class="gm-hub">
         ${GAMES.map((g, i) => `
-          <button class="gm-card gm-card-${g.id}" data-game="${g.id}" style="--i:${i}">
+          <div class="gm-slot"><button class="gm-card gm-card-${g.id}" data-game="${g.id}" style="--i:${i}">
             <span class="gm-card-pv">${g.preview}</span>
             <span class="gm-card-txt">
               <span class="gm-card-level mono"><b>0${i + 1}</b>${esc(g.level)}</span>
@@ -71,7 +71,7 @@ export const detectivesView: View = async (body, ctx) => {
               <span class="gm-card-p">${esc(g.promise)}</span>
               <span class="gm-card-go">Play<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
             </span>
-          </button>`).join('')}
+          </button></div>`).join('')}
       </div>
       <div class="gm-mount" hidden></div>
     </div>`;

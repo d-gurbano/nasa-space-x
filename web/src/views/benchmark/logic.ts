@@ -28,7 +28,7 @@ export interface BenchSummary {
 }
 
 /** One brightness bin of the completeness curve (V magnitude from v_min to v_max). */
-export interface CurveBin { v_min?: number; v_max?: number; n?: number; found?: number; found_or_hint?: number }
+export interface CurveBin { v_min?: number; v_max?: number; n?: number; found?: number; found_or_hint?: number; seen_by_oracle?: number }
 
 /** benchmark.json. v2 adds types, decoys, the curve and keeps the first test under v1; every field may be missing. */
 export interface Bench {
@@ -57,6 +57,17 @@ export function tally(cases: BenchCase[]) {
   const n = { found: 0, hint: 0, missed: 0, quiet: 0, false: 0 };
   for (const c of cases) n[outcome(c)]++;
   return { ...n, total: cases.length, seen: n.found + n.hint + n.missed };
+}
+
+/** The one false-alarm sentence used on every page: "0 false alarms in 23 real cases and 22 empty-sky decoys". */
+export function alarmLine(t: ReturnType<typeof tally>, decoys: ReturnType<typeof decoyTally>): string {
+  const n = t.false + decoys.false;
+  return `${n} false ${n === 1 ? 'alarm' : 'alarms'} in ${t.total} real ${t.total === 1 ? 'case' : 'cases'}${decoys.ran ? ` and ${decoys.ran} empty-sky ${decoys.ran === 1 ? 'decoy' : 'decoys'}` : ''}`;
+}
+
+/** The engine's method note, in plain words where it uses shorthand. */
+export function methodText(s: string): string {
+  return s.replace('missed excludes hints. Frames listed with MOST (full orbit).', "'Missed' doesn't count hints. Frame lists come from the MOST service using the full orbit.");
 }
 
 /** Empty-sky decoys: how many ran, and how many Rewind wrongly called a find. */
@@ -91,10 +102,12 @@ export function median(sorted: number[]): number | null {
   return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
 }
 
-/** The curve as bar heights: share found and share hint in each brightness bin. Empty bins are dropped. */
+/** The curve as bar heights: share found and share hint in each brightness bin, out of the objects
+ *  SPHEREx could see (seen_by_oracle when given, as in the headline). Empty bins are dropped. */
 export function curveBars(curve: CurveBin[]) {
-  return curve.filter((b) => (b.n ?? 0) > 0).map((b) => {
-    const n = b.n!, found = Math.min(n, b.found ?? 0), hint = Math.max(0, Math.min(n, b.found_or_hint ?? found) - found);
+  const seen = (b: CurveBin) => b.seen_by_oracle ?? b.n ?? 0;
+  return curve.filter((b) => seen(b) > 0).map((b) => {
+    const n = seen(b), found = Math.min(n, b.found ?? 0), hint = Math.max(0, Math.min(n, b.found_or_hint ?? found) - found);
     return { label: !b.v_min ? `under ${b.v_max}` : `${b.v_min} to ${b.v_max}`, n, found, hint };
   });
 }
@@ -128,12 +141,13 @@ export function explain(c: BenchCase): string {
       return `Rewind found it blind${c.pos_err_arcsec ? `, ${c.pos_err_arcsec.toFixed(1)} arcsec from its true position` : ''}.`;
     case 'hint': {
       const why = failedChecks(c);
-      return `Rewind saw a signal but did not call it a find${why.length ? ': ' + why.join(', and ') : ''}.`;
+      const s = why.length ? why.join(', and ') : 'not every check passed';
+      return `${s[0].toUpperCase()}${s.slice(1)}.`;
     }
     case 'missed':
       return `SPHEREx did record it${sn(c.oracle_snr, ' at the true position')}, but on Rewind's rough early path the signal was too weak. Rewind said ${said(c)} and did not guess.`;
     case 'quiet':
-      return `SPHEREx did not see this one clearly${sn(c.oracle_snr, ' at the true position, under the line of 5')}. Rewind said ${said(c)}, not Found, so there is no false alarm.`;
+      return `SPHEREx did not see this one clearly${sn(c.oracle_snr, ' at the true position, under the line of 5')}. Rewind said ${said(c)}, not Found.`;
     case 'false':
       return 'Rewind said Found, but SPHEREx did not really see it. This is a false alarm.';
   }

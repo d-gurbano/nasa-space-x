@@ -9,7 +9,7 @@ import { plainDate } from '../lib/time';
 import { simpleSpectrum, TYPE_PLAIN } from './panel-chart';
 import { el, esc, fixPlural, fmt, plural, provenance } from './dom';
 import { verdictWord } from './topbar';
-import { beforeWhat, daysBefore, isKnown } from '../lib/rank';
+import { beforeWhat, daysBefore, isKnown, seenNotEarlier } from '../lib/rank';
 import { oneSentence } from './panel-text';
 import type { Level } from '../scene/Scene';
 
@@ -83,7 +83,7 @@ export class ObjectPanel {
     this.root.hidden = false;
     void this.root.offsetWidth;
     this.root.classList.add('pn-in');
-    this.body.innerHTML = `<header class="op-head"><div class="op-title"><h2 class="op-name">${esc(o.name)}</h2></div><p class="op-type">${esc(KIND[o.kind] ?? o.kind)}</p><p class="muted">Loading...</p></header>`;
+    this.body.innerHTML = `<header class="op-head"><div class="pn-title"><h2 class="op-name">${esc(o.name)}</h2></div><p class="op-type">${esc(KIND[o.kind] ?? o.kind)}</p><p class="muted">Loading...</p></header>`;
   }
 
   fail(msg: string) {
@@ -190,7 +190,7 @@ export class ObjectPanel {
     }
     const early = what.includes('before anyone');
     return `<header class="op-head">
-      <div class="op-title"><h2 class="op-name">${esc(p.name ?? o.name)}</h2><span class="verdict-chip v-${v.toLowerCase()}">${known && v === 'FOUND' ? 'Seen' : verdictWord(v)}</span></div>
+      <div class="pn-title"><h2 class="op-name">${esc(p.name ?? o.name)}</h2>${seenNotEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : `<span class="verdict-chip v-${v.toLowerCase()}">${known && v === 'FOUND' ? 'Seen' : verdictWord(v)}</span>`}</div>
       <p class="op-type">${bits.map(esc).join(' <span aria-hidden="true">·</span> ')}</p>
       <div class="op-stat${v === 'FOUND' || v === 'HINT' ? ' op-stat-gold' : ''}">
         <span class="op-num">${num}</span>

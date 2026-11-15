@@ -120,6 +120,7 @@
 .tr-dial-knob { fill: var(--gold); stroke: var(--space); stroke-width: 3; transition: r var(--t-fast); }
 .tr-dial:hover .tr-dial-knob, .tr-dial.drag .tr-dial-knob { r: 11px; }
 .tr-dial:focus-visible .tr-dial-face { stroke: var(--gold); stroke-width: 2; }
+.tr-dial-note { position: absolute; left: 0; right: 0; bottom: -18px; text-align: center; font-size: var(--fs-2xs); color: var(--ink-3); pointer-events: none; }
 .tr-dial-val { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: var(--fs-l); color: var(--ink); font-variant-numeric: tabular-nums; pointer-events: none; }
 
 .tr-tape { width: 100%; display: grid; gap: 10px; justify-items: center; touch-action: none; cursor: ew-resize; outline: none; }

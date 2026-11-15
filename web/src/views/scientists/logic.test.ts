@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bytes, filterRows, gainRange, km, lead, snrBar, sortRows, splitContract, toCsv, type Row } from './logic';
+import { bytes, filterRows, notEarlier, gainRange, km, lead, snrBar, sortRows, splitContract, toCsv, type Row } from './logic';
 
 const row = (name: string, verdict: Row['verdict'], snr: number | null, extra: Partial<Row> = {}): Row => ({
   slug: name.toLowerCase().replace(/[^a-z0-9]/g, ''), name, kind: 'neo', verdict, verdict_text: `${name}, "quoted"`,
@@ -18,7 +18,9 @@ const rows = [
 
 describe('results table', () => {
   it('filters by verdict and by name, ignoring spaces and slashes', () => {
-    expect(filterRows(rows, 'FOUND', '').length).toBe(3);
+    expect(filterRows(rows, 'FOUND', '').length).toBe(2);
+    expect(filterRows(rows, 'KNOWN', '').map((o) => o.name)).toEqual(['433 Eros']);
+    expect(rows.filter(notEarlier).map((o) => o.name)).toEqual(['C/2025 W2']);
     expect(filterRows(rows, 'ALL', 'st20').map((o) => o.name)).toEqual(['2025 ST20']);
     expect(filterRows(rows, 'ALL', 'c/2025 w').map((o) => o.name)).toEqual(['C/2025 W2']);
     expect(filterRows(rows, 'HINT', 'st20')).toEqual([]);

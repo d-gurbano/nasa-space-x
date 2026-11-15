@@ -118,6 +118,9 @@ body:not(.scene-ready) .timebar { visibility: hidden; }
 .tb-pop-when { font: var(--w-medium) var(--fs-2xs) / 1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-2); }
 .tb-pop-label { font-size: var(--fs-xs); line-height: 1.35; color: var(--ink-2); white-space: normal; }
 
+/* a new find whose photos are not earlier than the first known observation */
+.verdict-chip.v-seen { color: var(--ink-2); }
+
 /* ---------- opening ---------- */
 .opening {
   position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 96px clamp(24px, 6vw, 96px) clamp(40px, 8vh, 88px);
@@ -126,7 +129,7 @@ body:not(.scene-ready) .timebar { visibility: hidden; }
 }
 .op-out { opacity: 0; pointer-events: none; }
 .explored .opening { visibility: hidden; }
-.op-inner { max-width: 900px; }
+.op-inner { max-width: min(900px, 100%); min-width: 0; }
 .op-inner > * { animation: rise var(--t-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 120ms + 250ms); }
 .op-kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 var(--g3); color: var(--ink-2); }
 .op-kicker::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
@@ -153,6 +156,8 @@ body:not(.scene-ready) .timebar { visibility: hidden; }
 .cap-dots i.on { background: var(--gold); }
 .cap-skip { padding: var(--g) 12px; font: var(--w-medium) var(--fs-2xs) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-2); border: 1px solid var(--line-2); border-radius: var(--pill); background: rgba(8, 10, 15, 0.5); }
 .cap-skip:hover { color: var(--ink); border-color: var(--ink-3); }
+/* the panel or photo card owns the right side: keep captions in the free space to its left */
+@media (min-width: 721px) { .obj-open .captions, .card-open .captions { left: calc((100vw - min(440px, calc(100vw - 32px)) - 32px) / 2); width: min(92vw - 472px, 760px); } }
 
 /* ---------- picking: ring and card on the object under the pointer ---------- */
 .pick { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity var(--t-fast) var(--ease), visibility 0s var(--t-fast); will-change: transform; }

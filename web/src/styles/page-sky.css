@@ -38,7 +38,7 @@
   border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel-2);
   transition: border-color var(--t-fast), transform var(--t) var(--ease-out);
 }
-.sky-card:hover, .sky-card:focus-visible { border-color: var(--gold-line); transform: translateY(-2px); }
+.sky-cards li:hover > .sky-card, .sky-card:focus-visible { border-color: var(--gold-line); transform: translateY(-2px); }
 /* the tile behind the photo is a few faint stars, so a spot with no photo still looks like sky */
 .sky-thumb {
   display: block; aspect-ratio: 4 / 3; overflow: hidden; background-color: #000;
@@ -46,7 +46,7 @@
     radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.5) 0 1px, transparent 1.5px), radial-gradient(circle at 36% 76%, rgba(255, 217, 138, 0.7) 0 1.2px, transparent 1.8px), radial-gradient(circle at 52% 48%, rgba(255, 255, 255, 0.35) 0 1px, transparent 1.5px);
 }
 .sky-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: opacity var(--t-fast), transform var(--t-slow) var(--ease-out); }
-.sky-card:hover img { opacity: 1; transform: scale(1.04); }
+.sky-cards li:hover > .sky-card img { opacity: 1; transform: scale(1.04); }
 .sky-card-name { padding: 12px 12px 0; font: var(--w-semi) var(--fs-m) / 1.25 var(--font-display); letter-spacing: var(--track-display); color: var(--ink); }
 .sky-card-what { padding: 4px 12px 14px; font-size: var(--fs-s); line-height: 1.35; color: var(--ink-3); }
 

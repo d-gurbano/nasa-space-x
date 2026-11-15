@@ -463,10 +463,23 @@ export class Scene {
       }
     }
     this.pickEl.classList.toggle('on', !!h && this.place(this.pickEl, h));
+    let clash = false;
     if (this.pinned >= 0 && this.place(this.pinEl, { planet: true, k: this.pinned })) {
       const html = this.planetCard?.(this.planets[this.pinned].name) ?? '';
       if (html !== this.pinHtml) (this.pinEl.lastElementChild as HTMLElement).innerHTML = this.pinHtml = html;
+      // the hover card must not sit on the pinned planet card: flip it to the other side of its dot,
+      // and if it still overlaps, fade the pinned card until the hover ends
+      if (h && this.pickEl.classList.contains('on') && this.pinEl.classList.contains('on')) {
+        const pin = (this.pinEl.lastElementChild as HTMLElement).getBoundingClientRect();
+        const card = this.pickEl.lastElementChild as HTMLElement;
+        if (overlap(card.getBoundingClientRect(), pin)) {
+          this.pickEl.classList.toggle('up');
+          clash = overlap(card.getBoundingClientRect(), pin);
+        }
+      }
     }
+    this.pinEl.style.opacity = clash ? '0.25' : '';
+    this.pinEl.style.pointerEvents = clash ? 'none' : '';
   }
 
   // ---------- orbit lines of Rewind objects ----------
@@ -751,4 +764,8 @@ export class Scene {
     };
     requestAnimationFrame(loop);
   }
+}
+
+function overlap(a: DOMRect, b: DOMRect): boolean {
+  return a.width > 0 && b.width > 0 && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }

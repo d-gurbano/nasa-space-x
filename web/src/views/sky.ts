@@ -101,7 +101,7 @@ export const skyView: View = async (body, ctx) => {
       <ul class="sky-cards">${TARGETS.map((t) => spot(t, true)).join('')}${meta ? FIELDS.map((t) => spot(t, false)).join('') : ''}</ul>
       ${meta ? `<div class="sky-more">
         ${finds.length ? `<select class="chip sky-finds" aria-label="A Rewind find, where SPHEREx saw it"><option value="">A Rewind find...</option>${finds.map((o) => `<option value="${esc(o.slug)}">${esc(o.name)}</option>`).join('')}</select>` : ''}
-        <button class="chip chip-gold sky-lucky">I'm feeling lucky</button>
+        <button class="chip chip-gold sky-lucky">Random spot</button>
       </div>` : ''}
     </section>
     <div class="sky-out" aria-live="polite"></div>`;

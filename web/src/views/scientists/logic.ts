@@ -17,10 +17,26 @@ export interface Sort { key: SortKey; dir: 1 | -1 }
 
 const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-/** Rows of one verdict (or all) whose name or slug contains the search text; spaces and "/" do not matter. */
-export function filterRows(rows: Row[], verdict: Verdict | 'ALL', q: string): Row[] {
+/** A results-table tab: a verdict, all rows, or the known objects run as controls. */
+export type Tab = Verdict | 'ALL' | 'KNOWN';
+
+/** FOUND means a new find, the same count as the rest of the site; known controls have their own tab. */
+export function inTab(o: Row, tab: Tab): boolean {
+  if (tab === 'ALL') return true;
+  if (tab === 'KNOWN') return o.verdict === 'FOUND' && isKnown(o);
+  if (tab === 'FOUND') return o.verdict === 'FOUND' && !isKnown(o);
+  return o.verdict === tab;
+}
+
+/** A new find whose SPHEREx photos are not earlier than the first known observation. */
+export function notEarlier(o: Row): boolean {
+  return o.verdict === 'FOUND' && !isKnown(o) && !((o.days_before_first_known_obs ?? 0) > 0);
+}
+
+/** Rows of one tab whose name or slug contains the search text; spaces and "/" do not matter. */
+export function filterRows(rows: Row[], tab: Tab, q: string): Row[] {
   const k = key(q);
-  return rows.filter((o) => (verdict === 'ALL' || o.verdict === verdict) && (!k || key(o.name).includes(k) || o.slug.includes(k)));
+  return rows.filter((o) => inTab(o, tab) && (!k || key(o.name).includes(k) || o.slug.includes(k)));
 }
 
 /** "verdict" is the site's own ranking (finds first, stronger signal first). Empty values always go last. */

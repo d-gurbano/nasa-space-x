@@ -18,7 +18,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
     <a class="logo" href="#/" aria-label="Rewind home">Rewind<span class="logo-dot">.</span></a>
     <div class="search">
       <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input type="search" placeholder="Search an asteroid or comet" aria-label="Search objects" autocomplete="off" spellcheck="false">
+      <input type="search" placeholder="${matchMedia('(max-width: 480px)').matches ? 'Search objects' : 'Search an asteroid or comet'}" aria-label="Search objects" autocomplete="off" spellcheck="false">
       <ul class="search-results" role="listbox" hidden></ul>
     </div>
     <div class="tb-end">

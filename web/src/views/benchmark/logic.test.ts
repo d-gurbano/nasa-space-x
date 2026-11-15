@@ -32,7 +32,7 @@ describe('benchmark logic', () => {
   it('explains a hint with the checks that failed', () => {
     const c = mk('seen', 'HINT', { checks: { snr: true, time_shift: false } });
     expect(failedChecks(c)).toEqual(['the signal is not strongest at the right time']);
-    expect(explain(c)).toBe('Rewind saw a signal but did not call it a find: the signal is not strongest at the right time.');
+    expect(explain(c)).toBe('The signal is not strongest at the right time.');
   });
 
   it('survives cases without the optional fields', () => {
@@ -79,7 +79,8 @@ describe('benchmark v2 file', () => {
 
   it('turns the curve into bars that never exceed the bin', () => {
     const bars = curveBars(data.completeness_curve ?? []);
-    expect(bars.length).toBe(5);
+    expect(bars.length).toBe(4);
+    expect(bars.reduce((a, b) => a + b.n, 0)).toBe(18);
     for (const b of bars) expect(b.found + b.hint).toBeLessThanOrEqual(b.n);
     expect(curveBars([{ n: 0 }, {}])).toEqual([]);
   });

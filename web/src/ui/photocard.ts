@@ -2,7 +2,7 @@
 import type { FlashEvent, IndexObject, ObjectPage } from '../lib/types';
 import { plainDate } from '../lib/time';
 import { el, esc, fixPlural, plural, provenance } from './dom';
-import { beforeWhat, isKnown, knownSince } from '../lib/rank';
+import { beforeWhat, daysBefore, isKnown, knownSince } from '../lib/rank';
 
 export function mountPhotoCard(root: HTMLElement, opts: {
   sample: boolean;
@@ -39,7 +39,9 @@ export function mountPhotoCard(root: HTMLElement, opts: {
     // whole days between this photo and the moment anyone had the object; a photo the engine
     // marks as taken after the first known observation is an extra position, not a find before it
     const days = o && f.before_first_known_obs !== false && knownSince(o) > f.mjd ? Math.floor(knownSince(o) - f.mjd) : null;
-    const before = o ? `Before ${beforeWhat(o)}` : '';
+    const before = o ? `before ${beforeWhat(o)}` : '';
+    // the card shows the photo at the time bar's date; the object's earliest photo can be older
+    const earliest = o ? Math.round(daysBefore(o) ?? 0) : 0;
     const guessDay = /\/days\//.test(f.photo);
     card.innerHTML = `
       <div class="pc-head">
@@ -55,11 +57,9 @@ export function mountPhotoCard(root: HTMLElement, opts: {
         <div><dt>S/N</dt><dd class="pc-snr">${f.snr != null ? f.snr.toFixed(1) : '...'}</dd></div>
         ${o && isKnown(o)
           ? `<div><dt>Note</dt><dd>Known object - shows what SPHEREx sees</dd></div>`
-          : days !== null && days > 0
-            ? `<div class="pc-gold"><dt>${before}</dt><dd>${plural(days, 'day')}</dd></div>`
-            : days === 0
-              ? `<div class="pc-gold"><dt>${before}</dt><dd>hours</dd></div>`
-              : `<div><dt>Note</dt><dd>${esc(fixPlural(f.label))}</dd></div>`}
+          : days !== null && days >= 0
+            ? `<div class="pc-gold"><dt>This photo</dt><dd>${days > 0 ? plural(days, 'day') : 'hours'} ${esc(before)}</dd></div>${earliest > days ? `<div><dt>Earliest</dt><dd>${plural(earliest, 'day')}</dd></div>` : ''}`
+            : `<div><dt>Note</dt><dd>${esc(fixPlural(f.label))}</dd></div>`}
       </dl>
       <div class="pc-foot">${provenance(opts.sample, 'NASA SPHEREx')}<button class="pc-open chip chip-gold">Open ${esc(name)}</button></div>`;
     card.hidden = false;

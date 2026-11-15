@@ -82,13 +82,3 @@ Keplerian elements for Mercury to Neptune (JPL "approximate positions of the pla
 Planted fakes are labelled as planted after the user answers.
 
 PNG rules: north up, east left; one shared brightness stretch per object; at most 512 px; nearest-neighbour upscaling so pixels stay honest.
-
-## Website notes (c2-web)
-
-What the website accepts beyond the text above:
-- planets.json: either flat rows `{name, a, a_rate, e, e_rate, i, i_rate, L, L_rate, varpi, varpi_rate, node, node_rate}` (data-sample) or JPL-style rows `{name, a, e, I, L, long_peri, long_node, rates: {a, e, I, L, long_peri, long_node}}` (engine). Rates are per Julian century from J2000.
-- orbits.bin.json: `epoch_mjd` is read if present; otherwise the website reads it from orbits.json.
-- orbits rows with e >= 1, a <= 0 or NaN are skipped in the 3D view (hyperbolic comets are not drawn).
-- Optional extension: a `disc_mjd` column in `fields` lets each dot turn grey before its own discovery date. Without it, objects with the new_since_2025 flag turn grey before 2025-04-01.
-- object.json: `orbit` may have null fields and `cloud` may be null; the site then shows no moving dot and no cloud, and uses the flash event's stored positions for the beam. `checks.passed` (booleans) is used for the Pass/Weak marks when present.
-- detectives/rounds.json: the site reads schema `rewind-detectives-v2`. Per round: `frames: [{png, iso, wavelength_um}]`, `truth: known|planted|empty`, `track_xy` (one [x, y] per frame in PNG pixels, or null), `tolerance_px`, `explain`, `difficulty`; top level `real_rounds_note` is shown on the page as it is. The v1 fields of section 7 (`images`, `answer_xy`) are not read any more. The game shows every round at the same width of sky (121.5 arcsec), which it takes from the PNG width: 324 px means an asteroid cutout at 0.375 arcsec per PNG pixel, any other width means 1.23 arcsec per PNG pixel. A mark counts when it is within `tolerance_px` of the track in any frame, and never further than a tenth of the width shown.

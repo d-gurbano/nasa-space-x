@@ -51,15 +51,15 @@
 
 /* the grid of cards */
 .dw-grid { list-style: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; }
-.dw-grid li { max-width: none; perspective: 900px; animation: rise var(--t-slow) var(--ease-out) both; animation-delay: calc(var(--i) * 50ms); }
-.dw-flip { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; border: 0; background: none; color: inherit; text-align: left; transform-style: preserve-3d; transition: transform 620ms var(--ease-out); }
+.dw-grid li { max-width: none; perspective: 900px; cursor: pointer; animation: rise var(--t-slow) var(--ease-out) both; animation-delay: calc(var(--i) * 50ms); }
+.dw-flip { position: relative; display: block; width: 100%; aspect-ratio: 4 / 5; padding: 0; pointer-events: none; border: 0; background: none; color: inherit; text-align: left; transform-style: preserve-3d; transition: transform 620ms var(--ease-out); }
 .dw-flip[aria-pressed='true'] { transform: rotateY(180deg); }
 .dw-face {
   position: absolute; inset: 0; display: flex; flex-direction: column; padding: 12px; overflow: hidden;
   border: 1px solid var(--line); border-radius: var(--r2); background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)), var(--panel-2);
   backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: border-color var(--t);
 }
-.dw-flip:hover .dw-face, .dw-flip:focus-visible .dw-face { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
+.dw-grid li:hover .dw-face, .dw-flip:focus-visible .dw-face { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
 .dw-flip:focus-visible { outline: none; }
 .dw-flip:focus-visible .dw-face { box-shadow: 0 0 0 2px var(--c); }
 .dw-back { transform: rotateY(180deg); gap: 10px; background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--panel-2); }
@@ -93,6 +93,7 @@
 .dw-when { font-size: var(--fs-2xs); color: var(--ink-3); }
 
 .page-content > .dw-hint-line { max-width: none; margin: var(--g2) 0 0; font-size: var(--fs-s); color: var(--ink-3); }
+.page-content > .dw-rule { margin: var(--g4) 0 var(--g2); }
 
 /* how the test works: three steps in one strip */
 .dw-how { list-style: none; counter-reset: dw; display: grid; grid-template-columns: repeat(3, 1fr); padding: 0; margin: var(--g6) 0 var(--g4); border-block: 1px solid var(--line); }

@@ -318,13 +318,13 @@ export class Neighbourhood {
 
   private nearest(cx: number, cy: number, maxPx: number): string | null {
     const r = this.canvas.getBoundingClientRect();
-    let best: string | null = null, bd = maxPx;
+    let best: string | null = null, bd = Infinity;
     for (const b of this.bodies) {
       const p = this.screen(b.pos);
       if (!p) continue;
-      // a big sphere in the close-up counts all over, not only near its centre
-      const d = Math.max(0, Math.hypot(p[0] - (cx - r.left), p[1] - (cy - r.top)) - b.r / this.pxAt(b.pos));
-      if (d < bd) [bd, best] = [d, b.star.id];
+      // a big sphere in the close-up counts all over, but the nearest centre wins (Barnard's Star beside the Sun)
+      const d = Math.hypot(p[0] - (cx - r.left), p[1] - (cy - r.top));
+      if ((d < maxPx || d < b.r / this.pxAt(b.pos)) && d < bd) [bd, best] = [d, b.star.id];
     }
     return best;
   }

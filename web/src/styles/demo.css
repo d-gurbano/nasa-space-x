@@ -1,0 +1,83 @@
+/* ?demo=1: the recorded film. Big type, one caption at a time, 300 ms fades, no site chrome. */
+.demo .label-rewind, .demo .label-beam, .demo .pick, .demo .demo-cap { display: none !important; }
+
+.dm { position: fixed; inset: 0; z-index: 20; pointer-events: none; font-family: var(--font); color: var(--ink); }
+.dm-dim, .dm-white { position: absolute; inset: 0; opacity: 0; }
+.dm-dim { background: var(--space); }
+.dm-white { background: #fff; mix-blend-mode: screen; }
+.dm em { font-style: normal; color: var(--gold); }
+
+/* fades: every block is hidden until it has .on */
+.dm-panel, .dm-card, .dm-info, .dm-title, .dm-cap, .dm-end, .dm-ring, .dm-num { opacity: 0; transition: opacity 300ms var(--ease-out), transform 600ms var(--ease-out); }
+.dm .on { opacity: 1; }
+
+/* lower third */
+.dm-cap {
+  position: absolute; left: 6vw; bottom: 7vh; max-width: min(52vw, 1000px);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.35em;
+  font: var(--w-semi) clamp(28px, 2.7vw, 54px) / 1.14 var(--font-display); letter-spacing: var(--track-display);
+  text-wrap: balance; text-shadow: 0 2px 24px var(--space), 0 0 6px var(--space);
+  transform: translateY(8px);
+}
+.dm-cap.on { transform: none; }
+.dm-kick { display: flex; align-items: center; gap: 12px; font: var(--w-medium) clamp(13px, 0.95vw, 19px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--gold-2); }
+.dm-kick::before { content: ''; width: 36px; height: 1px; background: var(--gold); }
+.dm-chip {
+  display: inline-block; margin-top: 0.35em; padding: 0.4em 0.9em; border: 1px solid var(--warn); border-radius: var(--pill);
+  font: var(--w-medium) clamp(13px, 0.95vw, 19px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--warn);
+  background: rgba(3, 4, 7, 0.6); text-shadow: none;
+}
+.dm-date { font: var(--w-display) clamp(56px, 6.2vw, 120px) / 0.95 var(--font-display); font-variant-numeric: tabular-nums; color: var(--blue-2); }
+.dm-big { font: var(--w-display) clamp(56px, 6.2vw, 120px) / 0.95 var(--font-display); color: var(--gold); }
+.dm-stats { display: flex; flex-direction: column; gap: 0.1em; }
+.dm-stats b { color: var(--gold); font-weight: var(--w-display); font-variant-numeric: tabular-nums; }
+.dm-cap:has(.dm-stats) { max-width: 80vw; }
+
+/* opening title and end card, centred */
+.dm-title, .dm-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; text-shadow: 0 2px 30px var(--space); }
+.dm-title { font: var(--w-display) clamp(44px, 5.2vw, 104px) / 1 var(--font-display); letter-spacing: var(--track-display); padding-bottom: 6vh; }
+.dm-end { gap: 2.2vh; }
+.dm-end b { font: var(--w-display) clamp(64px, 8vw, 160px) / 0.9 var(--font-display); letter-spacing: var(--track-display); }
+.dm-end span { font: var(--w-medium) clamp(26px, 2.4vw, 48px) / 1.1 var(--font-display); }
+.dm-end small { margin-top: 3vh; font: var(--w-medium) clamp(12px, 0.85vw, 17px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-2); }
+
+/* the overlay panel, right side, always above the lower third */
+.dm-panel { position: absolute; right: 5vw; top: 8vh; height: 64vh; display: grid; }
+.dm-card, .dm-info {
+  grid-area: 1 / 1; align-self: start; justify-self: end;
+  display: flex; flex-direction: column; gap: 1.4vh; padding: 2.2vh;
+  background: #07090e; border: 1px solid var(--gold-line); border-radius: var(--r2);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+}
+.dm-card-kick { font: var(--w-medium) clamp(12px, 0.9vw, 18px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--gold-2); }
+.dm-card-foot { font: var(--w-medium) clamp(14px, 1.1vw, 22px) / 1.2 var(--font); color: var(--ink-2); }
+.dm-photo { position: relative; width: 44vh; height: 44vh; border-radius: var(--r); overflow: hidden; background: #000; }
+.dm-stack { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.dm-ring { position: absolute; left: 50%; top: 50%; width: 24%; aspect-ratio: 1; border: 3px solid var(--gold); border-radius: 50%; transform: translate(-50%, -50%) scale(1.4); box-shadow: 0 0 18px rgba(255, 195, 90, 0.5); }
+.dm-ring.on { transform: translate(-50%, -50%) scale(1); }
+.dm-days { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; width: 44vh; }
+.dm-days img { width: 100%; aspect-ratio: 1; display: block; border-radius: 3px; outline: 1px solid transparent; opacity: 0; image-rendering: pixelated; }
+.dm-days img.lit { outline-color: var(--gold); }
+
+.dm-info-body { display: flex; align-items: center; gap: 3vh; }
+.dm-info svg { width: 40vh; height: 44.4vh; overflow: visible; }
+.dm-c-blue, .dm-c-gold { transition: none; }
+.dm-svg-label { font: 500 6px var(--font); fill: var(--ink-2); }
+.dm-nums { display: flex; flex-direction: column; gap: 3vh; min-width: 30vh; }
+.dm-num { display: flex; flex-direction: column; gap: 0.6vh; transition: opacity 300ms var(--ease-out); }
+.dm-num.on.past { opacity: 0.45; }
+.dm-num small { font: var(--w-medium) clamp(12px, 0.9vw, 18px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--blue-2); }
+.dm-num b { font: var(--w-display) clamp(30px, 2.9vw, 58px) / 1 var(--font-display); letter-spacing: var(--track-display); color: var(--blue-2); white-space: nowrap; }
+.dm-num span { font: var(--w-medium) clamp(14px, 1.05vw, 21px) / 1.2 var(--font); color: var(--ink-2); }
+.dm-num.gold small, .dm-num.gold b { color: var(--gold); }
+
+/* ?guide=1: title-safe (90%) and action-safe (95%) frames */
+.dm-guide { position: absolute; inset: 0; }
+.dm-guide i { position: absolute; border: 1px dashed rgba(255, 80, 80, 0.7); }
+.dm-guide i:first-child { inset: 2.5%; }
+.dm-guide i:nth-child(2) { inset: 5%; border-color: rgba(80, 200, 255, 0.7); }
+.dm-guide span { position: absolute; left: 5%; top: 5%; padding: 2px 6px; font: 500 11px var(--mono); background: rgba(255, 80, 80, 0.85); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-panel, .dm-card, .dm-info, .dm-title, .dm-cap, .dm-end, .dm-ring, .dm-num { transition-duration: 1ms; }
+}
