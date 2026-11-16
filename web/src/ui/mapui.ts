@@ -19,7 +19,7 @@ const KIND: Record<IndexObject['kind'], string> = {
 };
 
 const LAYER_ROWS: [Layer, string, string][] = [
-  ['found', 'Found before discovery', 'var(--gold)'],
+  ['found', 'Precoveries', 'var(--gold)'],
   ['searched', 'Searched', 'var(--blue-2)'],
   ['neo', 'Near-Earth', '#6badeb'],
   ['comet', 'Comets', '#b3e0f2'],
@@ -91,7 +91,16 @@ export function mountMapUi(root: HTMLElement, scene: Scene, objects: IndexObject
   const t = tally(objects);
   const refresh = () => {
     const n = { ...scene.layerCounts(), found: t.before, searched: t.searched };
-    layers.querySelectorAll<HTMLButtonElement>('[data-layer]').forEach((b) => ((b.lastElementChild as HTMLElement).textContent = fmt(n[b.dataset.layer as Layer])));
+    // the background asteroid layers are empty until orbits.bin has loaded: show a placeholder, not "0"
+    const loaded = document.body.classList.contains('dots-ready');
+    const pending = new Set<Layer>(['neo', 'comet', 'mba']);
+    layers.querySelectorAll<HTMLButtonElement>('[data-layer]').forEach((b) => {
+      const k = b.dataset.layer as Layer;
+      const out = b.lastElementChild as HTMLElement;
+      const wait = !loaded && pending.has(k);
+      out.textContent = wait ? '…' : fmt(n[k]);
+      out.title = wait ? 'Loading' : '';
+    });
   };
   refresh();
 

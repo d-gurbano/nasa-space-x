@@ -17,6 +17,9 @@ export interface BenchCase {
   median_blind_minus_true_arcsec?: number | null;
   checks?: Record<string, boolean>;
   note?: string;
+  /** SPHEREx images used in the blind stack, and the length of the truncated arc. */
+  n_frames?: number | null;
+  arc_days?: number | null;
 }
 
 export interface BenchSummary {
@@ -138,18 +141,18 @@ const sn = (v: number | null | undefined, tail: string) => (typeof v === 'number
 export function explain(c: BenchCase): string {
   switch (outcome(c)) {
     case 'found':
-      return `Rewind found it blind${c.pos_err_arcsec ? `, ${c.pos_err_arcsec.toFixed(1)} arcsec from its true position` : ''}.`;
+      return `Recovered blind${c.pos_err_arcsec ? `, ${c.pos_err_arcsec.toFixed(1)}″ from the JPL Horizons position` : ''}.`;
     case 'hint': {
       const why = failedChecks(c);
       const s = why.length ? why.join(', and ') : 'not every check passed';
       return `${s[0].toUpperCase()}${s.slice(1)}.`;
     }
     case 'missed':
-      return `SPHEREx did record it${sn(c.oracle_snr, ' at the true position')}, but on Rewind's rough early path the signal was too weak. Rewind said ${said(c)} and did not guess.`;
+      return `Detectable at the true position${sn(c.oracle_snr, '')}, but the short-arc prediction was too far off for the stack to build up. Classified ${said(c)}, so no false FOUND.`;
     case 'quiet':
-      return `SPHEREx did not see this one clearly${sn(c.oracle_snr, ' at the true position, under the line of 5')}. Rewind said ${said(c)}, not Found.`;
+      return `Below the detection limit even at the true position${sn(c.oracle_snr, ' < 5')}. Classified ${said(c)}, not FOUND.`;
     case 'false':
-      return 'Rewind said Found, but SPHEREx did not really see it. This is a false alarm.';
+      return 'Classified FOUND although the object is not detectable at its true position: a false alarm.';
   }
 }
 

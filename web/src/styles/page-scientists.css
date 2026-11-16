@@ -176,7 +176,7 @@ th[aria-sort='ascending'] .sci-sort::before { opacity: 1; transform: translateY(
 .sci-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g3); align-items: start; }
 .sci-cards p, .sci-ai p { margin: 0 0 var(--g2); font-size: var(--fs-s); line-height: 1.55; color: var(--ink-2); }
 .sci-cards .sci-big { margin: var(--g2) 0; font: var(--w-semi) var(--fs-4xl) / 1 var(--font-display); letter-spacing: var(--track-display); color: var(--ink); }
-.sci-big span { margin-left: 12px; font: 400 var(--fs-s) / 1 var(--font); letter-spacing: 0; color: var(--ink-3); }
+.sci-big span { display: block; margin: 8px 0 0; font: 400 var(--fs-s) / 1 var(--font); letter-spacing: 0; color: var(--ink-3); }
 .sci-cards .sci-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--g); margin: 0; }
 .sci-cards p:last-child, .sci-ai p:last-child { margin-bottom: 0; }
 .sci-cc td:nth-child(2), .sci-cc td:nth-child(3), .sci-cc th:nth-child(2), .sci-cc th:nth-child(3) { text-align: left; }

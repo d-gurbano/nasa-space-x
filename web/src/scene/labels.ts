@@ -10,7 +10,7 @@ export interface LabelSpec {
   text: string;
   cls?: string;
   priority: number; // 0 = never shown on its own (only while it is the focus or selected)
-  sub?: () => string | null; // small tag after the name, e.g. "Nobody knew it yet"
+  sub?: () => string | null; // small tag after the name, e.g. "Before first known obs."
   sticky?: boolean; // show the tag all the time, not only in focus"
   pos: (out: THREE.Vector3) => THREE.Vector3 | null;
   offset?: [number, number]; // px; draws a leader line from the point to the label

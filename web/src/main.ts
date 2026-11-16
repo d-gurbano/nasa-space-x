@@ -45,9 +45,14 @@ const labelRoot = document.getElementById('labels')!;
 
 export const pages = new Map<string, Promise<ObjectPage>>();
 
+/** Old links: #/detectives was renamed #/games. Rewrites the hash in place (no extra history entry). */
+function legacyHash() {
+  if (location.hash === '#/detectives') history.replaceState(null, '', '#/games');
+}
+
 const VIEWS: Record<string, [string, string, View]> = {
   sky: ['Sky', 'Any spot in the sky', skyView],
-  detectives: ['Tune the Rewind', 'Game / stack the photos', detectivesView],
+  games: ['Games', 'Three exercises on real SPHEREx data', detectivesView],
   stars: ['Challenge stars', 'NASA challenge targets', starsView],
   benchmark: ['Does it work?', 'The "pretend it is new" test', benchmarkView],
   scientists: ['For scientists', 'Method / data / positions', scientistsView],
@@ -160,7 +165,7 @@ async function boot() {
     onOpen: select,
     onHide: () => (scene.labels.focus = null),
   });
-  // the object in the photo is the one in focus: its label shows "Nobody knew it yet"
+  // the object in the photo is the one in focus: its label shows "Before first known obs."
   const flash = new FlashFx(scene, idx.flash_events, (f) => {
     scene.labels.focus = 'obj-' + f.slug;
     card.show(f);
@@ -268,6 +273,7 @@ async function boot() {
   };
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
+    legacyHash();
     const m = location.hash.match(/^#\/object\/(.+)$/);
     const v = location.hash.match(/^#\/(\w+)$/)?.[1];
     if (v && VIEWS[v]) {
@@ -312,11 +318,11 @@ async function boot() {
   const t = tally(idx.objects);
   mountOpening(ui, {
     stats: [
-      [String(t.found), t.allBefore ? 'found before discovery' : 'found in older photos', true],
-      [String(t.searched), 'comets and asteroids searched'],
-      [fmt(idx.headline_stats.frames_read), 'SPHEREx photos read'],
+      [String(t.before), t.before === 1 ? 'precovery: detected before its first known observation' : 'precoveries: detected before their first known observation', true],
+      [String(t.searched), 'asteroids and comets searched'],
+      [fmt(idx.headline_stats.frames_read), 'SPHEREx images analysed'],
     ],
-    lastCaption: t.found ? undefined : 'Watch for the flash: an older SPHEREx photo of the same spot.',
+    lastCaption: t.before ? undefined : 'Highlighted: an earlier SPHEREx image of the same field.',
     start: loadHeavy,
     onCaption: (i) => {
       cancelAnimationFrame(demo);
@@ -369,9 +375,10 @@ function fpsMeter(scene: Scene) {
 function noWebgl() {
   document.body.classList.add('scene-ready', 'explored', 'no-webgl');
   mountTopbar(ui, source.index.objects, source.sample, () => {});
-  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/detectives">Tune the Rewind</a>, <a href="#/stars">Challenge stars</a>, <a href="#/benchmark">Does it work?</a>, <a href="#/scientists">For scientists</a>, <a href="#/about">About</a>.</p>`);
+  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/games">Games</a>, <a href="#/stars">Challenge stars</a>, <a href="#/benchmark">Does it work?</a>, <a href="#/scientists">For scientists</a>, <a href="#/about">About</a>.</p>`);
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
+    legacyHash();
     const v = location.hash.match(/^#\/(\w+)$/)?.[1];
     if (v && VIEWS[v]) host.open(v, ...VIEWS[v]);
     else host.close();

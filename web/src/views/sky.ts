@@ -26,8 +26,8 @@ const J2026 = 61041; // MJD of 2026-01-01
 // The 5 challenge targets with catalogue proper motions (mas per year), and the 2 deep fields.
 const TARGETS = [
   { id: 'wise0855', name: 'WISE 0855', what: 'The coldest known brown dwarf', ra: 133.783556, dec: -7.244052, pmra: -8123.7, pmdec: 673.2, epoch: 2015.3929, source: 'Kirkpatrick et al. 2021' },
-  { id: 'barnard', name: "Barnard's Star", what: 'The fastest-moving star in the sky', ra: 269.448503, dec: 4.73942, pmra: -801.551, pmdec: 10362.394, epoch: 2016, source: 'Gaia DR3' },
-  { id: 'epsindib', name: 'Epsilon Indi B', what: 'A pair of brown dwarfs, 12 light-years away', ra: 331.076453, dec: -56.793812, pmra: 3981.977, pmdec: -2466.832, epoch: 2016, source: 'Gaia DR3' },
+  { id: 'barnard', name: "Barnard's Star", what: 'Largest proper motion of any star, 10.4″/yr', ra: 269.448503, dec: 4.73942, pmra: -801.551, pmdec: 10362.394, epoch: 2016, source: 'Gaia DR3' },
+  { id: 'epsindib', name: 'Epsilon Indi B', what: 'Binary brown dwarf, 3.6 pc (11.8 light-years)', ra: 331.076453, dec: -56.793812, pmra: 3981.977, pmdec: -2466.832, epoch: 2016, source: 'Gaia DR3' },
   { id: 'rwaur', name: 'RW Aurigae', what: 'A young star that dims and recovers', ra: 76.956081, dec: 30.401205, pmra: 2.641, pmdec: -27.398, epoch: 2016, source: 'Gaia DR3' },
   { id: 'rdra', name: 'R Draconis', what: 'A red giant that pulses', ra: 248.167378, dec: 66.755007, pmra: -20.643, pmdec: 6.149, epoch: 2016, source: 'Gaia DR3' },
 ];

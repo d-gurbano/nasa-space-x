@@ -102,22 +102,32 @@ export interface ObjectPage {
     injection: { limit_ab_mag: number | null; recovered_fraction_at_object_mag: number | null };
     orbit_fit: { rms_arcsec_before: number; rms_arcsec_after: number; new_points: number } | null;
     trail_px: number;
-    clone_search: { n_clones: number; false_alarm_rate: number } | null;
+    clone_search: { n_clones: number; false_alarm_rate: number; n_null_trials?: number } | null;
     real_or_fake_score: number | null;
-    passed?: Partial<Record<'snr' | 'cleaned' | 'nulls' | 'time_shift' | 'days' | 'detectable' | 'orbit', boolean>>;
+    frac_positive?: { target: number; null_mean: number; null_std: number; null_max: number } | null;
+    passed?: Partial<Record<CheckKey, boolean>>;
   };
   composition: {
     points: { um: number; value: number; err: number }[];
     templates: { name: string; um: number[]; value: number[] }[];
     best_match: string | null;
     label: string;
+    note?: string;
   };
   quiz: { image: string; answer_xy: [number, number]; answer_text: string };
   shape_model: { glb: string; source: string; credit: string } | null;
   credits: string[];
   /** What the SPHEREx positions change. The scenario is computed, and labelled so. */
-  impact?: { at_discovery_scenario?: { factor?: number; converged?: boolean; label?: string } | null } | null;
+  impact?: {
+    at_discovery_scenario?: { factor?: number; converged?: boolean; label?: string; error?: string; sigma3_km_before?: number; sigma3_km_after?: number } | null;
+    one_year_after_last_obs?: { iso: string; sigma3_km_before: number; sigma3_km_after: number; factor: number } | null;
+  } | null;
+  first_known_obs_iso?: string | null;
+  days_before_first_known_obs?: number | null;
 }
+
+/** The nine detection checks, in the order the engine defines them (docs/DATA-CONTRACT.md). */
+export type CheckKey = 'snr' | 'cleaned' | 'nulls' | 'time_shift' | 'days' | 'detectable' | 'sign_test' | 'not_one_day' | 'orbit';
 
 export interface Benchmark {
   sample?: boolean;

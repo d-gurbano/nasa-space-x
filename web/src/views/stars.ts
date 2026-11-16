@@ -30,12 +30,12 @@ interface Target {
 const TARGETS: Record<string, Target> = {
   barnard: {
     extra: 'barnard', kind: 'mover', tone: 'ok',
-    why: 'The fastest star in our sky. If Rewind can follow anything that moves, it should follow this.',
-    honest: 'So bright that it is saturated in every photo: its position comes from the edges of its image.',
+    why: 'The largest proper motion of any star (10.4″ per year, Gaia DR3): almost two SPHEREx pixels a year, so its motion is visible across the survey.',
+    honest: 'Saturated in every SPHEREx image: its position is measured from the wings of the point-spread function.',
   },
   epsindib: {
     extra: 'eps_indi_b', kind: 'mover', tone: 'ok',
-    why: 'Two brown dwarfs that drift less than one SPHEREx pixel a year: the cleanest check of small motions.',
+    why: 'A binary brown dwarf moving 4.7″ per year, less than one SPHEREx pixel (6.2″): a test of sub-pixel motion.',
     honest: 'The two brown dwarfs are too close for SPHEREx to separate, so they show as one dot.',
   },
   wise0855: {
@@ -146,7 +146,7 @@ export const starsView: View = async (body, ctx) => {
     <div class="s3">
       <div class="s3-stage">
         <div class="s3-intro">
-          <p class="s3-lead">The five stars named in the NASA challenge. <b>Tap one.</b></p>
+          <p class="s3-lead">The five targets named in the NASA challenge: three stars and two brown dwarfs (one of them a binary). <b>Select one.</b></p>
           <ul class="s3-legend">
             ${(['red dwarf', 'brown dwarf', 'young variable star', 'pulsating red giant'] as Kind[]).map((k) => `<li><i style="--c: ${hex(STARS.find((s) => s.kind === k)!.color)}"></i>${KIND[k]}</li>`).join('')}
             <li><i class="s3-lg-trace"></i>Tap a star to see its path</li>
@@ -167,7 +167,7 @@ export const starsView: View = async (body, ctx) => {
         <div class="s3-zoom">
           <button type="button" class="icon-btn" data-zoom="0.8" aria-label="Zoom in">+</button>
           <button type="button" class="icon-btn" data-zoom="1.25" aria-label="Zoom out">&minus;</button>
-          <p class="s3-zoom-hint">Click the map, then scroll to zoom</p>
+          <p class="s3-zoom-hint">${matchMedia('(pointer: coarse)').matches ? 'Pinch to zoom' : 'Click the map, then scroll to zoom'}</p>
         </div>
         <div class="s3-time">
           <button type="button" class="icon-btn s3-play" aria-label="Play through time">${icon('play')}</button>

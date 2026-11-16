@@ -158,13 +158,13 @@ export const aboutView: View = (body, ctx) => {
     <figure class="ab-hero">
       <img src="${nasa('PIA26531')}" alt="Artist's concept of the SPHEREx space telescope in orbit above Earth" />
       <figcaption>
-        <p class="ab-hero-lead">Rewind finds new comets and asteroids in older NASA SPHEREx photos, taken before anyone knew they existed.</p>
+        <p class="ab-hero-lead">Rewind does not discover new objects. It finds recently discovered asteroids and comets in NASA SPHEREx images taken before their first known observation: precoveries.</p>
         <span class="ab-credit mono">SPHEREx in orbit, artist's concept. NASA/JPL-Caltech</span>
       </figcaption>
     </figure>
     <div class="ab-nums">
       ${stats([
-        stat(t.found, 'found in older SPHEREx photos', 'stat-gold stat-l'),
+        stat(t.found, `FOUND in SPHEREx images (all nine checks pass)`, 'stat-gold stat-l'),
         lead.n ? stat(lead.n, `seen ${earlier} before the first known observation`, 'stat-l') : '',
       ], 'ab-nums-top')}
       ${stats(rest.filter(([n]) => n > 0).map(([n, label]) => stat(fmt(n), label)), 'ab-nums-rest')}
@@ -176,7 +176,7 @@ export const aboutView: View = (body, ctx) => {
         <li>
           <div class="ab-how-media ab-days" aria-label="Day-by-day SPHEREx photos of 2025 YH5 before its discovery"></div>
           <h3><span>1</span>The old photos</h3>
-          <p class="ab-days-text">SPHEREx photographed it before anyone knew it existed. Each day it is barely there.</p>
+          <p class="ab-days-text">SPHEREx imaged it on several nights before its first known observation. On any single night it is at or below the noise.</p>
         </li>
         <li>
           <div class="ab-how-media ab-stack-box"><img alt="The stack of SPHEREx photos along the path of 2025 YH5, with a clear dot in the middle" loading="lazy" /><span class="ab-tag mono"></span></div>
@@ -186,7 +186,7 @@ export const aboutView: View = (body, ctx) => {
         <li>
           <div class="ab-how-media ab-orbit-box"><canvas aria-hidden="true"></canvas><span class="ab-tag mono">orbit</span></div>
           <h3><span>3</span>The orbit</h3>
-          <p>Each earlier position narrows down where it will be next year.</p>
+          <p>An earlier position lengthens the observed arc. Right after discovery, when the arc is days long, that can shrink the predicted uncertainty several times; once months of follow-up exist, it changes little.</p>
         </li>
       </ol>
       <p class="ab-how-more"><a href="#/object/2025yh5">Open 2025 YH5</a></p>`)}
@@ -195,7 +195,7 @@ export const aboutView: View = (body, ctx) => {
       <ul class="ab-gallery">${NASA_IMG.map((m) => `<li><figure><img src="${nasa(m.id)}" alt="${esc(m.title)}" loading="lazy" /><figcaption><b>${esc(m.title)}</b><span class="ab-credit mono">NASA/JPL-Caltech, ${m.id}</span></figcaption></figure></li>`).join('')}</ul>`)}
 
     ${section('Why it matters', 'Most useful right after discovery', `
-      <p class="ab-text">A new object's path is least certain in its first days. That is when an older sighting helps most.</p>
+      <p class="ab-text">A new object’s orbit is least certain while its observed arc is only days long. That is when a precovery position helps most.</p>
       <div class="ab-impact"></div>`)}
 
     ${section('Team', 'Team SpaceX', `

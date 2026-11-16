@@ -46,8 +46,8 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
   ];
   const shown = parts.filter((p) => p[1] > 0);
   const hero = t.allBefore
-    ? 'found in older photos,<br>before their discovery'
-    : `found in older photos${t.before ? `,<br>${t.before} before anyone had seen them` : ''}`;
+    ? 'FOUND in SPHEREx images,<br>all before their first known observation'
+    : `FOUND in SPHEREx images${t.before ? `,<br>${t.before} before their first known observation` : ''}`;
   card.innerHTML = `
     <button class="rs-toggle" aria-expanded="true"><span class="rs-kicker kicker">${title}</span><span class="rs-count">${t.searched} searched</span><span class="rs-caret" aria-hidden="true"></span></button>
     <div class="rs-body">

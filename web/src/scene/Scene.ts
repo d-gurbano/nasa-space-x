@@ -269,7 +269,7 @@ export class Scene {
         text: o.name,
         cls: 'label-rewind',
         priority: o.priority ?? 7,
-        sub: () => (store.mjd < o.knownMjd ? 'Nobody knew it yet' : null),
+        sub: () => (store.mjd < o.knownMjd ? 'Before first known obs.' : null),
         pos: (out) => out.fromArray(g.attributes.position.array as Float32Array, k * 3),
         onClick: () => this.onPick?.(o.slug),
         onHover: (on) => this.overLabel({ planet: false, k }, on),

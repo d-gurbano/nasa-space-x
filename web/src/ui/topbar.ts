@@ -5,7 +5,7 @@ import { isKnown, rankObjects } from '../lib/rank';
 
 export const VIEWS = [
   { hash: '#/sky', label: 'Sky' },
-  { hash: '#/detectives', label: 'Tune the Rewind' },
+  { hash: '#/games', label: 'Games' },
   { hash: '#/stars', label: 'Challenge stars' },
   { hash: '#/benchmark', label: 'Does it work?' },
   { hash: '#/scientists', label: 'For scientists' },

@@ -5,9 +5,9 @@ import { icon, stat } from './components';
 import { reducedMotion } from '../state';
 
 const CAPTIONS = [
-  'These dots are real asteroids and comets, on their real orbits.',
+  'Each point is a catalogued asteroid or comet, placed on its JPL orbit.',
   'Drag time backward.',
-  'Watch for the flash: SPHEREx saw it before anyone knew.',
+  'Highlighted: a SPHEREx image that recorded the object before its first known observation.',
 ];
 
 export interface OpeningHooks {
@@ -25,9 +25,9 @@ export function mountOpening(root: HTMLElement, hooks: OpeningHooks) {
   const o = el('section', { class: 'opening', 'aria-label': 'Introduction' });
   o.innerHTML = `
     <div class="op-inner">
-      <p class="op-kicker kicker" style="--i:0">NASA Space Apps 2026 / SPHEREx</p>
+      <p class="op-kicker kicker" style="--i:0">NASA Space Apps 2026 · SPHEREx</p>
       <h1 class="op-title" style="--i:1">Every discovery<br>has a <em>past.</em></h1>
-      <p class="op-line" style="--i:2">When a new comet or asteroid is discovered, Rewind looks for it in older NASA SPHEREx photos, taken before anyone knew it was there. Then its future path becomes more certain.</p>
+      <p class="op-line" style="--i:2">Rewind searches NASA SPHEREx survey images for recently discovered asteroids and comets, in the weeks before anyone had reported them. Each precovery is an earlier position on the object’s path; how much it tightens the orbit depends on how short the observed arc still is.</p>
       <div class="op-actions" style="--i:3">
         <button class="btn btn-primary op-start">Start the rewind${icon('arrow')}</button>
         <span class="op-status" aria-live="polite"></span>

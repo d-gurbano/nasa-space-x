@@ -26,3 +26,17 @@ export function oneSentence(text: string | null | undefined, claim?: string | nu
   }
   return first;
 }
+
+const fmtInt = (n: number) => Math.round(n).toLocaleString('en-US');
+
+/** A false-alarm probability as a count of null trials, never rounded to "about 0%". */
+export function farText(rate: number, trials?: number | null): string {
+  if (!(rate > 0)) return trials ? `0 in ${fmtInt(trials)} null trials` : '0 in the null trials';
+  if (trials) return `${fmtInt(rate * trials)} in ${fmtInt(trials)} null trials (${(rate * 100).toPrecision(2)}%)`;
+  return `${(rate * 100).toPrecision(2)}%`;
+}
+
+/** "26 Dec 2025" -> "26 Dec '25": a compact date that keeps the year. */
+export function shortDate(plain: string): string {
+  return plain.replace(/ \d{2}(\d{2})$/, " '$1");
+}

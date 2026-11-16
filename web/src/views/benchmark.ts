@@ -12,14 +12,13 @@ import { PIXEL_ARCSEC } from './sky/logic';
 import { BENCH_ORBITS } from './visuals/bench-orbits';
 import { animateOrbits, type OrbitMini } from './visuals/orbit-mini';
 import type { View } from './page';
+import type { IndexObject } from '../lib/types';
+import { CHECKS } from '../lib/checks';
 
 const BADGE: Record<Outcome, string> = { found: 'Found', hint: 'Hint', missed: 'Missed', quiet: 'Not visible', false: 'False alarm' };
 const COLOR: Record<Outcome, string> = { found: '#f2b544', hint: '#a6d2ff', missed: '#b7b9c0', quiet: '#868a96', false: '#ee8a78' };
 const TYPE: Record<string, string> = { neo: 'Near-Earth asteroids', comet: 'Comets', mba: 'Main-belt asteroids' };
-const CHECK: Record<string, string> = {
-  snr: 'Signal above S/N 5', cleaned: 'Fixed sky cleaned', nulls: 'Beats fake paths nearby', time_shift: 'Strongest at the right time',
-  days: 'Seen on 2+ days', detectable: 'Bright enough to see', sign_test: 'Shows in single photos', not_one_day: 'Not one day alone', orbit: 'Fits the orbit',
-};
+const CHECK: Record<string, string> = Object.fromEntries(CHECKS.map((d) => [d.key, d.name]));
 
 const ICON = {
   hide: '<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.6"/><path d="M4 20L20 4"/>',
@@ -36,7 +35,7 @@ function bar(label: string, snr: number | null | undefined) {
   return `<span class="dw-bar"><span class="dw-bar-label">${label}</span><span class="dw-bar-track"><i style="--w:${snrBar(v)}"></i><b style="--at:${snrBar(5)}" title="S/N 5"></b></span><span class="dw-bar-num mono">${v === null ? 'n/a' : v.toFixed(1)}</span></span>`;
 }
 
-function card(c: BenchCase, i: number, hasOrbit: boolean): string {
+function card(c: BenchCase, i: number, hasOrbit: boolean, xref = ''): string {
   const o = outcome(c);
   const checks = Object.entries(c.checks ?? {}).filter(([k]) => CHECK[k]);
   return `<li class="dw-card dw-${o}" style="--i:${i}">
@@ -48,13 +47,24 @@ function card(c: BenchCase, i: number, hasOrbit: boolean): string {
       </span>
       <span class="dw-face dw-back" aria-hidden="true">
         <span class="dw-badge">${BADGE[o]}</span>
-        <span class="dw-sentence">${esc(explain(c))}</span>
+        <span class="dw-sentence">${esc(explain(c))}${xref ? `<span class="dw-xref">${esc(xref)}</span>` : ''}</span>
         <span class="dw-bars">${bar('S/N, Rewind blind', c.snr)}${bar('S/N at true position', c.oracle_snr)}</span>
         ${checks.length ? `<span class="dw-checks" title="${checks.map(([k, ok]) => `${ok ? 'Passed' : 'Failed'}: ${CHECK[k]}`).join('\n')}">${checks.map(([, ok]) => `<i class="${ok ? 'ok' : 'no'}"></i>`).join('')}<span class="mono">${checks.filter(([, ok]) => ok).length}/${checks.length} checks</span></span>` : ''}
-        ${c.hidden_until_iso ? `<span class="dw-when mono">Hidden from ${esc(plainDate(c.hidden_until_iso))}</span>` : ''}
+        ${c.hidden_until_iso ? `<span class="dw-when mono">Observations after ${esc(plainDate(c.hidden_until_iso))} hidden</span>` : ''}
       </span>
     </button>
   </li>`;
+}
+
+/** A note when the main search (full arc) reached a different verdict than this blind run. */
+function xrefText(c: BenchCase, o: IndexObject | undefined): string {
+  if (!o) return '';
+  const blind = outcome(c);
+  if (o.verdict === 'FOUND' && blind !== 'found') {
+    return `Main search: FOUND${o.best_snr != null ? ` (S/N ${o.best_snr.toFixed(1)})` : ''}, using the full observed arc and ${plural(o.n_frames ?? 0, 'SPHEREx image')}. This blind run used ${c.arc_days != null ? `a ${c.arc_days}-day arc` : 'a truncated arc'}${c.n_frames != null ? ` and ${plural(c.n_frames, 'image')}` : ''}.`;
+  }
+  if (o.verdict !== 'FOUND' && blind === 'found') return `Main search verdict: ${o.verdict.replace('_', ' ')}.`;
+  return '';
 }
 
 // share found (gold) and share hint (blue) in each brightness bin
@@ -63,11 +73,11 @@ function curveHtml(data: Bench): string {
   if (!bars.length) return '';
   return `<article class="dw-panel">
     <p class="kicker">Brighter is easier</p>
-    <ol class="dw-curve" aria-label="Share of visible test objects found, by brightness">${bars.map((b) => `<li aria-label="Magnitude ${b.label}: ${b.found} of ${b.n} found${b.hint ? `, ${plural(b.hint, 'hint')}` : ''}">
+    <ol class="dw-curve" aria-label="Share of visible test objects found, by brightness">${bars.map((b) => `<li aria-label="V magnitude ${b.label}: ${b.found} of ${b.n} found${b.hint ? `, ${plural(b.hint, 'hint')}` : ''}">
       <span class="dw-col-num mono">${b.found}/${b.n}</span>
       <span class="dw-col"><i class="dw-col-hint" style="--h:${b.hint / b.n}"></i><i class="dw-col-found" style="--h:${b.found / b.n}"></i></span>
       <span class="dw-col-label mono">${esc(b.label)}</span></li>`).join('')}</ol>
-    <p class="dw-panel-foot">Found, of those SPHEREx could see, per brightness step (magnitude; left is brighter). Blue is a hint.</p>
+    <p class="dw-panel-foot">FOUND fraction among objects SPHEREx recorded, per bin of predicted V magnitude (JPL Horizons; left is brighter). Blue: HINT.</p>
   </article>`;
 }
 
@@ -111,13 +121,17 @@ function firstTestHtml(v1: Bench['v1']): string {
 
 export const benchmarkView: View = async (body, ctx) => {
   const { data, sample } = await ctx.load<Bench>('benchmark.json');
+  // the same object can also be in the main search, which uses its full observed arc and all
+  // SPHEREx images; say so when the two runs disagree, so the pages never contradict each other
+  const main = await ctx.load<{ objects: IndexObject[] }>('index.json').then((r) => r.data.objects, () => [] as IndexObject[]);
+  const mainBy = new Map(main.map((o) => [orbitKey(o.name), o]));
   const all = data.cases ?? [];
   const cases = byOutcome(all.filter(usable));
   const skipped = all.length - cases.length;
   const t = tally(cases);
   const decoys = decoyTally(data.decoys ?? []);
   const wrong = t.false + decoys.false;
-  const alarms = wrong === 0 ? 'zero false alarms' : wrong === 1 ? 'one false alarm' : `${wrong} false alarms`;
+  const alarms = wrong === 0 ? 'no false FOUNDs' : wrong === 1 ? 'one false FOUND' : `${wrong} false FOUNDs`;
   const orbits = cases.map((c) => BENCH_ORBITS[orbitKey(c.name)] ?? null);
   const counts = (['found', 'hint', 'missed', 'quiet', 'false'] as Outcome[]).filter((o) => t[o] > 0);
   const kinds = new Set(cases.map((c) => c.type));
@@ -125,18 +139,19 @@ export const benchmarkView: View = async (body, ctx) => {
   const panels = [curveHtml(data), closeHtml(data, cases), typeHtml(cases)].filter(Boolean);
 
   body.innerHTML = `
-    <p class="dw-hero display">We hid the answers and asked Rewind. It found <em>${t.found} of ${t.seen}</em> known ${what} it could see, with ${alarms}.</p>
+    <p class="dw-hero display">With the later observations hidden, Rewind recovered <em>${t.found} of ${t.seen}</em> known ${what} that SPHEREx recorded, with ${alarms}.</p>
+    <p class="dw-sub">${t.found} FOUND, ${plural(t.hint, 'HINT')}, ${t.missed} missed, of ${t.seen} objects detectable at their true positions (S/N ≥ 5). ${t.quiet ? `${t.quiet} more were below S/N 5 even at the true position. ` : ''}A false alarm would be a FOUND on an object SPHEREx did not record, or on an empty-sky decoy.</p>
     <ul class="dw-tally" aria-label="Results">${counts.map((o) => `<li class="dw-${o}"><i></i><b class="mono">${t[o]}</b>${BADGE[o]}</li>`).join('')}<li class="dw-decoys">${alarmLine(t, decoys).replace(/^(\d+)/, '<b class="mono">$1</b>')}</li></ul>
     ${panels.length ? `<div class="dw-panels">${panels.join('')}</div>` : ''}
 
-    <p class="dw-hint-line dw-rule">Hint: Rewind saw a signal but did not call it a find; each hint card says why. Not visible: SPHEREx did not see it clearly and Rewind did not say Found, so there is no false alarm.</p>
-    <ol class="dw-grid" aria-label="${plural(t.total, 'test object')}, found first">${cases.map((c, i) => card(c, i, !!orbits[i])).join('')}</ol>
+    <p class="dw-hint-line dw-rule">HINT: a signal, but not all nine checks pass; each card names the failed checks. Not visible: S/N &lt; 5 even at the true position, so the object was not detectable in these images.</p>
+    <ol class="dw-grid" aria-label="${plural(t.total, 'test object')}, found first">${cases.map((c, i) => card(c, i, !!orbits[i], xrefText(c, mainBy.get(orbitKey(c.name))))).join('')}</ol>
     <p class="dw-hint-line">The real orbit of each test object, with Earth's orbit dotted. Hover or tap a card for the result.</p>
 
     <ol class="dw-how" aria-label="How the test works">
-      <li>${svg('hide')}<span><b>Hide</b>Keep only the first weeks of a known object's observations, as if it were just found.</span></li>
-      <li>${svg('search')}<span><b>Search blind</b>Rewind stacks the older SPHEREx photos along that rough path.</span></li>
-      <li>${svg('check')}<span><b>Compare</b>Check against the true JPL position. A miss costs nothing; a false alarm would.</span></li>
+      <li>${svg('hide')}<span><b>Truncate the arc</b>Fit an orbit from only the first 20 to 45 days of a known object's MPC observations, as if it had just been discovered.</span></li>
+      <li>${svg('search')}<span><b>Blind search</b>Shift-and-stack up to 40 SPHEREx images from the 20 days before that date along the short-arc prediction, and apply the nine checks.</span></li>
+      <li>${svg('check')}<span><b>Compare</b>Measure the same images at the true JPL Horizons positions. A miss costs completeness; a false FOUND would cost trust.</span></li>
     </ol>
 
     <div class="dw-folds">

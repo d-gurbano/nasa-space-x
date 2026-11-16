@@ -30,20 +30,22 @@ export function simpleSpectrum(c: ObjectPage['composition']): string {
   const lines = templates
     .map((t) => `<path class="${isBest(t.name) ? 'sp-best' : 'sp-other'}" d="${t.um.map((u, k) => `${k ? 'L' : 'M'}${x(u).toFixed(1)},${y(t.value[k]).toFixed(1)}`).join('')}"><title>Typical ${esc(t.name)}-type</title></path>`)
     .join('');
+  // a channel with S/N < 2 carries no colour information; it is drawn faded
+  const weak = (p: { value: number; err: number }) => !(p.err > 0) || Math.abs(p.value) / p.err < 2;
   const dots = pts
-    .map((p) => `<g class="sp-pt"><line x1="${x(p.um)}" x2="${x(p.um)}" y1="${y(p.value - p.err)}" y2="${y(p.value + p.err)}"/><circle cx="${x(p.um)}" cy="${y(p.value)}" r="4"><title>${p.um} µm: ${p.value} +/- ${p.err}</title></circle></g>`)
+    .map((p) => `<g class="sp-pt${weak(p) ? ' sp-weak' : ''}"><line x1="${x(p.um)}" x2="${x(p.um)}" y1="${y(p.value - p.err)}" y2="${y(p.value + p.err)}"/><circle cx="${x(p.um)}" cy="${y(p.value)}" r="4"><title>${p.um} µm: ${p.value} ± ${p.err}${weak(p) ? ' (S/N < 2)' : ''}</title></circle></g>`)
     .join('');
-  return `<svg class="op-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Brightness of the object in ${pts.length} infrared colours measured by SPHEREx${c.best_match ? `, compared with a typical ${esc(c.best_match)}-type` : ''}">
+  return `<svg class="op-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Relative reflectance in ${pts.length} SPHEREx spectral bins${c.best_match ? `, compared with a typical ${esc(c.best_match)}-type` : ''}">
     <defs><clipPath id="op-chart-clip"><rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}"/></clipPath></defs>
-    <text x="${L}" y="12">brighter ↑</text>
+    <text x="${L}" y="12">relative reflectance (normalised below 1.3 µm) ↑</text>
     <line class="sp-axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>
     ${ticks}
-    <text x="${(L + W - R) / 2}" y="${H - 3}" text-anchor="middle">infrared colour (wavelength in µm)</text>
+    <text x="${(L + W - R) / 2}" y="${H - 3}" text-anchor="middle">wavelength (µm)</text>
     <g clip-path="url(#op-chart-clip)">${lines}${dots}</g>
   </svg>
   <ul class="op-legend">
-    <li><span class="sp-k-dot"></span>SPHEREx measurements</li>
-    ${c.best_match ? `<li><span class="sp-k-best"></span>Typical ${esc(c.best_match)}-type</li>` : ''}
-    ${templates.length > (c.best_match ? 1 : 0) ? `<li><span class="sp-k-other"></span>${c.best_match ? 'Other types' : 'Typical types'}</li>` : ''}
+    <li><span class="sp-k-dot"></span>SPHEREx, binned (faded: S/N &lt; 2)</li>
+    ${c.best_match ? `<li><span class="sp-k-best"></span>Mean ${esc(c.best_match)}-type template</li>` : ''}
+    ${templates.length > (c.best_match ? 1 : 0) ? `<li><span class="sp-k-other"></span>${c.best_match ? 'Other templates' : 'Taxonomic templates'}</li>` : ''}
   </ul>`;
 }

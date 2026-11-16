@@ -10,6 +10,8 @@
 
 .page-content > .dw-hero { max-width: 940px; margin: 0 0 var(--g3); font-size: clamp(var(--fs-2xl), 4.2vw, var(--fs-4xl)); font-weight: var(--w-semi); line-height: 1.08; text-wrap: balance; }
 .dw-hero em { font-style: normal; color: var(--gold); }
+.page-content > .dw-sub { max-width: 760px; margin: 0 0 var(--g3); color: var(--ink-2); line-height: 1.5; }
+.dw-xref { display: block; margin-top: 6px; font-size: var(--fs-2xs); line-height: 1.35; color: var(--gold-2); }
 
 .dw-tally { list-style: none; display: flex; flex-wrap: wrap; gap: var(--g) var(--g3); padding: 0; margin: 0 0 var(--g4); font-size: var(--fs-s); color: var(--ink-2); }
 .dw-tally li { display: flex; align-items: center; gap: var(--g); max-width: none; }

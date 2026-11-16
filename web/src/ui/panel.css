@@ -57,6 +57,7 @@
 .op-strip img { width: 48px; height: 48px; display: block; border-radius: 6px; image-rendering: pixelated; opacity: 0.55; outline: 1px solid var(--line); outline-offset: -1px; transition: opacity var(--t-fast); }
 .op-strip button:hover img { opacity: 0.9; }
 .op-strip button[aria-selected='true'] { color: var(--gold-2); }
+.op-strip button.op-nodet img { opacity: 0.35; filter: grayscale(1); }
 .op-strip button[aria-selected='true'] img { opacity: 1; outline: 2px solid var(--gold); }
 .op-pane .op-cap { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 8px 0 0; font-size: var(--fs-xs); color: var(--ink-2); }
 
@@ -98,6 +99,7 @@
 .op-chart .sp-best { fill: none; stroke: var(--blue); stroke-width: 2; }
 .op-chart .sp-pt line { stroke: var(--gold); stroke-width: 1.2; opacity: 0.7; }
 .op-chart .sp-pt circle { fill: var(--gold); }
+.op-chart .sp-weak { opacity: 0.3; }
 .op-legend { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: var(--fs-xs); color: var(--ink-3); }
 .op-legend li { display: flex; align-items: center; gap: 6px; }
 .sp-k-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }

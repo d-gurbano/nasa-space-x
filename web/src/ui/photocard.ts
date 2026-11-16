@@ -56,9 +56,9 @@ export function mountPhotoCard(root: HTMLElement, opts: {
         <div><dt>Wavelength</dt><dd class="pc-wl">...</dd></div>
         <div><dt>S/N</dt><dd class="pc-snr">${f.snr != null ? f.snr.toFixed(1) : '...'}</dd></div>
         ${o && isKnown(o)
-          ? `<div><dt>Note</dt><dd>Known object - shows what SPHEREx sees</dd></div>`
+          ? `<div><dt>Note</dt><dd>Control object (known for years), not a precovery</dd></div>`
           : days !== null && days >= 0
-            ? `<div class="pc-gold"><dt>This photo</dt><dd>${days > 0 ? plural(days, 'day') : 'hours'} ${esc(before)}</dd></div>${earliest > days ? `<div><dt>Earliest</dt><dd>${plural(earliest, 'day')}</dd></div>` : ''}`
+            ? `<div class="pc-gold"><dt>This image</dt><dd>${days > 0 ? plural(days, 'day') : 'hours'} ${esc(before)}</dd></div>${earliest > days ? `<div><dt>Earliest detection</dt><dd>${plural(earliest, 'day')} ${esc(before)}</dd></div>` : ''}`
             : `<div><dt>Note</dt><dd>${esc(fixPlural(f.label))}</dd></div>`}
       </dl>
       <div class="pc-foot">${provenance(opts.sample, 'NASA SPHEREx')}<button class="pc-open chip chip-gold">Open ${esc(name)}</button></div>`;

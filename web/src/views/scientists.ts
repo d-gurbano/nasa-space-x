@@ -68,7 +68,7 @@ const FILES: [string, string][] = [
   ['orbits.json', 'Orbital elements for the 3D dots'],
   ['orbits.bin', 'The same as Float32 rows (fields in orbits.bin.json)'],
   ['planets.json', 'Planet elements used by the 3D view'],
-  ['detectives/rounds.json', 'The rounds of the Detectives game'],
+  ['detectives/rounds.json', 'The rounds of the "Tune the Rewind" game (Games page)'],
 ];
 
 // what the engine adds to a find's object.json
@@ -365,7 +365,8 @@ export const scientistsView: View = (body, ctx) => {
     const decoys = decoyTally(data.decoys ?? []);
     const err = data.summary?.pos_err_arcsec;
     $('.sci-bm').innerHTML = `<p class="kicker">Blind test</p>
-      <p class="sci-big">${bt.found} of ${bt.seen}<span>${alarmLine(bt, decoys)}</span></p>
+      <p class="sci-big">${bt.found} of ${bt.seen}<span>recovered as FOUND, of the test objects SPHEREx recorded</span></p>
+      <p class="mono">${bt.hint} HINT · ${bt.missed} missed · ${alarmLine(bt, decoys).replace('false alarms', 'false FOUNDs').replace('false alarm ', 'false FOUND ')}</p>
       <p>${esc(data.summary?.plain ?? `Rewind found ${bt.found} of ${bt.seen} known objects that SPHEREx could see, in ${plural(bt.total, 'case')}.`)}</p>
       ${err?.median != null ? `<p class="mono">Position error: median ${err.median} arcsec${err.p90 != null ? `, 90% within ${err.p90}` : ''}${err.n ? ` (n = ${err.n})` : ''}.</p>` : ''}
       <p class="sci-card-foot"><a class="sci-link" href="#/benchmark">See every case</a>${provenance(sample, 'NASA SPHEREx')}</p>`;
@@ -430,7 +431,7 @@ export const scientistsView: View = (body, ctx) => {
         ${best.map(({ f, s }) => stat(times(s!.factor!), `${f.o.name}, had Rewind run at discovery: ${km(s!.sigma3_km_before!)} to ${km(s!.sigma3_km_after!)} km`, 'stat-gold')).join('')}
         ${today.length ? stat(gainRange(today), 'today, now that weeks to a year of follow-up exist') : ''}
       </dl>
-      <p>Old photos help most in the first days after discovery. Right then, a few old SPHEREx positions can shrink the uncertainty of the future path several times over. Once the follow-up is done they add little.</p>
+      <p>Precovery positions matter most in the first days after discovery, when the arc is short${best.length ? `: for ${best.length} of ${finds.length} objects the at-discovery scenario shows a ${best.map(({ s }) => times(s!.factor!)).reverse().join(' to ')} reduction in 1-year uncertainty` : ''}.${today.length ? ` With today's follow-up arcs (weeks to a year) the same positions reduce it by ${gainRange(today)}.` : ''}</p>
       <div class="sci-scroll"><table class="data-table sci-impact-table">
         <thead><tr><th scope="col">Object</th><th scope="col">First known obs.</th><th scope="col">Earlier by</th><th scope="col">Positions</th><th scope="col">Arc, days</th><th scope="col" colspan="2">3 sigma in 1 yr, today (km)</th><th scope="col" colspan="2">At discovery (km)</th></tr></thead>
         <tbody>${finds.map(({ o, impact: m }) => `<tr>
@@ -444,6 +445,7 @@ export const scientistsView: View = (body, ctx) => {
         </tr>`).join('')}</tbody>
       </table></div>
       ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => sig(x)?.converged === false)) ? '<p class="hint"><span class="sci-foot">*</span> The fit did not converge, so this number is unreliable.</p>' : ''}
+      ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => { const v = sig(x); return v?.factor != null && v.factor < 0.95 && v.converged !== false; })) ? '<p class="hint">A factor below 1 means the formal uncertainty grew when the SPHEREx positions were added. This can happen when a new position pulls a short-arc least-squares solution, or when its assigned weight (σ ≥ 2″) understates its true error; non-gravitational forces on comets are not modelled.</p>' : ''}
       <p class="hint">COMPUTED with kete least-squares fits of the real MPC observations, without and with the SPHEREx positions (each given an uncertainty of at least ${finds[0].impact!.sigma_floor_arcsec ?? 2} arcsec). 3 sigma is the largest axis of 300 covariance clones (linear, gravity only), one year after the last observation. "At discovery" uses only the MPC observations of the first 7 days plus the SPHEREx positions that are earlier than them. First known observation: JPL SBDB, 2026-11-15.</p>`;
   };
 
