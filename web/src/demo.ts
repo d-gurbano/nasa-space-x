@@ -17,7 +17,7 @@ import { el } from './ui/dom';
 import { store } from './state';
 import { DemoFx } from './demo/fx';
 import {
-  DURATION, MOON_KM, T, captionAt, captionHtml, demoFacts, millionKm, moons, mjdAt, orbitPose,
+  CAPTIONS, DURATION, MOON_KM, T, captionAt, captionHtml, demoFacts, millionKm, moons, mjdAt, orbitPose,
   poseAt, poseToCamera, ramp, shotAt, cubicOut, type CapId, type DemoFacts,
 } from './demo/timeline';
 
@@ -60,7 +60,7 @@ export async function runDemo(o: {
     </div>
     <div class="dm-title"></div>
     <div class="dm-cap"></div>
-    <div class="dm-end"><b>Rewind</b><span>Precovery in <em>SPHEREx</em> archive images</span><small>NASA SPHEREx data / NASA Space Apps 2026 / Team SpaceX</small></div>
+    <div class="dm-end"><b>Rewind</b><span>Precovery in <em>SPHEREx</em> archive images</span><small class="dm-url">rewind.up.railway.app</small><small>NASA SPHEREx data / NASA Space Apps 2026 / Team SpaceX</small></div>
     ${params.get('guide') === '1' ? '<div class="dm-guide"><i></i><i></i><span>REC-safe</span></div>' : ''}`;
   ui.appendChild(root);
   const $ = <E extends HTMLElement = HTMLElement>(s: string) => root.querySelector(s) as E;
@@ -97,12 +97,16 @@ export async function runDemo(o: {
   const today = store.today;
   const start = Math.min(DURATION, Math.max(0, Number(params.get('t')) || 0));
   const t0 = performance.now() - start * 1000;
+  const capture = params.get('capture') === '1';
+  if (capture) document.body.classList.add('dm-capture');
   let lastCap: CapId | null | undefined;
   let lastShift = -1;
   const on = (e: HTMLElement, v: boolean) => e.classList.contains('on') !== v && e.classList.toggle('on', v);
 
   scene.addHook(() => {
-    const t = Math.min(DURATION + 2, (performance.now() - t0) / 1000);
+    // ?capture=1: the time comes from window.__demoT, so a video can be made frame by frame
+    const capT = (window as unknown as { __demoT?: number }).__demoT;
+    const t = capture ? Math.min(DURATION + 2, capT ?? 0) : Math.min(DURATION + 2, (performance.now() - t0) / 1000);
     const shot = shotAt(t);
     // clock and camera
     store.setTime(mjdAt(t, today, disc, f.earliestMjd));
@@ -115,7 +119,7 @@ export async function runDemo(o: {
 
     // map extras
     fx.update(t, {
-      orbit: ramp(t, 3.5, 5) * (1 - 0.5 * ramp(t, 22, 23)) * (1 - 0.5 * ramp(t, 26, 27)),
+      orbit: ramp(t, 3.5, 5) * (1 - ramp(t, 8.4, 9.6)),
       beam: ramp(t, T.flash, T.flash + 0.2) * (1 - 0.6 * ramp(t, 12.6, 13.4)) * (1 - ramp(t, 21.4, 22)),
       beamGrow: ramp(t, T.flash, T.flash + 0.6, cubicOut),
       hero: ramp(t, 4, 5) * (1 - ramp(t, 22, 22.5)),
@@ -154,6 +158,23 @@ export async function runDemo(o: {
       numA.classList.toggle('past', t >= T.shrinkTo - 0.2);
     }
 
+    if (capture) {
+      const fadeIn = (a: number) => ramp(t, a, a + 0.4), fadeOut = (b: number) => 1 - ramp(t, b - 0.4, b);
+      const span = CAPTIONS.find((x) => t >= x.from && t < x.to);
+      const capOp = span ? fadeIn(span.from) * (span.to === Infinity ? 1 : fadeOut(span.to)) : 0;
+      for (const e of [title, cap, end]) e.style.opacity = e.classList.contains('on') ? String(capOp) : '0';
+      panel.style.opacity = String(fadeIn(T.flash) * fadeOut(T.orbitOut));
+      card.style.opacity = String(1 - ramp(t, 16.6, 17));
+      info.style.opacity = String(ramp(t, 17, 17.4));
+      // title and end card lines rise in one after another
+      const stagger = (box: HTMLElement, from: number) => [...box.children].forEach((ch, i) => {
+        const k = cubicOut(ramp(t, from + 0.15 + i * 0.22, from + 0.75 + i * 0.22));
+        (ch as HTMLElement).style.opacity = String(k);
+        (ch as HTMLElement).style.transform = `translateY(${((1 - k) * 22).toFixed(1)}px)`;
+      });
+      stagger(title, 0.3);
+      stagger(end, 26.2);
+    }
     // one caption at a time
     const c = captionAt(t);
     if (c !== lastCap) {
@@ -163,7 +184,7 @@ export async function runDemo(o: {
       if (c && c !== 'end') {
         const html = captionHtml(c, f);
         // let the previous lower third fade out (300 ms) before the new words appear
-        if (target === cap && cap.classList.contains('on')) {
+        if (!capture && target === cap && cap.classList.contains('on')) {
           on(cap, false);
           setTimeout(() => lastCap === c && ((cap.innerHTML = html), on(cap, true)), 300);
         } else {

@@ -82,3 +82,11 @@
 @media (prefers-reduced-motion: reduce) {
   .dm-panel, .dm-card, .dm-info, .dm-title, .dm-cap, .dm-end, .dm-ring, .dm-num { transition-duration: 1ms; }
 }
+
+/* frame-by-frame capture: the script drives every fade */
+.dm-capture .dm-panel, .dm-capture .dm-card, .dm-capture .dm-info, .dm-capture .dm-title, .dm-capture .dm-cap, .dm-capture .dm-end { transition: none !important; }
+.dm-title { gap: 1.2vh; }
+.dm-title .dm-tk { font: var(--w-medium) clamp(15px, 1.25vw, 24px) / 1 var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--gold); margin-bottom: 1.6vh; }
+.dm-title .dm-tl { display: block; font: var(--w-display) clamp(40px, 4.6vw, 92px) / 1.02 var(--font-display); letter-spacing: var(--track-display); }
+.dm-end .dm-url { margin-top: 2.4vh; font: var(--w-medium) clamp(16px, 1.3vw, 26px) / 1 var(--mono); letter-spacing: 0.04em; text-transform: none; color: var(--gold); }
+.dm-end .dm-url + small { margin-top: 1.2vh; }

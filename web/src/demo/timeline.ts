@@ -112,7 +112,7 @@ export const captionAt = (t: number): CapId | null => CAPTIONS.find((c) => t >= 
 export function captionHtml(id: CapId, f: DemoFacts): string {
   switch (id) {
     case 'title':
-      return 'Finding recently discovered asteroids and comets in older <em>SPHEREx images</em>';
+      return '<span class="dm-tk">NASA SPHEREx · Space Apps 2026</span><span class="dm-tl">Finding recently discovered</span><span class="dm-tl">asteroids and comets in</span><span class="dm-tl"><em>older SPHEREx images</em></span>';
     case 'discover':
       return `<span class="dm-kick">Discovery</span>${f.name} is discovered on ${plainDate(f.discoveredIso)}.${f.hazardous ? '<span class="dm-chip">Potentially hazardous</span>' : ''}`;
     case 'rewind':
@@ -207,6 +207,7 @@ export function poseAt(t: number, orbit: Pose): Pose {
     ...p,
     az: p.az - 0.028 * t, // never still: a slow turn around the Sun
     el: p.el + 0.05 * Math.sin((t / DURATION) * Math.PI * 2),
+    dist: p.dist * (1 + 0.07 * (1 - Math.sin((t / DURATION) * Math.PI))), // eases in to the framing, then back out; never closer
   };
 }
 
