@@ -1,4 +1,4 @@
-// Charts for the Challenge stars page: plain SVG drawn to the width it is given, with one
+// Charts for the Test targets page: plain SVG drawn to the width it is given, with one
 // readout line under the plot that follows the pointer, a tap, or the arrow keys, and a
 // table of the same numbers.
 import { dateFromMjd, mjdFromDate, plainDate } from '../../lib/time';

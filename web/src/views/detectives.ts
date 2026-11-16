@@ -1,7 +1,7 @@
 // Games: a small hub with three games about how Rewind works, each opening on the same page.
-//   Tune the Rewind   shift and stack real photos by hand until the asteroid appears
-//   Rainbow Detective match an object's 102-colour fingerprint to what it is made of
-//   Where will it be? guess where a find goes next, and see what the old photos change
+//   Stack the images   shift and stack real photos by hand until the asteroid appears
+//   Match the spectrum match an object's 102-colour fingerprint to what it is made of
+//   Predict the orbit guess where a find goes next, and see what the old photos change
 import '../styles/page-detectives.css';
 import '../styles/page-games.css';
 import { esc } from '../ui/dom';
@@ -35,9 +35,9 @@ const PREVIEW = {
 };
 
 const GAMES: GameDef[] = [
-  { id: 'tune', title: 'Tune the Rewind', promise: 'Shift-and-stack: line up real SPHEREx photos along an asteroid’s motion until it appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
-  { id: 'rainbow', title: 'Rainbow Detective', promise: 'Spectral classification: match a reflectance spectrum to rocky, carbon-rich, metallic or icy.', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
-  { id: 'where', title: 'Where will it be?', promise: 'Orbit prediction: guess where an object goes next, then see how precovery positions shrink the uncertainty.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
+  { id: 'tune', title: 'Stack the images', promise: 'Line up real SPHEREx photos along an asteroid’s motion until it appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
+  { id: 'rainbow', title: 'Match the spectrum', promise: 'Match a reflectance spectrum to rocky, carbon-rich, metallic or icy.', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
+  { id: 'where', title: 'Predict the orbit', promise: 'Guess where an object goes next, then see how precovery positions shrink the uncertainty.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
 ];
 
 /** The open game lives in ?game= (before the hash), so a link to one game can be shared. */

@@ -1,5 +1,5 @@
-// Full-screen pages over the (dimmed) 3D scene: Detectives, Challenge stars, Benchmark,
-// For scientists, About. Each view renders into the page body and may return a cleanup.
+// Full-screen pages over the (dimmed) 3D scene: Games, Test targets, Benchmark,
+// Methods, About. Each view renders into the page body and may return a cleanup.
 import { getJson, resolveRel, type DataSource } from '../lib/data';
 import { el, esc } from '../ui/dom';
 import { pageHeader } from '../ui/components';
@@ -39,7 +39,7 @@ export class PageHost {
   constructor(parent: HTMLElement, private ctx: ViewCtx) {
     this.root = el('section', { class: 'page', 'aria-live': 'polite', tabindex: '-1' });
     this.root.hidden = true;
-    this.root.innerHTML = `<div class="page-inner"><a class="page-back" href="#/">&larr; Back to the solar system</a><div class="page-body"></div></div>`;
+    this.root.innerHTML = `<div class="page-inner"><a class="page-back" href="#/">&larr; Solar system</a><div class="page-body"></div></div>`;
     this.body = this.root.querySelector('.page-body') as HTMLElement;
     parent.appendChild(this.root);
   }

@@ -1,4 +1,4 @@
-/* "Does it work?": one sentence, three small charts, a grid of flip cards (real orbit in front, result behind),
+/* Blind test: one sentence, three small charts, a grid of flip cards (real orbit in front, result behind),
    how the test works, and the details folded away.
    Tokens and shared components only (note, chip, kicker); local pieces start with "dw-". */
 .dw-card { --c: var(--ink-3); }

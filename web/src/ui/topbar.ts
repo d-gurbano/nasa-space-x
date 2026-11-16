@@ -4,11 +4,11 @@ import { el, esc } from './dom';
 import { isKnown, rankObjects } from '../lib/rank';
 
 export const VIEWS = [
-  { hash: '#/sky', label: 'Sky viewer' },
+  { hash: '#/sky', label: 'Sky images' },
   { hash: '#/games', label: 'Games' },
-  { hash: '#/stars', label: 'Challenge targets' },
-  { hash: '#/benchmark', label: 'Blind recovery test' },
-  { hash: '#/scientists', label: 'Method & data' },
+  { hash: '#/targets', label: 'Test targets' },
+  { hash: '#/blind-test', label: 'Blind test' },
+  { hash: '#/methods', label: 'Methods' },
   { hash: '#/about', label: 'About' },
 ];
 
@@ -28,7 +28,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
       </button>
     </div>
     <nav class="menu" hidden>
-      <a href="#/">Home</a>
+      <a href="#/">Solar system</a>
       ${VIEWS.map((v) => `<a href="${v.hash}">${v.label}</a>`).join('')}
     </nav>`;
   root.appendChild(bar);

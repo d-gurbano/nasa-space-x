@@ -1,5 +1,5 @@
 // The site's terms, defined once. Pages use term() for an inline definition on first use and the
-// For scientists page lists them all, so a word always means the same thing everywhere.
+// Methods page lists them all, so a word always means the same thing everywhere.
 import { esc } from '../ui/dom';
 
 export interface Term {

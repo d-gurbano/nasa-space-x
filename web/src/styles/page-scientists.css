@@ -1,4 +1,4 @@
-/* For scientists: step diagram, results table, orbit impact, definitions, validation,
+/* Methods: step diagram, results table, orbit impact, definitions, validation,
    downloads, data contract and the MPC code panel. Built from the shared tokens and components. */
 /* sections land below the top bar (64 px, 56 on phones) and the sticky nav */
 .sci-sec { scroll-margin-top: 132px; }

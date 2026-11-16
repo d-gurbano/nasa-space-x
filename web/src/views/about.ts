@@ -37,8 +37,8 @@ const AI: [string, string][] = [
 // title, link, opens in a new tab
 const LINKS: [string, string, boolean][] = [
   ['Explore the 3D view', '#/', false],
-  ['Blind recovery test', '#/benchmark', false],
-  ['Method & data', '#/scientists', false],
+  ['Blind test', '#/blind-test', false],
+  ['Methods', '#/methods', false],
   ['Data contract', 'DATA-CONTRACT.md', true],
   ['SPHEREx mission', 'https://spherex.caltech.edu/', true],
   ['NASA Space Apps Challenge', 'https://www.spaceappschallenge.org/', true],
@@ -157,7 +157,7 @@ export const aboutView: View = (body, ctx) => {
         stat(t.found, `FOUND in SPHEREx images (all nine checks pass)`, 'stat-gold stat-l'),
         lead.n ? stat(lead.n, `precoveries, ${earlier} before the first known observation`, 'stat-l') : '',
       ], 'ab-nums-top')}
-      <div class="ab-foot">${provenance(ctx.source.sample, 'Rewind on NASA SPHEREx')}<span class="hint">${idx.final ? 'Final results. ' : ''}${fmt(t.searched)} objects searched in ${plural(idx.headline_stats.frames_read, 'SPHEREx image')}. <a href="#/scientists">Full breakdown</a>.</span></div>
+      <div class="ab-foot">${provenance(ctx.source.sample, 'Rewind on NASA SPHEREx')}<span class="hint">${idx.final ? 'Final results. ' : ''}${fmt(t.searched)} objects searched in ${plural(idx.headline_stats.frames_read, 'SPHEREx image')}. <a href="#/methods">Full breakdown</a>.</span></div>
     </div>
 
     ${section('How Rewind works', 'One real find, 2025 YH5', `

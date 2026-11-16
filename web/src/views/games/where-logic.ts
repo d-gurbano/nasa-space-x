@@ -1,4 +1,4 @@
-// "Where will it be?": the numbers behind a round. Positions come from the object's orbit
+// "Predict the orbit": the numbers behind a round. Positions come from the object's orbit
 // (two-body, heliocentric ecliptic), flattened to the ecliptic plane: a map seen from above the
 // solar system. The guess-area sizes are the engine's own numbers from the object page.
 import { DEG, isValidElements, meanMotion, orbitPolyline, positionAt, type Elements, type Vec3 } from '../../lib/kepler';

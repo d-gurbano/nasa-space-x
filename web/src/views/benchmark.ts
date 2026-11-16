@@ -1,4 +1,4 @@
-// "Does it work?": the "pretend it is new" test. We hide what we know about asteroids and comets
+// Blind test: the "pretend it is new" test. We hide what we know about asteroids and comets
 // that SPHEREx did (or did not) see, run Rewind blind, then compare with the truth.
 // One sentence, three small charts, one card per test object (its real orbit, moving; flip for
 // the result), how the test works. Everything else is folded away. Reads benchmark.json v2;

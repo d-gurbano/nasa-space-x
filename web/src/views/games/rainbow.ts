@@ -1,4 +1,4 @@
-// Rainbow Detective: SPHEREx splits light into 102 colours. Each round shows one object's colour
+// Match the spectrum: SPHEREx splits light into 102 colours. Each round shows one object's colour
 // fingerprint (brightness vs wavelength, 0.75 to 5 um). Match it to what the object is made of,
 // then see the typical curve of that type laid over it and one feature explained.
 import { icon } from '../../ui/components';
@@ -66,7 +66,7 @@ export const rainbowGame: View = async (body, ctx) => {
   body.innerHTML = `
     <div class="rb">
       <header class="gm-bar">
-        <h2 class="gm-title">Rainbow Detective</h2>
+        <h2 class="gm-title">Match the spectrum</h2>
         <ol class="gm-prog" aria-label="Rounds"></ol>
         <button type="button" class="btn btn-ghost rb-guide-open">Field guide</button>
         <p class="gm-score"><span class="mono">Score</span><b class="mono rb-pts">0</b></p>
@@ -235,7 +235,7 @@ export const rainbowGame: View = async (body, ctx) => {
     fin.hidden = false;
     body.closest('.page')?.scrollTo(0, 0);
     fin.innerHTML = `
-      <p class="kicker">Rainbow Detective</p>
+      <p class="kicker">Match the spectrum</p>
       <h2 class="gm-end-h"><b class="mono">${right * 10}</b> of ${n * 10}</h2>
       <p class="gm-end-lead">SPHEREx measures 102 spectral channels from 0.75 to 5 µm for every source across the whole sky. That is how Rewind can start to classify a new find, when it is bright enough.</p>
       <ol class="gm-list">${KINDS.map((k) => {

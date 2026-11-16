@@ -1,4 +1,4 @@
-// Tune the Rewind: shift-and-stack by hand. Each round is a set of real SPHEREx photos of one
+// Stack the images: shift-and-stack by hand. Each round is a set of real SPHEREx photos of one
 // fixed patch of sky, with the still sky taken away. Turn the direction dial and the speed tape:
 // the photos are shifted by that motion and averaged, live. At the object's real motion its light
 // lands on one spot and a dot appears that no single photo shows. That is exactly how Rewind works.

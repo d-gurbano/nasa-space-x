@@ -29,7 +29,7 @@ sample shows a "Sample data" chip.
 - `/?fps=1`: frame-rate meter.
 - `/?flash=<slug>`: choose the object for the guided rewind and the demo (otherwise picked automatically:
   FOUND before HINT, highest null-scaled S/N, never a known object).
-- `#/object/<slug>`, `#/detectives`, `#/stars`, `#/benchmark`, `#/scientists`, `#/about`.
+- `#/object/<slug>`, `#/sky`, `#/games`, `#/targets`, `#/blind-test`, `#/methods`, `#/about` (old `#/detectives`, `#/stars`, `#/benchmark`, `#/scientists` redirect).
 
 ## Deploy to GitHub Pages
 

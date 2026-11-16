@@ -45,17 +45,19 @@ const labelRoot = document.getElementById('labels')!;
 
 export const pages = new Map<string, Promise<ObjectPage>>();
 
-/** Old links: #/detectives was renamed #/games. Rewrites the hash in place (no extra history entry). */
+/** Old page addresses, kept working: rewrites the hash in place (no extra history entry). */
+const RENAMED: Record<string, string> = { detectives: 'games', stars: 'targets', benchmark: 'blind-test', scientists: 'methods' };
 function legacyHash() {
-  if (location.hash === '#/detectives') history.replaceState(null, '', '#/games');
+  const old = location.hash.match(/^#\/([\w-]+)$/)?.[1];
+  if (old && RENAMED[old]) history.replaceState(null, '', '#/' + RENAMED[old]);
 }
 
 const VIEWS: Record<string, [string, string, View]> = {
-  sky: ['Sky viewer', 'SPHEREx image archive, queried live', skyView],
+  sky: ['Sky images', 'SPHEREx images of any position, queried live', skyView],
   games: ['Games', 'The pipeline, one step at a time', detectivesView],
-  stars: ['Challenge targets', 'Stars and brown dwarfs named in the challenge', starsView],
-  benchmark: ['Blind recovery test', 'Validation', benchmarkView],
-  scientists: ['Method & data', 'Method / results / downloads', scientistsView],
+  targets: ['Test targets', 'Stars and brown dwarfs named in the challenge', starsView],
+  'blind-test': ['Blind test', 'Recovering known objects without their later observations', benchmarkView],
+  methods: ['Methods', 'Pipeline, full results, checks, downloads', scientistsView],
   about: ['About Rewind', 'Team / credits / AI use', aboutView],
 };
 export let source: DataSource;
@@ -275,7 +277,7 @@ async function boot() {
   const route = () => {
     legacyHash();
     const m = location.hash.match(/^#\/object\/(.+)$/);
-    const v = location.hash.match(/^#\/(\w+)$/)?.[1];
+    const v = location.hash.match(/^#\/([\w-]+)$/)?.[1];
     if (v && VIEWS[v]) {
       dismissOpening();
       closeObject();
@@ -371,15 +373,15 @@ function fpsMeter(scene: Scene) {
   requestAnimationFrame(tick);
 }
 
-// Without WebGL the 3D view is gone, but the pages (Detectives, Challenge stars, ...) still work.
+// Without WebGL the 3D view is gone, but the pages (Games, Test targets, ...) still work.
 function noWebgl() {
   document.body.classList.add('scene-ready', 'explored', 'no-webgl');
   mountTopbar(ui, source.index.objects, source.sample, () => {});
-  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/games">Games</a>, <a href="#/stars">Challenge targets</a>, <a href="#/benchmark">Blind recovery test</a>, <a href="#/scientists">Method &amp; data</a>, <a href="#/about">About</a>.</p>`);
+  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/sky">Sky images</a>, <a href="#/games">Games</a>, <a href="#/targets">Test targets</a>, <a href="#/blind-test">Blind test</a>, <a href="#/methods">Methods</a>, <a href="#/about">About</a>.</p>`);
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
     legacyHash();
-    const v = location.hash.match(/^#\/(\w+)$/)?.[1];
+    const v = location.hash.match(/^#\/([\w-]+)$/)?.[1];
     if (v && VIEWS[v]) host.open(v, ...VIEWS[v]);
     else host.close();
   };

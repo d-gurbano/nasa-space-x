@@ -1,4 +1,4 @@
-// Where will it be?: three known positions of a real Rewind find on a map seen from above the
+// Predict the orbit: three known positions of a real Rewind find on a map seen from above the
 // solar system. Drag the marker to where it will be 30 days later, then see the true spot and
 // how big the guess area is one year ahead, without and with the older SPHEREx positions.
 import { getJson } from '../../lib/data';
@@ -187,7 +187,7 @@ export const whereGame: View = async (body, ctx) => {
     fin.hidden = false;
     body.closest('.page')?.scrollTo(0, 0);
     fin.innerHTML = `
-      <p class="kicker">Where will it be?</p>
+      <p class="kicker">Predict the orbit</p>
       <h2 class="gm-end-h"><b class="mono">${sum}</b> of ${total * 100}</h2>
       <p class="gm-end-lead">${sum >= total * 75 ? 'You think like an orbit.' : sum >= total * 45 ? 'A good eye for motion.' : 'Orbits curve and speed up. That is why every extra position counts.'}</p>
       <ol class="gm-list">${rounds.map((r, i) => `<li><a href="#/object/${esc(r.slug)}">${esc(r.name)}</a><span class="mono">+${scores[i] ?? 0}</span><span class="gm-list-n">old photos: ${esc(factorText(r.sizes.factor))}</span></li>`).join('')}</ol>

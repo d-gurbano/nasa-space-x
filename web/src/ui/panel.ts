@@ -309,7 +309,7 @@ export class ObjectPanel {
       pass = `<p>${p.facts?.neo ? 'No close approach to Earth is listed in JPL SBDB.' : 'Not a near-Earth object: its orbit does not come close to Earth\'s.'}</p>`;
     }
     // One number, one definition: the 3σ largest-axis uncertainty one year after the last
-    // observation (the same figure as the For scientists table). The 3D cloud's own 1σ value is
+    // observation (the same figure as the Methods table). The 3D cloud's own 1σ value is
     // only the fallback, and is labelled as such.
     const yr = p.impact?.one_year_after_last_obs;
     const disc = p.impact?.at_discovery_scenario;

@@ -1,4 +1,4 @@
-// Challenge stars: the Sun's neighbourhood in 3D, with the five NASA challenge targets at
+// Test targets: the Sun's neighbourhood in 3D, with the five NASA challenge targets at
 // their real distances and a time slider that moves every star along its real space motion.
 // Clicking a star (or the Sun) flies to a close-up and opens a compact card with three tabs:
 // what SPHEREx saw (the blink and flipbook, the wavelength reveal for WISE 0855, the honest

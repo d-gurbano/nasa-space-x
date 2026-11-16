@@ -1,6 +1,6 @@
 // "Made of" chart for the object panel, kept simple: the SPHEREx measurements as gold dots
 // over the closest typical type as one clear line (the other types stay faint). The full
-// chart and the table are on the For scientists page.
+// chart and the table are on the Methods page.
 import type { ObjectPage } from '../lib/types';
 import { esc } from './dom';
 

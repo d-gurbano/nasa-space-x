@@ -1,4 +1,4 @@
-// Pure logic for the "Does it work?" page: what each test case counts as, the totals,
+// Pure logic for the Blind test page: what each test case counts as, the totals,
 // and one plain sentence per case. No DOM here, so it can be tested.
 
 export interface BenchCase {

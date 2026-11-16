@@ -1,4 +1,4 @@
-// For scientists: the method as a step diagram, the full results table, what the finds do to
+// Methods: the method as a step diagram, the full results table, what the finds do to
 // the orbit, check definitions, validation, downloads, the data contract and positions in MPC
 // 80-column format for expert review. Nothing here is ever submitted anywhere.
 import '../styles/page-scientists.css';
@@ -65,7 +65,7 @@ const FILES: [string, string][] = [
   ['orbits.json', 'Orbital elements for the objects drawn in the 3D view'],
   ['orbits.bin', 'The same as Float32 rows (fields in orbits.bin.json)'],
   ['planets.json', 'Planet elements used by the 3D view'],
-  ['detectives/rounds.json', 'The rounds of the "Tune the Rewind" game (Games page)'],
+  ['detectives/rounds.json', 'The rounds of the shift-and-stack game (Games page)'],
 ];
 
 // what the engine adds to a find's object.json
@@ -380,7 +380,7 @@ export const scientistsView: View = (body, ctx) => {
       <p class="mono">${bt.hint} HINT · ${bt.missed} missed · ${alarmLine(bt, decoys).replace('false alarms', 'false FOUNDs').replace('false alarm ', 'false FOUND ')}</p>
       <p>${esc(engineText(data.summary?.plain) || `Rewind recovered ${bt.found} of ${bt.seen} detectable known objects, in ${plural(bt.total, 'case')}.`)}</p>
       ${err?.median != null ? `<p class="mono">Position error: median ${err.median} arcsec${err.p90 != null ? `, 90% within ${err.p90}` : ''}${err.n ? ` (n = ${err.n})` : ''}.</p>` : ''}
-      <p class="sci-card-foot"><a class="sci-link" href="#/benchmark">See every case</a>${provenance(sample, 'NASA SPHEREx')}</p>`;
+      <p class="sci-card-foot"><a class="sci-link" href="#/blind-test">See every case</a>${provenance(sample, 'NASA SPHEREx')}</p>`;
   }).catch(() => alive && ($('.sci-bm').innerHTML = `<p class="kicker">Blind test</p><p class="muted">The benchmark file is not in this data set.</p>`));
 
   getJson<Crosscheck>(source.base + 'kaggle_crosscheck.json').then((x) => {

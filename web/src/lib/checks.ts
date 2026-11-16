@@ -1,5 +1,5 @@
 // The nine detection checks and four verdicts, defined once. Every page that counts or names a
-// check (object panel, blind test, For scientists) reads this list, so the counts always agree.
+// check (object panel, blind test, Methods) reads this list, so the counts always agree.
 // Keys and pass rules follow docs/DATA-CONTRACT.md and engine/rewind_engine/verdict.py.
 import type { CheckKey } from './types';
 

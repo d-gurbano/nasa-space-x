@@ -1,4 +1,4 @@
-// Pure helpers for the For scientists page: the results table (filter, sort, CSV),
+// Pure helpers for the Methods page: the results table (filter, sort, CSV),
 // the orbit-impact numbers and the split of DATA-CONTRACT.md into sections.
 import type { IndexObject, Verdict } from '../../lib/types';
 import { isKnown, rankObjects } from '../../lib/rank';

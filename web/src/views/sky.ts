@@ -79,7 +79,7 @@ export const skyView: View = async (body, ctx) => {
   // a place to try, as a card: a button that loads it live, or (with no index yet) a link to its ready-made page
   const spot = (t: { id: string; name: string; what: string }, thumb: boolean) => {
     const inner = `<span class="sky-thumb">${thumb ? `<img src="${esc(ctx.source.base)}stars/${t.id}/stack.png" alt="" loading="lazy">` : ''}</span><span class="sky-card-name">${esc(t.name)}</span><span class="sky-card-what">${esc(t.what)}</span>`;
-    return `<li>${meta ? `<button type="button" class="sky-card" data-preset="${t.id}">${inner}</button>` : `<a class="sky-card" href="#/stars">${inner}</a>`}</li>`;
+    return `<li>${meta ? `<button type="button" class="sky-card" data-preset="${t.id}">${inner}</button>` : `<a class="sky-card" href="#/targets">${inner}</a>`}</li>`;
   };
   const soon = !meta
     ? 'Until then, these targets open with images already processed by Rewind.'

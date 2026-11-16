@@ -29,10 +29,10 @@ export async function drawCard(c: Card): Promise<HTMLCanvasElement> {
   const gold = '#f2b544';
   g.fillStyle = gold;
   g.font = '500 18px "Geist Mono", monospace';
-  g.fillText('TUNE THE REWIND', 630, 128);
+  g.fillText('STACK THE IMAGES', 630, 128);
   g.fillStyle = '#f3f1ec';
   g.font = '400 64px "Instrument Serif", serif';
-  (c.yh5 ? ['I rewound 2025 YH5,', 'a hazardous asteroid'] : ['I tuned the Rewind', 'on SPHEREx photos']).forEach((l, i) => g.fillText(l, 630, 205 + i * 66));
+  (c.yh5 ? ['I rewound 2025 YH5,', 'a hazardous asteroid'] : ['I stacked SPHEREx', 'images by hand']).forEach((l, i) => g.fillText(l, 630, 205 + i * 66));
   g.fillStyle = '#b7b9c0';
   g.font = '400 26px "Instrument Sans", sans-serif';
   (c.yh5 ? ['in NASA SPHEREx photos from', `${c.days} days before its first sighting.`] : ['the way Rewind recovered 2025 YH5,', `${c.days} days before its first sighting.`]).forEach((l, i) => g.fillText(l, 630, 330 + i * 36));
@@ -57,7 +57,7 @@ export async function shareCard(c: Card, btn: HTMLButtonElement): Promise<void> 
   const blob = await new Promise<Blob | null>((ok) => cv.toBlob(ok, 'image/png'));
   if (!blob) return;
   const file = new File([blob], 'rewind-card.png', { type: 'image/png' });
-  const text = c.yh5 ? `I rewound 2025 YH5 in ${c.time}. Can you?` : `I tuned the Rewind: ${c.time}. Can you?`;
+  const text = c.yh5 ? `I rewound 2025 YH5 in ${c.time}. Can you?` : `I found a hidden asteroid in SPHEREx images in ${c.time}. Can you?`;
   try {
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], text, url: location.href });
