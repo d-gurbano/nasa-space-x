@@ -79,7 +79,7 @@ export function mountDock(parent: HTMLElement, hooks: DockHooks): Dock {
       after = c?.after && a?.km != null ? a.km : b.km;
       shown = 0;
       countTo(before);
-      when.innerHTML = `position uncertainty${b.iso ? ` by ${esc(plainDate(b.iso))}` : ''}`;
+      when.innerHTML = `1σ position uncertainty${b.iso ? ` by ${esc(plainDate(b.iso))}` : ''}`;
       const afterBtn = root.querySelector('[data-cloud="after"]') as HTMLButtonElement;
       afterBtn.disabled = !(c?.after && a?.km != null);
       afterBtn.title = afterBtn.disabled ? 'There are no SPHEREx positions for this object yet' : '';

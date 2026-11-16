@@ -534,3 +534,6 @@ body:not(.explored) .results, .obj-open .results, .page-open .results { display:
   .dock-km { padding-right: 8px; }
   .dock-km strong { font-size: var(--fs-xs); }
 }
+
+/* phones: the distance chip sits on the orbit labels under the dock, so it stays desktop-only */
+@media (max-width: 720px) { .earth-dist { display: none !important; } }

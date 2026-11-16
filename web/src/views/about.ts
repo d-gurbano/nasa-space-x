@@ -35,7 +35,7 @@ const AI: [string, string][] = [
   ['Code', 'We wrote the code with Claude Code (Anthropic), an AI coding assistant. We reviewed, ran and tested all of it.'],
   ['Real-or-artifact score', 'A small neural network (CNN) gives each detection a score. The score is advisory. Every verdict comes from the nine rule-based checks.'],
   ['Text', 'AI helped draft some of the wording. We checked every statement against the data.'],
-  ['No AI images', 'Every image is real telescope data or labelled sample data. AI did not generate any image, measurement or number.'],
+  ['No AI images', 'Every image is real telescope data. AI did not generate any image, measurement or number.'],
 ];
 
 // title, link, opens in a new tab

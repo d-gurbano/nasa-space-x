@@ -114,7 +114,7 @@ export const scientistsView: View = (body, ctx) => {
       ${stat(fmt(t.searched), 'objects searched')}
       ${stat(t.found, early ? `FOUND, ${early} of them precoveries made before the first known observation` : 'FOUND in SPHEREx images', 'stat-gold')}
       ${stat(t.known, 'control objects detected')}
-      ${stat(t.hints, 'HINT (never upgraded)', 'stat-blue')}
+      ${stat(t.hints, 'HINT, a signal that failed a check', 'stat-blue')}
       ${stat(t.tooFaint, 'below the local limit')}
       ${stat(t.noPhotos, 'no SPHEREx coverage')}
     </dl>
@@ -195,7 +195,7 @@ export const scientistsView: View = (body, ctx) => {
           <span class="sci-file-meta"><span>${fileType(f)}</span><span class="sci-size"></span></span></a></li>`).join('')}
         <li><div class="sci-file sci-file-static">
           <span class="sci-file-ico">${ICO_FOLDER}</span>
-          <span class="sci-file-name">objects/&lt;slug&gt;/object.json</span><span class="sci-file-desc">One file per object, with its images, checks, uncertainty cloud and spectrum. Open a row in the results table for its link.</span>
+          <span class="sci-file-name">objects/<wbr>&lt;slug&gt;/<wbr>object.json</span><span class="sci-file-desc">One file per object, with its images, checks, uncertainty cloud and spectrum. Open a row in the results table for its link.</span>
           <span class="sci-file-meta"><span>JSON, one per object</span></span></div></li>
       </ul>`, 'sci-sec sci-s-files')}
 
@@ -211,7 +211,7 @@ export const scientistsView: View = (body, ctx) => {
     ${section('Cite', 'How to cite and reproduce', `
       <div class="card card-pad sci-cite">
         <p class="kicker">Suggested citation</p>
-        <p class="mono">Bazarov, R. &amp; Gurbanov, D. (2026). Rewind: SPHEREx precoveries of recently discovered asteroids and comets. NASA International Space Apps Challenge 2026. ${esc(location.origin + location.pathname)}</p>
+        <p class="mono">Bazarov, R. &amp; Gurbanov, D. (2026). Rewind: SPHEREx precoveries of recently discovered asteroids and comets. NASA International Space Apps Challenge 2026. https://rewind.up.railway.app/</p>
         <p class="kicker">Reproduce</p>
         <p>Every number on this site is read from the files under Downloads, in the format given by the data contract above. The images are NASA SPHEREx Level 2 (IRSA). Orbits and observations come from JPL SBDB, JPL Horizons and the Minor Planet Center. Orbit fits use kete (Caltech/IPAC). Please also cite SPHEREx and IRSA as in the acknowledgements below.</p>
       </div>`, 'sci-sec sci-s-cite')}
@@ -298,7 +298,7 @@ export const scientistsView: View = (body, ctx) => {
     const main = `<tr class="sci-row r-${esc(o.verdict.toLowerCase())}${open ? ' open' : ''}" data-slug="${esc(o.slug)}">
       <td><a href="#/object/${esc(o.slug)}">${esc(o.name)}</a></td>
       <td class="sci-wide">${esc(KIND[o.kind] ?? o.kind)}</td>
-      <td class="sci-left">${notEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : chipFor(o.verdict)}</td>
+      <td class="sci-left">${notEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : isKnown(o) ? '<span class="verdict-chip v-seen">Control</span>' : chipFor(o.verdict)}</td>
       <td class="sci-snr">${o.best_snr == null ? '<span class="muted">-</span>' : `<span class="sci-spark" aria-hidden="true"><i style="width:${snrBar(o.best_snr, maxSnr).toFixed(1)}%"></i></span><span class="sci-snr-v">${o.best_snr.toFixed(1)}</span>`}</td>
       <td class="sci-wide">${fmt(o.n_frames ?? 0)}</td>
       <td class="sci-wide">${esc(o.discovered?.iso ?? '-')}</td>
@@ -502,7 +502,7 @@ export const scientistsView: View = (body, ctx) => {
         <div class="sci-panel-head"><p class="mono"><span class="sci-tag">MPC 80-col</span><span class="sci-mpc-title"></span></p>${copyButton}</div>
         <pre class="sci-code" tabindex="0" aria-label="MPC 80-column lines"></pre>
       </div>
-      <p class="hint">Each line is the measured centre of one stack, from the SPHEREx frames used in the detection. A stack is one day of images, or all days when a single day is too weak. These are the positions added in the orbit refits above. Note 2 is S (space-based).</p>
+      <p class="hint">Each line is the measured centre of one stack, from the SPHEREx frames used in the detection. A stack is one day of images, or all days when a single day is too weak. These are the positions added in the orbit refits above. Column 15 holds S, the MPC note for an observation from space.</p>
       <p class="sci-prov">${provenance(source.sample, 'NASA SPHEREx')}</p>`;
     $('.sci-pick').addEventListener('click', (e) => {
       const k = (e.target as HTMLElement).closest<HTMLElement>('[data-k]')?.dataset.k;
