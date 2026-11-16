@@ -1,0 +1,53 @@
+/* Pulse reader: season images with a scrubber, and the measured points with a sine laid over them. */
+.pu-intro { margin: 0 0 var(--g2); max-width: 70ch; }
+.pu-fig { display: grid; gap: var(--g2); margin: 0; width: min(660px, 56vw); min-width: 0; }
+.pu-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--g2); margin: 0; }
+.pu-who .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.pu-who b { font-size: var(--fs-l); font-weight: 600; }
+.pu-view { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: var(--g2); align-items: start; }
+.pu-imgbox { position: relative; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #000; }
+.pu-img { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: auto; }
+.pu-tag { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: var(--pill); background: var(--gold); color: var(--space); font-size: var(--fs-xs); font-weight: 600; }
+.pu-scrub { display: grid; gap: 10px; align-content: start; }
+.pu-date { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; margin: 0; }
+.pu-date b { font-size: var(--fs-l); font-weight: 500; color: var(--ink); }
+.pu-date span, .pu-lab { font-size: var(--fs-s); color: var(--ink-3); }
+.pu-cap { margin: 0; font-size: var(--fs-s); line-height: 1.45; color: var(--ink-2); }
+.pu-range { width: 100%; min-height: 32px; accent-color: var(--gold); }
+.pu-range:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.pu-play { justify-self: start; }
+.pu-svg { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.pu-grid line { stroke: var(--line); stroke-width: 1; }
+.pu-grid .pu-zero { stroke: var(--line-2); stroke-dasharray: 3 4; }
+.pu-grid text { fill: var(--ink-3); font: 12px var(--mono); text-anchor: middle; }
+.pu-grid .pu-axis { text-anchor: start; }
+.pu-grid .pu-axis-r { text-anchor: end; }
+.pu-err { stroke: var(--ink-3); stroke-width: 1.2; }
+.pu-pt { fill: var(--blue-2); stroke: var(--space); stroke-width: 1; }
+.pu-s { fill: none; stroke-width: 2.4; stroke-linecap: round; }
+.pu-s-guess { stroke: var(--gold-2); filter: drop-shadow(0 0 4px rgba(255, 217, 138, 0.45)); }
+.pu-s-true { stroke: var(--ink); stroke-dasharray: 6 5; stroke-width: 1.6; }
+.pu-now { stroke: var(--gold); stroke-width: 1.5; opacity: 0.8; }
+.pu-ab { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 4 4; }
+.pu-ab-t { fill: var(--ink); font: 600 13px var(--mono); text-anchor: middle; }
+.pu-pass { fill: none; stroke: var(--gold); stroke-width: 1.8; }
+.pu-per { display: grid; gap: 8px; }
+.pu-per label { font-size: var(--fs-m); color: var(--ink-2); }
+.pu-per label b { color: var(--gold-2); font-weight: 500; }
+.pu-fitq { margin: 0; font-size: var(--fs-s); color: var(--ink-3); }
+.pu-answers { display: grid; gap: 8px; }
+.pu-a { justify-content: space-between; min-height: 48px; text-align: left; }
+.pu-a kbd { font-size: var(--fs-2xs); color: var(--ink-3); }
+.pu-say { margin: 0; font-size: var(--fs-m); line-height: 1.5; color: var(--ink); max-width: 46ch; }
+.pu-plus { font-size: var(--fs-l); color: var(--gold); }
+.pu-key { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-size: var(--fs-xs); color: var(--ink-3); }
+.pu-key span { display: inline-block; width: 22px; height: 0; border-top: 2.4px solid var(--gold-2); }
+.pu-key .pu-k-t { border-top: 1.6px dashed var(--ink); margin-left: 8px; }
+.pu-src { max-width: 62ch; font-size: var(--fs-s); }
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .pu-fig { width: 100%; }
+}
+@media (max-width: 560px) {
+  .pu-view { grid-template-columns: minmax(0, 1fr); }
+  .pu-imgbox { width: min(100%, 300px); justify-self: center; }
+}

@@ -1,0 +1,33 @@
+/* Planetary defense desk */
+.pd-intro { margin: 0 0 var(--g3); max-width: 62ch; }
+.pd-map { width: min(560px, 100%); margin: 0; padding: var(--g2); border: 1px solid var(--line); border-radius: var(--r2); background: radial-gradient(120% 100% at 50% 0%, #0c1019, #05070b 75%); display: grid; gap: var(--g); }
+.pd-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--g2); margin: 0 4px; }
+.pd-who .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.pd-who b { font-size: var(--fs-m); font-weight: 500; }
+.pd-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pd-before { fill: rgba(143, 151, 168, 0.12); stroke: var(--ink-3); stroke-dasharray: 2 2; stroke-width: 0.6; }
+.pd-after { fill: rgba(242, 181, 68, 0.22); stroke: var(--gold); stroke-width: 0.8; animation: pd-in 900ms var(--ease-out) backwards; transform-box: fill-box; transform-origin: center; }
+@keyframes pd-in { from { opacity: 0; transform: scale(3); } }
+.pd-moon { fill: none; stroke: var(--blue-2); stroke-width: 0.5; }
+.pd-earth { fill: var(--blue-2); }
+.pd-axis { stroke: var(--line-2); stroke-width: 0.5; }
+.pd-lab { fill: var(--ink-2); font: 500 6px var(--font); text-anchor: middle; }
+.pd-lab-after { fill: var(--gold-2); }
+.pd-lab-s { font-size: 5px; fill: var(--ink-3); }
+.pd-cap { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.4; margin: 0 4px; }
+.pd-brief { margin: 0; font-size: var(--fs-m); line-height: 1.45; color: var(--ink-2); max-width: 44ch; }
+.pd-acts { display: grid; gap: var(--g); }
+.pd-a { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 14px; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--fill); color: var(--ink); font-family: var(--font); text-align: left; cursor: pointer; transition: background var(--t-fast), border-color var(--t-fast); }
+.pd-a:hover, .pd-a:focus-visible { background: var(--fill-2); border-color: var(--gold-line); }
+.pd-a span { display: grid; gap: 2px; }
+.pd-a b { font-size: var(--fs-m); font-weight: 600; }
+.pd-a small { font-size: var(--fs-xs); color: var(--ink-3); }
+.pd-a kbd { margin-left: auto; padding: 2px 7px; border-radius: 5px; background: var(--fill-2); color: var(--ink-3); font-size: var(--fs-xs); }
+.pd-label { margin: 0; font-size: var(--fs-2xs); letter-spacing: var(--track-caps); color: var(--gold); }
+.pd-plus { font-size: 0.6em; font-weight: 500; color: var(--gold-2); vertical-align: middle; }
+.pd-say { margin: 0; font-size: var(--fs-l); line-height: 1.45; max-width: 40ch; }
+.pd-safe { max-width: 60ch; }
+@media (max-width: 760px) {
+  .pd .gm-stage { grid-template-columns: 1fr; }
+  .pd .gm-prog { display: none; }
+}

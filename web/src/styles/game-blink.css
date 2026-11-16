@@ -1,0 +1,32 @@
+/* Blink!: two real images of the same sky, flipping. The over-layer uses image pixels as units. */
+.bk-fig { width: clamp(300px, calc(100svh - 260px), 560px); margin: 0; display: grid; gap: var(--g); }
+.bk-who { display: flex; justify-content: space-between; gap: var(--g2); margin: 0 4px; font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.bk-frame { color: var(--gold); }
+.bk-sky { position: relative; aspect-ratio: 1; border-radius: var(--r2); overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--line); cursor: crosshair; touch-action: manipulation; user-select: none; -webkit-user-select: none; outline: none; }
+.bk-sky:focus-visible { box-shadow: 0 0 0 2px var(--gold); }
+.bk-sky.done { cursor: default; }
+.bk-img { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; opacity: 0; pointer-events: none; }
+.bk-img.on { opacity: 1; }
+.bk-over { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.bk-miss { fill: none; stroke: var(--ink-2); stroke-width: 0.35; stroke-dasharray: 0.8 0.6; }
+.bk-cur circle { fill: none; stroke: var(--gold); stroke-width: 0.35; }
+.bk-cur path { stroke: var(--gold); stroke-width: 0.35; }
+.bk-hintring { fill: rgba(242, 181, 68, 0.06); stroke: var(--gold-line); stroke-width: 0.3; stroke-dasharray: 1 0.8; }
+.bk-path { stroke: var(--gold-2); stroke-width: 0.35; stroke-dasharray: 0.8 0.6; }
+.bk-at { fill: none; stroke: var(--gold); stroke-width: 0.45; animation: bk-ring 600ms var(--ease-out) backwards; transform-box: fill-box; transform-origin: center; }
+@keyframes bk-ring { from { opacity: 0; transform: scale(2.2); } }
+.bk-lab { fill: var(--gold-2); font: 600 3px var(--mono); text-anchor: middle; }
+.bk-scale { display: flex; justify-content: space-between; margin: 0 4px; font-size: var(--fs-xs); color: var(--ink-3); }
+.bk-msg { min-height: 1.45em; color: var(--gold-2); }
+.bk-facts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--g) var(--g2); margin: 0; }
+.bk-facts div { display: grid; gap: 2px; }
+.bk-facts dt { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.bk-facts dd { margin: 0; font-size: var(--fs-s); color: var(--ink); overflow-wrap: anywhere; }
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .bk-fig { width: min(100%, 520px); justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-at { animation: none; }
+}
+
+.bk-frame { text-transform: none; }

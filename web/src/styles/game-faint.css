@@ -1,0 +1,40 @@
+/* Too faint? */
+.tf-intro { margin: 0 0 var(--g3); max-width: 62ch; }
+.tf-card { width: min(560px, 100%); margin: 0; padding: var(--g3); border: 1px solid var(--line); border-radius: var(--r2); background: radial-gradient(120% 100% at 50% 0%, #0c1019, #05070b 75%); display: grid; gap: var(--g3); }
+.tf-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px var(--g2); margin: 0; }
+.tf-who .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); width: 100%; }
+.tf-who b { font-size: var(--fs-xl); font-weight: 600; letter-spacing: -0.02em; }
+.tf-kind { color: var(--ink-3); font-size: var(--fs-s); }
+.tf-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--g2); margin: 0; }
+.tf-stats div { display: grid; gap: 4px; align-content: start; padding: 12px; border-radius: var(--r); background: var(--fill); }
+.tf-stats dt { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
+.tf-stats dd { margin: 0; font-size: var(--fs-xl); color: var(--gold-2); }
+.tf-stats small { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.35; }
+.tf-meter { padding: 26px 0 30px; }
+.tf-scale { position: relative; display: block; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--ink), var(--fill-2)); }
+.tf-scale i { position: absolute; top: -8px; width: 2px; height: 22px; margin-left: -1px; }
+.tf-scale i span { position: absolute; left: 50%; transform: translateX(-50%); font: 500 var(--fs-2xs) var(--font); white-space: nowrap; }
+.tf-m-obj { background: var(--gold); }
+.tf-m-obj span { top: -18px; color: var(--gold-2); }
+.tf-m-lim { background: var(--ink-2); }
+.tf-m-lim span { top: 24px; color: var(--ink-2); }
+.tf-scale b, .tf-scale em { position: absolute; top: 12px; font-size: var(--fs-2xs); font-weight: 400; font-style: normal; color: var(--ink-3); }
+.tf-scale b:nth-of-type(1) { left: 0; top: -20px; }
+.tf-scale b:nth-of-type(2) { right: 0; top: -20px; }
+.tf-scale em:nth-of-type(1) { left: 0; top: 14px; }
+.tf-scale em:nth-of-type(2) { right: 0; top: 14px; }
+.tf-bets { display: flex; flex-wrap: wrap; gap: var(--g); }
+.tf-bets kbd { margin-left: 10px; padding: 1px 6px; border-radius: 5px; background: rgba(0, 0, 0, 0.18); font-size: var(--fs-xs); }
+.tf-verdict { display: inline-flex; align-items: baseline; gap: 12px; margin: 0; font: 500 var(--fs-xs) var(--mono); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-2); }
+.tf-v-FOUND { color: var(--gold); }
+.tf-v-HINT { color: var(--blue-2); }
+.tf-verdict span { color: var(--ink-3); }
+.tf-plus { font-size: 0.6em; font-weight: 500; color: var(--gold-2); vertical-align: middle; }
+.tf-say { margin: 0; font-size: var(--fs-l); line-height: 1.45; max-width: 40ch; }
+@media (max-width: 760px) {
+  .tf .gm-stage { grid-template-columns: 1fr; }
+  .tf-stats { grid-template-columns: 1fr; }
+  .tf-stats div { grid-template-columns: 1fr auto; }
+  .tf-stats small { grid-column: 1 / -1; }
+  .tf .gm-prog { display: none; }
+}

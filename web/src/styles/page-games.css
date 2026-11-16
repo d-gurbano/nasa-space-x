@@ -66,7 +66,7 @@
 @keyframes pv-guess { 0%, 100% { transform: translate(-18px, 26px); } 50% { transform: none; } }
 
 /* ---- tabs over an open game ---- */
-.gm-tabs { display: flex; gap: 4px; padding: 4px; border-radius: var(--pill); background: var(--fill); width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.gm-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 26px; background: var(--fill); width: fit-content; max-width: 100%; }
 .gm-tab { flex: none; min-height: 40px; padding: 0 16px; border: 0; border-radius: var(--pill); background: none; color: var(--ink-2); font: 500 var(--fs-s) var(--font); cursor: pointer; white-space: nowrap; transition: background var(--t-fast), color var(--t-fast); }
 .gm-tab:hover { color: var(--ink); }
 .gm-tab[aria-selected='true'] { background: var(--ink); color: var(--space); }

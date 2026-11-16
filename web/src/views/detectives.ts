@@ -6,6 +6,15 @@ import '../styles/page-detectives.css';
 import '../styles/page-games.css';
 import { esc } from '../ui/dom';
 import type { View } from './page';
+import { preview as pv_blink } from './games/previews/blink';
+import { preview as pv_junk } from './games/previews/junk';
+import { preview as pv_dots } from './games/previews/dots';
+import { preview as pv_defense } from './games/previews/defense';
+import { preview as pv_comet } from './games/previews/comet';
+import { preview as pv_name } from './games/previews/name';
+import { preview as pv_faint } from './games/previews/faint';
+import { preview as pv_pulse } from './games/previews/pulse';
+import { preview as pv_speed } from './games/previews/speed';
 
 
 interface GameDef {
@@ -39,6 +48,15 @@ const GAMES: GameDef[] = [
   { id: 'tune', title: 'Tune the Rewind', promise: 'Shift real SPHEREx images along an asteroid’s motion until it appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
   { id: 'rainbow', title: 'Rainbow Detective', promise: 'Match a reflectance spectrum to a rocky, carbon-rich, metal-rich or icy surface.', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
   { id: 'where', title: 'Where will it be?', promise: 'Guess where an object will be next. Then see how much its earlier SPHEREx positions shrink the uncertainty.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
+  { id: 'blink', title: 'Blink!', promise: 'Two SPHEREx images of the same sky flip back and forth. Tap the dot that moved.', level: 'Easy to start', preview: pv_blink, load: () => import('./games/blink').then((m) => m.view) },
+  { id: 'junk', title: 'Real or junk?', promise: 'Asteroid, satellite trail, cosmic ray or ghost? Sort real SPHEREx images, then see what our AI said.', level: 'Quick', preview: pv_junk, load: () => import('./games/junk').then((m) => m.view) },
+  { id: 'dots', title: 'Connect the dots', promise: 'Dots from three days, mostly stars and noise. Link the ones that are one asteroid moving in a straight line.', level: 'Medium', preview: pv_dots, load: () => import('./games/dots').then((m) => m.view) },
+  { id: 'defense', title: 'Planetary defense desk', promise: 'A new near-Earth asteroid comes with a large uncertainty. Decide what to do and watch the uncertainty change.', level: 'Medium', preview: pv_defense, load: () => import('./games/defense').then((m) => m.view) },
+  { id: 'comet', title: 'Comet or asteroid?', promise: 'Look at a real SPHEREx stack and its spectrum. A fuzzy glow and a bump at 4.26 µm mean a comet.', level: 'Quick', preview: pv_comet, load: () => import('./games/comet').then((m) => m.view) },
+  { id: 'name', title: 'Name that rock', promise: 'Read the date hidden in a name like 2025 YH5, or build the name from a discovery date.', level: 'Quick', preview: pv_name, load: () => import('./games/name').then((m) => m.view) },
+  { id: 'faint', title: 'Too faint?', promise: 'Bet whether stacking will show an object, then see what Rewind measured.', level: 'Quick', preview: pv_faint, load: () => import('./games/faint').then((m) => m.view) },
+  { id: 'pulse', title: 'Pulse reader', promise: 'Step through real SPHEREx seasons of R Draconis and find how long one pulse takes.', level: 'Medium', preview: pv_pulse, load: () => import('./games/pulse').then((m) => m.view) },
+  { id: 'speed', title: 'Star speedometer', promise: 'Compare SPHEREx images taken months apart and measure how fast a nearby star moves.', level: 'Medium', preview: pv_speed, load: () => import('./games/speed').then((m) => m.view) },
 ];
 
 /** The open game lives in ?game= (before the hash), so a link to one game can be shared. */
@@ -55,8 +73,8 @@ export const detectivesView: View = async (body, ctx) => {
   body.innerHTML = `
     <div class="gm">
       <header class="gm-head">
-        <h1 class="gm-h">Three games, one for each step of the pipeline</h1>
-        <p class="gm-lead">Each game is one step that Rewind runs on real data. You stack images along a motion (shift-and-stack), match a spectrum to a surface type, and predict where an orbit goes.</p>
+        <h1 class="gm-h">Twelve games on real SPHEREx data</h1>
+        <p class="gm-lead">Each game is a real task from asteroid and comet work: spotting a moving dot, sorting real objects from junk, linking detections, reading a spectrum and judging a risk. All images and numbers come from SPHEREx and our own measurements.</p>
       </header>
       <nav class="gm-tabs" role="tablist" aria-label="Games" hidden>
         <button role="tab" data-game="hub" class="gm-tab gm-tab-all" aria-selected="false">All games</button>
@@ -67,7 +85,7 @@ export const detectivesView: View = async (body, ctx) => {
           <div class="gm-slot"><button class="gm-card gm-card-${g.id}" data-game="${g.id}" style="--i:${i}">
             <span class="gm-card-pv">${g.preview}</span>
             <span class="gm-card-txt">
-              <span class="gm-card-level mono"><b>0${i + 1}</b>${esc(g.level)}</span>
+              <span class="gm-card-level mono"><b>${String(i + 1).padStart(2, '0')}</b>${esc(g.level)}</span>
               <span class="gm-card-t">${esc(g.title)}</span>
               <span class="gm-card-p">${esc(g.promise)}</span>
               <span class="gm-card-go">Play<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
