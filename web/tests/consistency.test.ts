@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { CHECKS, N_CHECKS, VERDICT_DEF, checkResults } from '../src/lib/checks';
 import { tally } from '../src/lib/rank';
 import { tally as benchTally, usable, type BenchCase } from '../src/views/benchmark/logic';
-import { farText, shortDate } from '../src/ui/panel-text';
+import { engineText, farText, oneSentence, shortDate } from '../src/ui/panel-text';
 import type { IndexObject, ObjectPage } from '../src/lib/types';
 
 const PUB = join(__dirname, '..', 'public');
@@ -81,6 +81,35 @@ describe('blind test', () => {
     if (s?.seen != null) expect(t.seen).toBe(s.seen);
     if (s?.found != null && s.seen != null) expect(t.found).toBe(s.found);
     if (s?.hints != null) expect(t.hint).toBe(s.hints);
+  });
+});
+
+describe('engine text', () => {
+  const OLD = /\bphotos?\b|fake path|hint, not a find|before anyone|sky-cleaned stack|Nothing shows|too faint for SPHEREx here|pretend/i;
+  it('every verdict sentence in the data reads in the current wording', () => {
+    for (const o of index.objects) {
+      const t = engineText(o.verdict_text);
+      expect(t, o.slug).not.toMatch(OLD);
+      expect(t, o.slug).not.toMatch(/undefined|NaN/);
+    }
+  });
+  it('keeps every number from the original sentence', () => {
+    for (const o of index.objects) {
+      const nums = (s: string) => (s.match(/\d+(?:\.\d+)?/g) ?? []).sort().join(' ');
+      // the rewrite only adds thresholds that define a term ("local 50% limit", "stack S/N below 5")
+      const added = engineText(o.verdict_text).replace('local 50% limit', 'local limit').replaceAll('stack S/N below 5', 'stack S/N below threshold');
+      expect(nums(added), o.slug).toBe(nums(o.verdict_text ?? ''));
+    }
+  });
+  it('rewrites the blind-test summary and leaves new wording alone', () => {
+    const old = 'Rewind found 10 of 18 known objects that were visible in SPHEREx before the pretend discovery date (7 more were hints, 1 missed), with 0 false alarms in 23 real cases and 22 empty-sky decoys.';
+    expect(engineText(old)).toBe('With the observed arc truncated, Rewind recovered 10 of 18 known objects that were detectable in SPHEREx before the truncation date (7 more were HINT, 1 missed), with 0 false FOUNDs in 23 real cases and 22 empty-sky decoys.');
+    const fresh = 'Rewind detected X in SPHEREx images taken 1-18 days before the first known observation (2025-12-20): null-calibrated S/N 34.4.';
+    expect(engineText(fresh)).toBe(fresh);
+  });
+  it('the one-line summary still cuts at the colon', () => {
+    const t = engineText('Rewind found 2025 YH5 in SPHEREx photos taken 1-18 days before the first known observation (2025-12-20): S/N 34.4 in the sky-cleaned stack of 81 photos.');
+    expect(oneSentence(t)).toBe('Rewind detected 2025 YH5 in SPHEREx images taken 1-18 days before the first known observation.');
   });
 });
 

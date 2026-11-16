@@ -52,7 +52,7 @@ describe('demo numbers come from the data', () => {
     expect(f.dayPngs).toHaveLength(page.spherex.days.length);
     expect(f.searched).toBe(idx.objects.length);
     expect(text(captionHtml('flash', f))).toContain(`${f.daysBefore} days earlier`);
-    expect(text(captionHtml('stack', f))).toContain(`${f.stackFrames} photos`);
+    expect(text(captionHtml('stack', f))).toContain(`${f.stackFrames} images`);
     const map = text(captionHtml('map', f));
     for (const n of [f.searched, f.found, f.foundBefore]) expect(map).toContain(String(n));
   });
@@ -61,7 +61,7 @@ describe('demo numbers come from the data', () => {
     const s = (page.impact as any).at_discovery_scenario;
     expect(f.cloud!.beforeKm).toBe(s.sigma3_km_before);
     expect(f.cloud!.afterKm).toBe(s.sigma3_km_after);
-    expect(text(captionHtml('sharper', f))).toContain(`${Math.round(s.factor)}x sharper`);
+    expect(text(captionHtml('sharper', f))).toContain(`${Math.round(s.factor)}× smaller`);
   });
 
   it('follows the data when it changes, nothing is hard-coded', () => {
@@ -69,7 +69,7 @@ describe('demo numbers come from the data', () => {
     const p = { ...page, impact: { at_discovery_scenario: { sigma3_km_before: 4e6, sigma3_km_after: 1e6, factor: 4 } } } as unknown as ObjectPage;
     const g = demoFacts(idx.objects.slice(0, 50), o, p);
     expect(text(captionHtml('flash', g))).toContain('12 days earlier');
-    expect(text(captionHtml('sharper', g))).toContain('4x sharper');
+    expect(text(captionHtml('sharper', g))).toContain('4× smaller');
     expect(g.searched).toBe(50);
   });
 

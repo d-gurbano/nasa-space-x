@@ -35,9 +35,9 @@ const PREVIEW = {
 };
 
 const GAMES: GameDef[] = [
-  { id: 'tune', title: 'Tune the Rewind', promise: 'Line up real photos until a hidden asteroid appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
-  { id: 'rainbow', title: 'Rainbow Detective', promise: 'Read an object\'s colours. Rocky, carbon, metal or ice?', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
-  { id: 'where', title: 'Where will it be?', promise: 'Guess where a find goes next. Then see how old photos narrow it down.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
+  { id: 'tune', title: 'Tune the Rewind', promise: 'Shift-and-stack: line up real SPHEREx photos along an asteroid’s motion until it appears.', level: 'Easy to start', preview: PREVIEW.tune, load: () => import('./games/tune').then((m) => m.tuneGame) },
+  { id: 'rainbow', title: 'Rainbow Detective', promise: 'Spectral classification: match a reflectance spectrum to rocky, carbon-rich, metallic or icy.', level: 'Quick', preview: PREVIEW.rainbow, load: () => import('./games/rainbow').then((m) => m.rainbowGame) },
+  { id: 'where', title: 'Where will it be?', promise: 'Orbit prediction: guess where an object goes next, then see how precovery positions shrink the uncertainty.', level: 'Medium', preview: PREVIEW.where, load: () => import('./games/where').then((m) => m.whereGame) },
 ];
 
 /** The open game lives in ?game= (before the hash), so a link to one game can be shared. */
@@ -54,8 +54,8 @@ export const detectivesView: View = async (body, ctx) => {
   body.innerHTML = `
     <div class="gm">
       <header class="gm-head">
-        <h1 class="gm-h">Play with real space photos.</h1>
-        <p class="gm-lead">Three small games. Each game is one step of the real pipeline.</p>
+        <h1 class="gm-h">Try the pipeline yourself.</h1>
+        <p class="gm-lead">Three short exercises on real data, each one a step Rewind runs: shift-and-stack, spectral classification and orbit prediction.</p>
       </header>
       <nav class="gm-tabs" role="tablist" aria-label="Games" hidden>
         <button role="tab" data-game="hub" class="gm-tab gm-tab-all" aria-selected="false">All games</button>
@@ -88,7 +88,7 @@ export const detectivesView: View = async (body, ctx) => {
     tabs.hidden = mount.hidden = !g;
     tabs.querySelectorAll('button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.game === id)));
     remember(g ? g.id : null);
-    document.title = `${g ? g.title : 'Games'} - Rewind`;
+    document.title = `${g ? g.title : 'Games'} · Rewind`;
     mount.innerHTML = '';
     body.closest('.page')?.scrollTo(0, 0);
     if (!g) return;

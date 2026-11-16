@@ -74,7 +74,7 @@ export const rainbowGame: View = async (body, ctx) => {
       <div class="gm-stage">
         <figure class="rb-chart">
           <p class="rb-who"><span class="mono rb-kind"></span><b class="rb-name"></b></p>
-          <svg class="rb-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Brightness of the object in each of the SPHEREx colours, from 0.75 to 5 micrometres">
+          <svg class="rb-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Relative reflectance in the SPHEREx wavelength range, 0.75 to 5 micrometres">
             <defs>
               <linearGradient id="rb-grad" gradientUnits="userSpaceOnUse" x1="${X0}" x2="${X1}" y1="0" y2="0">${gradStops}</linearGradient>
               <filter id="rb-glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -93,20 +93,20 @@ export const rainbowGame: View = async (body, ctx) => {
         <div class="gm-side">
           <div class="rb-ask">
             <p class="gm-q">What is it <b>made of</b>?</p>
-            <p class="gm-sub">A dip means something is soaking up that colour. Point at an answer to lay its typical curve over the mystery one.</p>
+            <p class="gm-sub">A dip is an absorption band: a mineral or ice absorbing light at that wavelength. Point at an answer to overlay its template on the mystery spectrum.</p>
             <div class="rb-answers">${KINDS.map((k) => `<button class="rb-a rb-a-${k.id}" data-a="${k.id}">${mini(k.id, 88, 40)}<span><b>${k.name}</b><small>${k.tell}</small></span><kbd class="mono">${k.key}</kbd></button>`).join('')}</div>
             <div class="gm-row"><button type="button" class="btn btn-ghost rb-hint">Hint</button></div>
           </div>
           <div class="rb-reveal" hidden></div>
         </div>
       </div>
-      <div class="tr-foot">${provenance(sample, 'Real ground-based spectra, resampled to SPHEREx colours')}<p class="rb-note">${esc(data.note)}</p></div>
+      <div class="tr-foot">${provenance(sample, 'Real ground-based spectra, resampled to SPHEREx wavelengths')}<p class="rb-note">${esc(data.note)}</p></div>
     </div>
     <div class="gm-end" hidden></div>
     <dialog class="rb-guide" aria-labelledby="rb-guide-h">
       <p class="kicker">Field guide</p>
       <h2 id="rb-guide-h" class="rb-guide-h">Four shapes to know</h2>
-      <p class="gm-sub">Each curve is the typical colour fingerprint of one type, from violet (0.75 µm) to red (5 µm). Match the shape, not the height.</p>
+      <p class="gm-sub">Each curve is the mean spectrum of one taxonomic type across the near- and mid-infrared, 0.75 to 5 µm (all invisible to the eye). Match the shape, not the height.</p>
       <ol class="rb-guide-list">${KINDS.map((k) => `<li>${mini(k.id, 200, 96)}<b>${kindIcon(k.id)}${k.name}</b><span>${k.tell}</span></li>`).join('')}</ol>
       <div class="gm-row"><button type="button" class="btn btn-primary rb-guide-ok">Got it</button></div>
     </dialog>`;
@@ -217,7 +217,7 @@ export const rainbowGame: View = async (body, ctx) => {
         <p class="rb-verdict rb-v-${r.truth}">${kindIcon(r.truth)}${esc(NAME[r.truth])}${r.kind === 'spherex' && r.label ? ` <span class="mono">(${esc(r.label)})</span>` : ''}</p>
         <p class="gm-q">${ok ? 'Right.' : `Not ${esc(NAME[a].toLowerCase())}.`} <span class="rb-plus mono">+${ok ? 10 : 0}</span></p>
         <p class="rb-say">${esc(r.say)}</p>
-        ${r.kind === 'model' ? `<p class="gm-sub">This round is a model built from lab ice bands, not a measured comet.</p>` : r.kind === 'measured' ? `<p class="gm-sub">A real spectrum from the NASA IRTF telescope, resampled to SPHEREx colours.</p>` : ''}
+        ${r.kind === 'model' ? `<p class="gm-sub">This round is a model built from lab ice bands, not a measured comet.</p>` : r.kind === 'measured' ? `<p class="gm-sub">A real spectrum from the NASA IRTF telescope, resampled to SPHEREx wavelengths.</p>` : ''}
         <div class="gm-row"><button class="btn btn-primary rb-next">${last ? 'See my score' : 'Next'}${icon('arrow')}</button>${r.slug ? `<a class="btn btn-ghost" href="#/object/${esc(r.slug)}">Open ${esc(r.name)}</a>` : ''}</div>`;
       next = () => (last ? end() : play(k + 1));
       const btn = q<HTMLButtonElement>('.rb-next');
@@ -237,7 +237,7 @@ export const rainbowGame: View = async (body, ctx) => {
     fin.innerHTML = `
       <p class="kicker">Rainbow Detective</p>
       <h2 class="gm-end-h"><b class="mono">${right * 10}</b> of ${n * 10}</h2>
-      <p class="gm-end-lead">SPHEREx measures 102 colours for every object it sees, across the whole sky. That is how Rewind can start to tell what a new find is made of.</p>
+      <p class="gm-end-lead">SPHEREx measures 102 spectral channels from 0.75 to 5 µm for every source across the whole sky. That is how Rewind can start to classify a new find, when it is bright enough.</p>
       <ol class="gm-list">${KINDS.map((k) => {
         const of = results.filter((x) => x.truth === k.id);
         return of.length ? `<li><span>${k.name}</span><span class="mono">${of.filter((x) => x.ok).length} of ${of.length}</span></li>` : '';

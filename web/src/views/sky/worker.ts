@@ -103,7 +103,7 @@ async function readFrame(req: LoadRequest, key: string): Promise<FrameResult> {
       if (y > y1) y1 = y;
     }
   const [cx, cy] = wcs.world2pix(req.ra, req.dec);
-  if (cx < 0 || cy < 0 || cx > nx - 1 || cy > ny - 1) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'The spot is just outside this photo' };
+  if (cx < 0 || cy < 0 || cx > nx - 1 || cy > ny - 1) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'The position is just outside this image' };
   const [ex, ey] = wcs.world2pix(...offsetToSky(req.ra, req.dec, 10, 0));
   const [nxx, nyy] = wcs.world2pix(...offsetToSky(req.ra, req.dec, 0, 10));
   const c0 = Math.max(0, Math.floor(x0)), c1 = Math.min(nx - 1, Math.ceil(x1));
@@ -127,7 +127,7 @@ async function readFrame(req: LoadRequest, key: string): Promise<FrameResult> {
     data[k] = Number.isFinite(a + b + c + d) ? (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy : at(Math.round(x), Math.round(y));
   }
   const { sky, noise } = skyStats(data);
-  if (!Number.isFinite(sky)) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'No valid pixels at this spot in this photo' };
+  if (!Number.isFinite(sky)) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'No valid pixels at this position in this image' };
   for (let k = 0; k < data.length; k++) data[k] -= sky;
   return {
     type: 'frame', job: req.job, key, ok: true, data, sky, noise, mjd: head.mjd, detector: head.detector,

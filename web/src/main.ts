@@ -51,11 +51,11 @@ function legacyHash() {
 }
 
 const VIEWS: Record<string, [string, string, View]> = {
-  sky: ['Sky', 'Any spot in the sky', skyView],
-  games: ['Games', 'Three exercises on real SPHEREx data', detectivesView],
-  stars: ['Challenge stars', 'NASA challenge targets', starsView],
-  benchmark: ['Does it work?', 'The "pretend it is new" test', benchmarkView],
-  scientists: ['For scientists', 'Method / data / positions', scientistsView],
+  sky: ['Sky viewer', 'SPHEREx image archive, queried live', skyView],
+  games: ['Games', 'The pipeline, one step at a time', detectivesView],
+  stars: ['Challenge targets', 'Stars and brown dwarfs named in the challenge', starsView],
+  benchmark: ['Blind recovery test', 'Validation', benchmarkView],
+  scientists: ['Method & data', 'Method / results / downloads', scientistsView],
   about: ['About Rewind', 'Team / credits / AI use', aboutView],
 };
 export let source: DataSource;
@@ -375,7 +375,7 @@ function fpsMeter(scene: Scene) {
 function noWebgl() {
   document.body.classList.add('scene-ready', 'explored', 'no-webgl');
   mountTopbar(ui, source.index.objects, source.sample, () => {});
-  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/games">Games</a>, <a href="#/stars">Challenge stars</a>, <a href="#/benchmark">Does it work?</a>, <a href="#/scientists">For scientists</a>, <a href="#/about">About</a>.</p>`);
+  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/games">Games</a>, <a href="#/stars">Challenge targets</a>, <a href="#/benchmark">Blind recovery test</a>, <a href="#/scientists">Method &amp; data</a>, <a href="#/about">About</a>.</p>`);
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
     legacyHash();

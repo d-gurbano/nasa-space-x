@@ -258,9 +258,9 @@ def write(cases_, decoys):
                 n_decoys=len(decoys), by_type=by_type,
                 pos_err_arcsec=dict(n=len(errs), median=round(float(np.median(errs)), 2) if errs else None,
                                     p90=round(float(np.percentile(errs, 90)), 2) if errs else None),
-                plain=(f"Rewind found {len(found)} of {len(seen)} known objects that were visible in SPHEREx before the pretend "
-                       f"discovery date ({len(hints)} more were hints, {len(missed)} missed), with {len(fa_cases) + len(fa_decoys)} "
-                       f"false alarms in {len(known)} real cases and {len(decoys)} empty-sky decoys."),
+                plain=(f"With the observed arc truncated, Rewind recovered {len(found)} of {len(seen)} known objects that were detectable "
+                       f"in SPHEREx before the truncation date ({len(hints)} more were HINT, {len(missed)} missed), with "
+                       f"{len(fa_cases) + len(fa_decoys)} false FOUNDs in {len(known)} real cases and {len(decoys)} empty-sky decoys."),
                 method=("v2: 10 NEOs, 8 comets, 12 main-belt; orbit from the MPC observations in the first 20-45 days after a "
                         "hidden date; up to 40 SPHEREx frames in the 20 days before it; blind engine with the final rules "
                         "(orbit-refit check skipped); truth = same photometry at the true JPL Horizons positions (S/N >= 5); "

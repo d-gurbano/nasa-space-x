@@ -85,10 +85,10 @@ export function trackChart(host: HTMLElement, t: Track, name: string): () => voi
       height: H,
       marks: pts.map((p) => ({
         x: x(p.year), y: y(p.moved),
-        say: `<b>${when(p)}</b> ${esc(p.family)}${p.n > 1 ? `, ${p.spherex ? plural(p.n, 'pass', 'passes') : plural(p.n, 'photo')}` : ''}: ${sky(p.moved)} from the start, ${n1(p.miss)} arcsec from the predicted spot.`,
+        say: `<b>${when(p)}</b> ${esc(p.family)}${p.n > 1 ? `, ${p.spherex ? plural(p.n, 'pass', 'passes') : plural(p.n, 'image')}` : ''}: ${sky(p.moved)} from the start, ${n1(p.miss)} arcsec from the predicted spot.`,
       })),
       svg: `<g class="axis">${axis}</g>
-        <text class="axis-label" x="0" y="12">Distance moved since the first photo (${unit})</text>
+        <text class="axis-label" x="0" y="12">Displacement since the first epoch (${unit})</text>
         <polyline class="st-line" points="${t.line.map((p) => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ')}"/>
         ${pts.filter((p) => !p.spherex).map((p) => `<circle class="st-pt" cx="${x(p.year).toFixed(1)}" cy="${y(p.moved).toFixed(1)}" r="4"/>`).join('')}
         <line class="st-lead" x1="${x(first.year)}" x2="${x(first.year)}" y1="${y(first.moved) - 9}" y2="${y(first.moved) - lift + 6}"/>
@@ -98,7 +98,7 @@ export function trackChart(host: HTMLElement, t: Track, name: string): () => voi
   };
   return chart(
     host,
-    `Chart: how far ${name} moved from ${Math.floor(y0)} to ${Math.floor(y1)}, and how close each photo is to the prediction.`,
+    `Chart: how far ${name} moved from ${Math.floor(y0)} to ${Math.floor(y1)}, and the residual of each measurement from the catalogue prediction.`,
     `<li><span class="lg-dot st-lg-old"></span>Older telescopes</li><li><span class="lg-dot st-lg-sx"></span>SPHEREx</li><li><span class="lg-line st-lg-pred"></span>Predicted from today's star catalogue</li>`,
     draw,
     pts.length - 1,
@@ -107,7 +107,7 @@ export function trackChart(host: HTMLElement, t: Track, name: string): () => voi
 
 export function trackTable(t: Track): string {
   return table(
-    ['Telescope', 'Year', 'Photos', 'Moved', 'From the prediction'],
+    ['Survey', 'Year', 'Images', 'Displacement', 'Residual'],
     [...t.points].sort((a, b) => a.year - b.year).map((p) => [esc(p.family), when(p), String(p.n), sky(p.moved), `${n1(p.miss)} arcsec`]),
   );
 }
@@ -162,7 +162,7 @@ export function curveChart(host: HTMLElement, lc: { points: LcPoint[]; medians: 
       : '';
     return {
       height: H,
-      marks: lc.medians.map((m) => ({ x: x(m.mjd), y: y(m.pct), say: `<b>${month(m.mjd)}</b>, ${BANDS[m.band]}: ${pct(m.pct)} (the middle of ${plural(m.n, 'photo')}).` })),
+      marks: lc.medians.map((m) => ({ x: x(m.mjd), y: y(m.pct), say: `<b>${month(m.mjd)}</b>, ${BANDS[m.band]}: ${pct(m.pct)} (median of ${plural(m.n, 'image')}).` })),
       svg: `<g class="axis">${axis}</g>${ticks}
         <text class="axis-label" x="0" y="12">Compared with the star's usual brightness</text>
         ${bar}${dots}${lines}`,
@@ -170,12 +170,12 @@ export function curveChart(host: HTMLElement, lc: { points: LcPoint[]; medians: 
   };
   return chart(
     host,
-    `Chart: brightness of ${name} in each SPHEREx photo, compared with its own usual brightness.`,
+    `Chart: brightness of ${name} in each SPHEREx image, relative to its median.`,
     `${bands.map((b) => `<li><span class="lg-dot lc-lg${b}"></span>${BANDS[b]}, middle of a pass</li>`).join('')}
-     <li><span class="lg-dot lc-lg-sat"></span>One photo, saturated</li>
-     ${lc.points.some((p) => !p.saturated) ? '<li><span class="lg-dot lc-lg-ok"></span>One photo, not saturated</li>' : ''}
+     <li><span class="lg-dot lc-lg-sat"></span>Single image, saturated</li>
+     ${lc.points.some((p) => !p.saturated) ? '<li><span class="lg-dot lc-lg-ok"></span>Single image, unsaturated</li>' : ''}
      <li><span class="lg-tick"></span>SPHEREx looked</li>
-     ${out ? `<li>${plural(out, 'photo')} beyond ${lim}% ${out === 1 ? 'is' : 'are'} not drawn</li>` : ''}`,
+     ${out ? `<li>${plural(out, 'image')} beyond ${lim}% ${out === 1 ? 'is' : 'are'} not drawn</li>` : ''}`,
     draw,
     Math.max(0, lc.medians.filter((m) => m.band === bands[0]).length - 1),
   );
@@ -183,7 +183,7 @@ export function curveChart(host: HTMLElement, lc: { points: LcPoint[]; medians: 
 
 export function curveTable(lc: { medians: LcMedian[] }): string {
   return table(
-    ['Wavelengths', 'Pass', 'Photos', 'Compared with usual'],
+    ['Wavelengths', 'Pass', 'Images', 'Relative to median'],
     lc.medians.map((m) => [BANDS[m.band], month(m.mjd), String(m.n), pct(m.pct)]),
   );
 }

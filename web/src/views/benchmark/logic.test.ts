@@ -31,8 +31,8 @@ describe('benchmark logic', () => {
 
   it('explains a hint with the checks that failed', () => {
     const c = mk('seen', 'HINT', { checks: { snr: true, time_shift: false } });
-    expect(failedChecks(c)).toEqual(['the signal is not strongest at the right time']);
-    expect(explain(c)).toBe('The signal is not strongest at the right time.');
+    expect(failedChecks(c)).toEqual(['S/N does not peak at zero time shift']);
+    expect(explain(c)).toBe('Failed: S/N does not peak at zero time shift.');
   });
 
   it('survives cases without the optional fields', () => {

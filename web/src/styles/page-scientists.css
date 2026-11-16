@@ -304,3 +304,13 @@ a.sci-file:focus-visible { outline-offset: 3px; }
   .sci-cc th:nth-child(6), .sci-cc td:nth-child(6) { display: none; }
   .sci-files { grid-template-columns: 1fr; gap: var(--g); }
 }
+
+/* limitations and glossary: two-column term / definition rows */
+.sci-limits { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 0 var(--g4); }
+.sci-limits div { padding: var(--g2) 0; border-bottom: 1px solid var(--line); }
+.sci-limits dt { font-weight: var(--w-semi); color: var(--ink); }
+.sci-limits dd { margin: 6px 0 0; font-size: var(--fs-s); line-height: 1.55; color: var(--ink-2); }
+.sci-terms div:target { background: var(--panel); }
+.sci-cite p { margin: 0 0 var(--g2); line-height: 1.55; }
+.sci-cite p.mono { font-size: var(--fs-s); overflow-wrap: anywhere; color: var(--ink); }
+.sci-cite .kicker { margin-bottom: 8px; }

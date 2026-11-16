@@ -4,11 +4,11 @@ import { el, esc } from './dom';
 import { isKnown, rankObjects } from '../lib/rank';
 
 export const VIEWS = [
-  { hash: '#/sky', label: 'Sky' },
+  { hash: '#/sky', label: 'Sky viewer' },
   { hash: '#/games', label: 'Games' },
-  { hash: '#/stars', label: 'Challenge stars' },
-  { hash: '#/benchmark', label: 'Does it work?' },
-  { hash: '#/scientists', label: 'For scientists' },
+  { hash: '#/stars', label: 'Challenge targets' },
+  { hash: '#/benchmark', label: 'Blind recovery test' },
+  { hash: '#/scientists', label: 'Method & data' },
   { hash: '#/about', label: 'About' },
 ];
 
@@ -22,7 +22,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
       <ul class="search-results" role="listbox" hidden></ul>
     </div>
     <div class="tb-end">
-      ${sample ? '<span class="chip chip-sample" title="The engine has not published real results yet. Orbits are real; photos and results are made-up test data.">Sample data</span>' : ''}
+      ${sample ? '<span class="chip chip-sample" title="The engine has not published real results yet. Orbits are real; images and results are generated test data.">Sample data</span>' : ''}
       <button class="icon-btn menu-btn" aria-label="Menu" aria-expanded="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       </button>
@@ -50,7 +50,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
     const head = !found.length ? 'No object with that name in Rewind' : found.length > matches.length ? `Strongest ${matches.length} of ${found.length}${q ? ' matches' : ' in Rewind'}` : `${found.length} ${q ? (found.length === 1 ? 'match' : 'matches') : 'in Rewind'}`;
     list.innerHTML = `<li class="sr-head mono">${head}</li>` + matches
       .map((o, k) => `<li role="option" data-slug="${esc(o.slug)}" class="${k === active ? 'on' : ''}" aria-selected="${k === active}">
-        <span>${esc(o.name)}</span><span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Known' : verdictWord(o.verdict)}</span></li>`)
+        <span>${esc(o.name)}</span><span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Control' : verdictWord(o.verdict)}</span></li>`)
       .join('');
   };
   const choose = (slug: string) => {
@@ -95,5 +95,5 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
 }
 
 export function verdictWord(v: string): string {
-  return ({ FOUND: 'Found', HINT: 'Hint', TOO_FAINT: 'Too faint', NO_PHOTOS: 'No photos', PENDING: 'Not yet' } as Record<string, string>)[v] ?? v;
+  return ({ FOUND: 'Found', HINT: 'Hint', TOO_FAINT: 'Too faint', NO_PHOTOS: 'No coverage', PENDING: 'Not yet' } as Record<string, string>)[v] ?? v;
 }

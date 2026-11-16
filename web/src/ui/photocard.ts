@@ -12,7 +12,7 @@ export function mountPhotoCard(root: HTMLElement, opts: {
   onOpen: (slug: string) => void;
   onHide?: () => void;
 }) {
-  const card = el('aside', { class: 'photocard', 'aria-live': 'polite', 'aria-label': 'SPHEREx photo' });
+  const card = el('aside', { class: 'photocard', 'aria-live': 'polite', 'aria-label': 'SPHEREx image' });
   card.hidden = true;
   root.appendChild(card);
   let timer = 0;
@@ -45,14 +45,14 @@ export function mountPhotoCard(root: HTMLElement, opts: {
     const guessDay = /\/days\//.test(f.photo);
     card.innerHTML = `
       <div class="pc-head">
-        <span class="pc-kicker mono">${o && isKnown(o) ? 'SPHEREx photo' : o?.verdict === 'FOUND' ? 'SPHEREx saw it' : 'SPHEREx may have seen it'}</span>
-        <button class="pc-close icon-btn" aria-label="Close photo">&times;</button>
+        <span class="pc-kicker mono">${o && isKnown(o) ? 'SPHEREx image · control' : o?.verdict === 'FOUND' ? 'SPHEREx precovery' : 'SPHEREx · possible signal (HINT)'}</span>
+        <button class="pc-close icon-btn" aria-label="Close image">&times;</button>
       </div>
-      <div class="pc-img"><img alt="SPHEREx photo of ${esc(name)} on ${esc(plainDate(f.iso))}" src="${esc(opts.photoUrl(f))}"><span class="pc-cross" aria-hidden="true"></span></div>
+      <div class="pc-img"><img alt="SPHEREx image of ${esc(name)} on ${esc(plainDate(f.iso))}" src="${esc(opts.photoUrl(f))}"><span class="pc-cross" aria-hidden="true"></span></div>
       <h3 class="pc-name">${esc(name)}</h3>
       <dl class="pc-meta mono">
         <div><dt>Date</dt><dd>${esc(plainDate(f.iso))}</dd></div>
-        <div><dt>Photo</dt><dd class="pc-kind">${guessDay ? 'One day, stacked' : 'Single photo'}</dd></div>
+        <div><dt>Image</dt><dd class="pc-kind">${guessDay ? 'One night, stacked' : 'Single exposure'}</dd></div>
         <div><dt>Wavelength</dt><dd class="pc-wl">...</dd></div>
         <div><dt>S/N</dt><dd class="pc-snr">${f.snr != null ? f.snr.toFixed(1) : '...'}</dd></div>
         ${o && isKnown(o)
@@ -80,17 +80,17 @@ export function mountPhotoCard(root: HTMLElement, opts: {
       const day = p.spherex.days.find((x) => x.png === tail);
       const wl = (list: number[]) => (list.length ? (Math.min(...list) === Math.max(...list) ? `${list[0].toFixed(2)} µm` : `${Math.min(...list).toFixed(2)} to ${Math.max(...list).toFixed(2)} µm`) : 'n/a');
       if (frame) {
-        set('.pc-kind', 'Single photo');
+        set('.pc-kind', 'Single exposure');
         set('.pc-wl', wl([frame.wavelength_um]));
         if (f.snr == null) set('.pc-snr', frame.snr != null ? frame.snr.toFixed(1) : 'n/a');
       } else if (day || guessDay) {
         const n = day?.n_frames;
-        set('.pc-kind', n ? `${plural(n, 'photo')} from one day, stacked` : 'One day, stacked');
+        set('.pc-kind', n ? `${plural(n, 'exposure')} from one night, stacked` : 'One night, stacked');
         const sameDay = p.spherex.frames.filter((x) => x.iso.slice(0, 10) === (day?.iso ?? f.iso).slice(0, 10)).map((x) => x.wavelength_um);
         set('.pc-wl', wl(sameDay));
         if (f.snr == null) set('.pc-snr', day?.snr != null ? day.snr.toFixed(1) : 'n/a');
       } else {
-        set('.pc-kind', 'All photos, stacked');
+        set('.pc-kind', 'All nights, stacked');
         set('.pc-wl', wl(p.spherex.frames.map((x) => x.wavelength_um)));
         if (f.snr == null) set('.pc-snr', p.spherex.stack.snr != null ? p.spherex.stack.snr.toFixed(1) : 'n/a');
       }

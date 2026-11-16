@@ -6,7 +6,7 @@ import { reducedMotion } from '../state';
 
 const CAPTIONS = [
   'Each point is a catalogued asteroid or comet, placed on its JPL orbit.',
-  'Drag time backward.',
+  'Drag the timeline back to before discovery.',
   'Highlighted: a SPHEREx image that recorded the object before its first known observation.',
 ];
 

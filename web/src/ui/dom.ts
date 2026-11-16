@@ -13,7 +13,7 @@ export function esc(s: unknown): string {
 }
 
 export function chipReal(source: string): string {
-  return `<span class="chip chip-real">Real data - ${esc(source)}</span>`;
+  return `<span class="chip chip-real">Real data · ${esc(source)}</span>`;
 }
 
 export function chipSample(): string {

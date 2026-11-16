@@ -35,7 +35,7 @@ export async function drawCard(c: Card): Promise<HTMLCanvasElement> {
   (c.yh5 ? ['I rewound 2025 YH5,', 'a hazardous asteroid'] : ['I tuned the Rewind', 'on SPHEREx photos']).forEach((l, i) => g.fillText(l, 630, 205 + i * 66));
   g.fillStyle = '#b7b9c0';
   g.font = '400 26px "Instrument Sans", sans-serif';
-  (c.yh5 ? ['hidden in NASA SPHEREx photos', `${c.days} days before anyone saw it.`] : ['the way Rewind found 2025 YH5', `${c.days} days before anyone saw it.`]).forEach((l, i) => g.fillText(l, 630, 330 + i * 36));
+  (c.yh5 ? ['in NASA SPHEREx photos from', `${c.days} days before its first sighting.`] : ['the way Rewind recovered 2025 YH5,', `${c.days} days before its first sighting.`]).forEach((l, i) => g.fillText(l, 630, 330 + i * 36));
   g.fillStyle = '#f3f1ec';
   g.font = '400 56px "Instrument Serif", serif';
   g.fillText(c.time, 630, 472);

@@ -51,7 +51,7 @@ export class PageHost {
     this.root.hidden = false;
     this.root.scrollTop = 0;
     this.body.innerHTML = `${pageHeader(kicker, title)}<div class="page-content"><p class="muted">Loading...</p></div>`;
-    document.title = `${title} - Rewind`;
+    document.title = `${title} · Rewind`;
     const content = this.body.querySelector('.page-content') as HTMLElement;
     try {
       content.innerHTML = '';

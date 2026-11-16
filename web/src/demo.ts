@@ -140,7 +140,7 @@ export async function runDemo(o: {
     } else days.forEach((im) => (im.style.opacity = '0'));
     stack.style.opacity = shot === 'stack' ? String(Math.max(0.06 + 0.5 * (lit / Math.max(1, days.length)) ** 1.5, merge)) : '1';
     on(ring, (t >= T.flash + 0.5 && t < 13) || t >= T.merge + 0.4);
-    const footText = shot === 'stack' ? 'No single photo shows it. Only the stack does.' : `${f.stackFrames} photos stacked${f.snr != null ? ` · S/N ${f.snr.toFixed(1)}` : ''}`;
+    const footText = shot === 'stack' ? 'Below the noise in every single image; detected only in the stack.' : `${f.stackFrames} images stacked${f.snr != null ? ` · S/N ${f.snr.toFixed(1)}` : ''}`;
     if (foot.textContent !== footText) foot.textContent = footText;
     if (f.cloud) {
       const r0 = 90, r1 = 90 * (f.cloud.afterKm / f.cloud.beforeKm);
@@ -202,7 +202,7 @@ function infoHtml(f: DemoFacts): string {
       </svg>
       <div class="dm-nums">
         <div class="dm-num dm-num-a"><small>On discovery day</small><b>${millionKm(c.beforeKm)}</b><span>about ${moons(c.beforeKm)} Earth-Moon distances</span></div>
-        <div class="dm-num dm-num-b gold"><small>With SPHEREx's older photos</small><b>${millionKm(c.afterKm)}</b><span>about ${moons(c.afterKm)} Earth-Moon distances</span></div>
+        <div class="dm-num dm-num-b gold"><small>With SPHEREx precovery positions</small><b>${millionKm(c.afterKm)}</b><span>about ${moons(c.afterKm)} Earth-Moon distances</span></div>
       </div>
     </div>
     <div class="dm-card-foot">${c.label}</div>`;

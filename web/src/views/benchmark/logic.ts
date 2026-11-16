@@ -115,20 +115,20 @@ export function curveBars(curve: CurveBin[]) {
   });
 }
 
-const VERDICT: Record<string, string> = { FOUND: 'Found', HINT: 'Hint', TOO_FAINT: 'Too faint', NO_PHOTOS: 'No photos' };
+const VERDICT: Record<string, string> = { FOUND: 'Found', HINT: 'Hint', TOO_FAINT: 'Too faint', NO_PHOTOS: 'No coverage' };
 export const said = (c: BenchCase) => VERDICT[c.rewind_verdict] ?? c.rewind_verdict;
 
 // Why a check failed, in plain words. The check rules are in the engine's docs/RESULTS.md.
 const FAILED: Record<string, string> = {
-  snr: 'the signal is below the line of S/N 5',
-  cleaned: 'the fixed sky could not be cleaned well enough',
-  nulls: 'a fake path nearby gave a signal just as strong',
-  time_shift: 'the signal is not strongest at the right time',
-  days: 'it shows on fewer than 2 separate days',
-  detectable: 'at this brightness it should be too faint to see here',
-  sign_test: 'too few single photos show it',
-  not_one_day: 'the signal depends on one day alone',
-  orbit: 'the new positions do not fit the orbit',
+  snr: 'stack S/N below 5',
+  cleaned: 'no usable static-sky reference',
+  nulls: 'a null trajectory reached the same S/N',
+  time_shift: 'S/N does not peak at zero time shift',
+  days: 'positive on fewer than 2 nights',
+  detectable: 'predicted magnitude below the injection–recovery limit',
+  sign_test: 'sign test failed (too few positive single images)',
+  not_one_day: 'signal depends on a single night',
+  orbit: 'new positions inconsistent with the orbit',
 };
 
 export function failedChecks(c: BenchCase): string[] {
@@ -144,8 +144,7 @@ export function explain(c: BenchCase): string {
       return `Recovered blind${c.pos_err_arcsec ? `, ${c.pos_err_arcsec.toFixed(1)}″ from the JPL Horizons position` : ''}.`;
     case 'hint': {
       const why = failedChecks(c);
-      const s = why.length ? why.join(', and ') : 'not every check passed';
-      return `${s[0].toUpperCase()}${s.slice(1)}.`;
+      return why.length ? `Failed: ${why.join('; ')}.` : 'Not every check passed.';
     }
     case 'missed':
       return `Detectable at the true position${sn(c.oracle_snr, '')}, but the short-arc prediction was too far off for the stack to build up. Classified ${said(c)}, so no false FOUND.`;

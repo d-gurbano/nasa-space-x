@@ -40,10 +40,10 @@ def _sign_ok(m):
     return bool(t > mx and (t - mu) / max(sd, 1e-6) >= 3)
 
 
-PLAIN = dict(snr="the stack is not strong enough", nulls="a fake path is as bright", time_shift="the signal does not peak at the "
-             "right time", days="it is not seen on 2 separate days", detectable="the object should be below our limit",
-             cleaned="the sky could not be cleaned", orbit="the new positions do not fit the orbit well",
-             sign_test="too few photos are positive compared with fake paths", not_one_day="the signal rests on a single day")
+PLAIN = dict(snr="stack S/N below 5", nulls="a null trajectory reached the same S/N", time_shift="S/N does not peak at zero "
+             "time shift", days="positive on fewer than 2 nights", detectable="predicted magnitude below the injection-recovery limit",
+             cleaned="no usable static-sky reference", orbit="new positions inconsistent with the orbit",
+             sign_test="sign test failed (too few positive single images)", not_one_day="signal depends on a single night")
 
 
 def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | None = None):
@@ -51,16 +51,16 @@ def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | N
     name = obj.name
     if res is None or res.get("n_frames_measured", 0) == 0:
         if res is not None and res.get("pending"):
-            return "PENDING", f"The SPHEREx photos of {name} are still being read.", {}
+            return "PENDING", f"The SPHEREx images of {name} are still being processed.", {}
         if res is not None and res.get("most_error"):
-            return "NO_PHOTOS", (f"We could not list SPHEREx photos of {name}: the IRSA MOST service could not compute its "
-                                 f"path, so it was not searched."), {}
-        return "NO_PHOTOS", f"SPHEREx did not photograph {name} in the time we searched.", {}
+            return "NO_PHOTOS", (f"No SPHEREx image list for {name}: the IRSA MOST service could not compute its "
+                                 f"ephemeris, so it was not searched."), {}
+        return "NO_PHOTOS", f"No SPHEREx image covers the predicted position of {name} in the searched window.", {}
     m = res["main"]
     c = checks_passed(m, orbit_fit, res.get("cleaned", False))
     if not m.get("n") and res.get("n_qa_dropped", 0) > 0:  # nothing left to stack: say so instead of "too faint"
-        return "TOO_FAINT", (f"SPHEREx photographed {name} {res['n_frames_measured']} times, but every photo was set aside "
-                             f"because bright stars sit next to the predicted path, so nothing can be said about it."), c
+        return "TOO_FAINT", (f"SPHEREx imaged {name} {res['n_frames_measured']} times, but every image was rejected "
+                             f"because bright stars lie next to the predicted path, so no constraint is possible."), c
     known = obj.role == "known"
     snr = m.get("snr_scaled", np.nan)
     lim_ok = c["detectable"]
@@ -70,8 +70,8 @@ def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | N
     if all(c[k] for k in ("snr", "nulls", "time_shift", "days", "detectable", "cleaned", "sign_test", "not_one_day")) and (c["orbit"] or known):
         v = "FOUND"
         if known:
-            s = (f"SPHEREx saw {name} (a known object, not a precovery): the cleaned stack of {m['n']} photos gives "
-                 f"S/N {snr:.1f}, and every control test agrees.")
+            s = (f"SPHEREx detected {name} (control object, not a precovery): null-calibrated S/N {snr:.1f} in the "
+                 f"static-sky-subtracted stack of {m['n']} images, and every check passes.")
         else:
             pos = [d for d in m.get("days", []) if d.get("snr", 0) >= 2]
             when = ""
@@ -79,35 +79,36 @@ def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | N
                 from .frames import iso_to_mjd
                 dd = sorted(int(iso_to_mjd(obj.disc_iso) - d["day"]) for d in pos)
                 when = f" taken {dd[0]}-{dd[-1]} days before its discovery" if dd[0] != dd[-1] else f" taken {dd[0]} days before its discovery"
-            single = "" if m.get("median_frame_snr", 0) >= 5 else " (no single photo shows it; only the stack does)"
-            s = (f"Rewind found {name} in SPHEREx photos{when}: S/N {snr:.1f} in the sky-cleaned stack of {m['n']} photos"
-                 f"{single}, on {m['days_positive']} separate days, and the orbit still fits with the new positions.")
+            single = "" if m.get("median_frame_snr", 0) >= 5 else " (below the noise in every single image; detected only in the stack)"
+            s = (f"Rewind detected {name} in SPHEREx images{when}: null-calibrated S/N {snr:.1f} in the static-sky-subtracted "
+                 f"stack of {m['n']} images{single}, positive on {m['days_positive']} separate nights, and the orbit refit with "
+                 f"the new positions stays consistent.")
     elif res.get("qa_fraction", 0) >= 0.3 and res.get("snr_before_qa", 0) >= SNR_FOUND and not snr >= SNR_HINT:
         v = "HINT"
-        s = (f"There is a signal where {name} should be (S/N {res['snr_before_qa']:.1f}), but {res['qa_fraction']:.0%} of the photos "
-             f"are spoiled by bright stars next to the path (bad fits, star-halo flags). Without them nothing significant is left, "
-             f"so this is a hint, not a find.")
+        s = (f"A signal is present at the predicted position of {name} (S/N {res['snr_before_qa']:.1f}), but {res['qa_fraction']:.0%} "
+             f"of the images are affected by bright stars next to the path (bad fits, halo flags). Without them nothing "
+             f"significant remains, so this is a HINT, not a detection.")
     elif snr >= SNR_HINT or n_core >= 2 and snr >= 2:
         v = "HINT"
         miss = [PLAIN[k] for k in ("snr", "nulls", "time_shift", "days", "detectable", "cleaned", "sign_test", "not_one_day",
                                    "orbit") if not c[k] and not (k == "orbit" and known)]
-        s = (f"There is a signal where {name} should be (S/N {snr:.1f}), but not every test passes "
-             f"({'; '.join(miss)}), so this is a hint, not a find.")
+        s = (f"A signal is present at the predicted position of {name} (S/N {snr:.1f}), but not every check passes "
+             f"({'; '.join(miss)}), so this is a HINT, not a detection.")
         if res.get("qa_fraction", 0) >= 0.3:
-            s += f" {res['qa_fraction']:.0%} of the photos were set aside because bright stars sit next to the path."
+            s += f" {res['qa_fraction']:.0%} of the images were rejected because bright stars lie next to the path."
     elif not lim_ok:
         lim = m.get("limit_mag")
-        s = f"{name} was too faint for SPHEREx here" + (f": our tests can only find objects brighter than about AB {lim:.1f}." if lim and np.isfinite(lim) else ".")
+        s = f"{name} was below the SPHEREx detection limit at this position" + (f": injection-recovery puts the local 50% limit at about AB {lim:.1f}." if lim and np.isfinite(lim) else ".")
         v = "TOO_FAINT"
     else:
         v = "TOO_FAINT"
         if getattr(obj, "kind", "") == "comet":
-            s = (f"Nothing shows at the predicted spot of {name}. A star-like source as bright as its predicted total "
-                 f"magnitude would have been found, but comet brightness predictions are rough (outbursts, spread-out coma), "
+            s = (f"No significant signal at the predicted position of {name}. A point source at its predicted total "
+                 f"magnitude would have been recovered, but comet magnitude predictions are uncertain (outbursts, extended coma), "
                  f"so it was probably fainter or more diffuse than predicted.")
         else:
-            s = (f"Nothing shows at the predicted spot of {name} although a source as bright as predicted would have been "
-                 f"found, so it was fainter than predicted (or its path was different).")
+            s = (f"No significant signal at the predicted position of {name}, although a source at the predicted magnitude "
+                 f"would have been recovered: it was fainter than predicted, or off the predicted path.")
     if res.get("crowded") and v != "FOUND":
-        s += " The photos are in a crowded Milky Way field, which makes faint sources harder to separate from stars."
+        s += " The images lie in a crowded Galactic field, where faint sources are harder to separate from stars."
     return v, s, c

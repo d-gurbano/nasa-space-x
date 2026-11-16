@@ -118,15 +118,15 @@ export function captionHtml(id: CapId, f: DemoFacts): string {
     case 'rewind':
       return `<span class="dm-kick">Rewind</span><span class="dm-date"></span>`;
     case 'flash':
-      return `<span class="dm-kick">${plainDate(f.earliestMjd)}</span>NASA's SPHEREx had already photographed it. <em>${f.daysBefore} days earlier.</em>`;
+      return `<span class="dm-kick">${plainDate(f.earliestMjd)}</span>NASA's SPHEREx had already imaged it. <em>${f.daysBefore} days earlier.</em>`;
     case 'stack':
-      return `<span class="dm-kick">The trick</span>${f.stackFrames} photos, added together. <em>The dot appears.</em>`;
+      return `<span class="dm-kick">Shift-and-stack</span>${f.stackFrames} images, co-added along its path. <em>The signal appears.</em>`;
     case 'cloud':
-      return `<span class="dm-kick">Its future path</span>Where could it be one year after discovery?`;
+      return `<span class="dm-kick">Orbit uncertainty</span>3σ position one year after discovery, from the first week of observations.`;
     case 'sharper':
-      return `<span class="dm-big">${Math.round(f.cloud!.factor)}x sharper.</span>`;
+      return `<span class="dm-big">${Math.round(f.cloud!.factor)}× smaller.</span><span class="dm-sub">with the SPHEREx precovery positions</span>`;
     case 'map':
-      return `<span class="dm-stats"><span><b>${f.searched}</b> comets and asteroids searched.</span><span><b>${f.found}</b> found in older photos.</span><span><b>${f.foundBefore}</b> before anyone else saw them.</span></span>`;
+      return `<span class="dm-stats"><span><b>${f.searched}</b> comets and asteroids searched.</span><span><b>${f.found}</b> FOUND in SPHEREx images.</span><span><b>${f.foundBefore}</b> before their first known observation.</span></span>`;
     case 'end':
       return '';
   }

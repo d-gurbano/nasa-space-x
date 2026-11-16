@@ -222,8 +222,8 @@ def run():
     n = len([x for x in cases if x["truth"] in ("seen", "not seen")])
     summ = dict(n=n, seen=len(seen), found=len(found), hints_on_seen=len(hints), missed=len(seen) - len(found),
                 false_alarms=len(fa),
-                plain=f"Rewind found {len(found)} of {len(seen)} known asteroids that were visible in SPHEREx before the "
-                      f"pretend discovery date (plus {len(hints)} hints), with {len(fa)} false alarms in {n} cases.",
+                plain=f"With the observed arc truncated, Rewind recovered {len(found)} of {len(seen)} known asteroids that were "
+                      f"detectable in SPHEREx before the truncation date (plus {len(hints)} HINT), with {len(fa)} false FOUNDs in {n} cases.",
                 method="short-arc orbit from MPC observations in the first 20-45 days after the hidden date; blind photometry at "
                        "the short-arc positions; truth = same photometry at the true JPL Horizons positions (S/N >= 5). "
                        "The blind verdict here skips the orbit-refit check. Frames were listed with MOST (full orbit).",

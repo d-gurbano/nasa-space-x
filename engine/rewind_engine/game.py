@@ -267,8 +267,8 @@ def write(rounds, guided=None):
         explain = (f"{r['name']} moves {r['rate']:.1f} pixels per hour on this picture. Slide each photo back by its time and the "
                    f"faint dot lines up: SPHEREx saw it in {r['n']} photos over {r['dt'][-1]:.1f} hours.")
         if is_find:
-            explain = (f"This is a real Rewind find: 2025 YH5, a potentially hazardous asteroid, in SPHEREx photos taken before "
-                       f"anyone had seen it. In a single photo it is lost in the noise; lined up correctly, {r['n']} photos make it pop.")
+            explain = (f"This is a real Rewind precovery: 2025 YH5, a potentially hazardous asteroid, in SPHEREx photos taken before "
+                       f"its first known observation. In a single photo it is lost in the noise; lined up correctly, {r['n']} photos add up to a clear detection.")
         out.append(dict(id=rid, title=("A real Rewind find" if is_find else f"Round {i + 1}: {r['name'].split(' (')[0]}"),
                         object=r["name"], truth=dict(angle_deg=round(r["ang"], 1), rate_px_per_hr=round(r["rate"], 3)),
                         frames=frames, explain=explain, difficulty=diff, snr_truth=round(r["s_true"], 1),
@@ -299,7 +299,7 @@ def write(rounds, guided=None):
                         snr_wrong=ex.get("wrong"), snr_close=ex.get("close"),
                         explain=(f"2025 YH5, a potentially hazardous asteroid, moves about {guided['rate_arcsec_hr'] / C.PIX_ARCSEC:.0f} "
                                  f"SPHEREx pixels per hour, too fast to stay in one patch, so here Rewind does the shifting for you. "
-                                 f"These are {guided['n']} real sky-cleaned SPHEREx photos from before anyone had seen it, stacked with a "
+                                 f"These are {guided['n']} real sky-cleaned SPHEREx photos from before its first known observation, stacked with a "
                                  f"wrong motion, a close one and the exact one: it pops only when the motion is right."),
                         note=("guided: stacks of the real cleaned frames (target minus static-sky references, long-wavelength "
                               "detectors where its thermal glow shows), centred on the predicted track; wrong/close = the median frame "

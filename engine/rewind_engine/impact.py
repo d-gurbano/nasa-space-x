@@ -134,18 +134,19 @@ def cloud_from_fits(f0, f1, dates_mjd, n=60):
 
 
 def relabel(text, imp):  # apply once, to the engine's original sentence
-    """Verdict sentence: 'before its discovery' -> before the first known observation, or say plainly it is not."""
+    """Verdict sentence: 'before its discovery' -> before the first known observation, or say plainly it is not.
+    Accepts both the current wording ('detected ... in SPHEREx images') and the older one ('found ... in SPHEREx photos')."""
     d = imp["days_before_first_known_obs"]
     first = imp["first_known_obs_iso"]
     text = re.sub(r" taken \d+(-\d+)? days before its discovery", "", text)
     if d:
         lo = max(1, int(iso_to_mjd(first) - iso_to_mjd(imp["latest_positive_before_iso"]))) if imp.get("latest_positive_before_iso") else 1
         span = f"{lo}-{d}" if lo != d else f"{d}"
-        return text.replace(" in SPHEREx photos", f" in SPHEREx photos taken {span} days before the first known observation "
-                                                    f"({first})", 1)
-    text = re.sub(r"^Rewind found (.+?) in SPHEREx photos:", r"SPHEREx saw \1:", text)
+        return re.sub(r" in SPHEREx (photos|images)", f" in SPHEREx images taken {span} days before the first known observation "
+                                                          f"({first})", text, count=1)
+    text = re.sub(r"^Rewind (?:found|detected) (.+?) in SPHEREx (?:photos|images):", r"SPHEREx detected \1:", text)
     return (text.rstrip(".") +
-            f". These photos are not earlier than the first known observation ({first}): they add extra positions, not a precovery.")
+            f". These images are not earlier than the first known observation ({first}): they add positions, not a precovery.")
 
 
 ORDER = ["2025yh5", "c2026s1", "2025st20", "2025yj6", "p2025y2", "c2025l2", "p2026v1", "c2025w2"]

@@ -36,7 +36,7 @@ const TARGETS: Record<string, Target> = {
   epsindib: {
     extra: 'eps_indi_b', kind: 'mover', tone: 'ok',
     why: 'A binary brown dwarf moving 4.7″ per year, less than one SPHEREx pixel (6.2″): a test of sub-pixel motion.',
-    honest: 'The two brown dwarfs are too close for SPHEREx to separate, so they show as one dot.',
+    honest: 'The two components (~0.7″ apart) are unresolved at SPHEREx’s 6.2″ pixels and appear as one source.',
   },
   wise0855: {
     extra: 'wise0855', kind: 'cold', tone: 'warn',
@@ -45,13 +45,13 @@ const TARGETS: Record<string, Target> = {
   },
   rwaur: {
     extra: 'rw_aur', kind: 'bright', tone: 'warn',
-    why: 'A young star still wrapped in dust, with a brightness that keeps changing: a test of what to say when a target is too bright.',
-    honest: 'Too bright for SPHEREx in most photos. The brightness changes we see are only indicative.',
+    why: 'A young T Tauri binary with circumstellar dust and deep dimming events: a test of reporting a target near saturation.',
+    honest: 'Saturated in most SPHEREx images, so the measured variability is indicative only.',
   },
   rdra: {
     extra: 'r_dra', kind: 'bright', tone: 'warn', period: 246,
-    why: 'A giant star that swells and fades every 246 days. Far too bright for SPHEREx to measure.',
-    honest: 'Too bright for SPHEREx in most photos: the pictures show its glow, not a precise brightness or position.',
+    why: 'A Mira variable: a red giant pulsating with a ~246-day period. Far brighter than the SPHEREx saturation limit.',
+    honest: 'Saturated in most SPHEREx images: they show its extended glow, not a usable flux or position.',
   },
 };
 
@@ -343,8 +343,8 @@ export const starsView: View = async (body, ctx) => {
         const sat = t.kind === 'bright' && sum?.n_saturated != null && sum.n_frames ? [sum.n_saturated, sum.n_frames] : null;
         v.side.insertAdjacentHTML('beforeend', `
           ${mv ? `<p class="s3c-big">${esc(mv.big)}</p><p class="s3c-small">${esc(mv.small)}</p>` : ''}
-          ${sat ? `<p class="s3c-big"><b>${fmt(sat[0])} of ${fmt(sat[1])}</b> photos are saturated: too bright to measure.</p>
-            <div class="st-meter" role="img" aria-label="${sat[0]} of ${sat[1]} photos are saturated"><span style="width: ${((sat[0] / sat[1]) * 100).toFixed(1)}%"></span></div>` : ''}
+          ${sat ? `<p class="s3c-big"><b>${fmt(sat[0])} of ${fmt(sat[1])}</b> images are saturated, so no flux can be measured from them.</p>
+            <div class="st-meter" role="img" aria-label="${sat[0]} of ${sat[1]} images are saturated"><span style="width: ${((sat[0] / sat[1]) * 100).toFixed(1)}%"></span></div>` : ''}
           <p class="s3c-note s3c-note-${t.tone}"><b>${t.tone === 'warn' ? 'Caveat' : 'How well it worked'}</b>${esc(t.honest)}</p>
           ${provenance(sample, 'NASA SPHEREx')}`);
         cbody.replaceChildren(v.el);
@@ -356,8 +356,8 @@ export const starsView: View = async (body, ctx) => {
         const pts = [...path.points].sort((a, b) => a.year - b.year), first = pts[0], last = pts[pts.length - 1];
         cbody.innerHTML = `<div class="s3c-chart">
           <div class="s3c-chart-say">
-            <p class="s3c-big"><b>${Math.round(last.last - first.first)} years</b> of motion, in real photos back to ${Math.floor(first.first)}.</p>
-            <p class="s3c-small">Moved ${sky(last.moved)}${sum?.decades_median_resid_arcsec != null ? `. A typical photo is ${sum.decades_median_resid_arcsec.toFixed(1)} arcsec from the prediction` : ''}.</p>
+            <p class="s3c-big"><b>${Math.round(last.last - first.first)} years</b> of proper motion, measured in archival images back to ${Math.floor(first.first)}.</p>
+            <p class="s3c-small">Moved ${sky(last.moved)}${sum?.decades_median_resid_arcsec != null ? `. Median residual from the catalogue prediction: ${sum.decades_median_resid_arcsec.toFixed(1)} arcsec` : ''}.</p>
             <p class="s3c-small"><a href="extra/stars/${t.extra}_decades_positions.csv" download>Download the table (CSV)</a></p>
           </div>
           <div class="st-chart" data-chart></div>
@@ -369,8 +369,8 @@ export const starsView: View = async (body, ctx) => {
           <div class="s3c-chart-say">
             <p class="s3c-big">Brightness, as a <b>hint</b> only.</p>
             <p class="s3c-small">${t.period
-              ? `Only ${plural(lc.points.length, 'photo')} gave a reading, between ${plainDate(Math.min(...days))} and ${plainDate(Math.max(...days))}: too little to show the ${t.period}-day pulse, which is known from other telescopes (AAVSO).`
-              : 'Small dots are single photos, large dots the middle of one pass, against the usual brightness of the star.'}</p>
+              ? `Only ${plural(lc.points.length, 'image')} gave a measurement, between ${plainDate(Math.min(...days))} and ${plainDate(Math.max(...days))}: too short a baseline to sample the ${t.period}-day period, which is known from AAVSO monitoring.`
+              : 'Small points: single images. Large points: median of one survey pass. Relative to the star’s median brightness.'}</p>
             <p class="s3c-small"><a href="extra/stars/${t.extra}_lightcurve.csv" download>Download the table (CSV)</a></p>
           </div>
           <div class="st-chart" data-chart></div>

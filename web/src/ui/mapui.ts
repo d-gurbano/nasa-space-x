@@ -111,7 +111,7 @@ export function mountMapUi(root: HTMLElement, scene: Scene, objects: IndexObject
   } catch {
     // no storage: skip the hint rather than show it on every visit
   }
-  const hint = seen ? null : root.appendChild(el('p', { class: 'map-hint chip chip-gold' }, 'Click a glowing dot to open it'));
+  const hint = seen ? null : root.appendChild(el('p', { class: 'map-hint chip chip-gold' }, 'Select a highlighted object to open it'));
   const picked = () => {
     if (!hint?.isConnected || !store.selected) return;
     hint.remove();

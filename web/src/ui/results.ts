@@ -9,21 +9,21 @@ import { verdictWord } from './topbar';
 const LIST_MAX = 20; // rows shown before "Show all"
 
 export function objectLine(o: SiteIndex['objects'][number]): string {
-  if (isKnown(o)) return 'Known object - shows what SPHEREx sees';
+  if (isKnown(o)) return 'Control object: a clear SPHEREx detection for comparison';
   switch (o.verdict) {
     case 'FOUND':
     case 'HINT': {
       const d = daysBefore(o);
-      const seen = o.verdict === 'FOUND' ? 'Seen' : 'Maybe seen';
+      const seen = o.verdict === 'FOUND' ? 'Detected' : 'Possible signal';
       if (d != null && d > 0) return `${seen} ${plural(d, 'day')} before ${beforeWhat(o)}`;
       if (d === 0) return `${seen} hours before ${beforeWhat(o)}`;
       // the engine says these photos are not earlier than the known observations
-      return o.days_before_first_known_obs === null ? `${seen} by SPHEREx, not before the first known observation` : `${seen} in older SPHEREx photos`;
+      return o.days_before_first_known_obs === null ? `${seen} by SPHEREx, not before the first known observation` : `${seen} in SPHEREx images`;
     }
     case 'TOO_FAINT':
-      return 'Too faint for SPHEREx then';
+      return 'Below the SPHEREx detection limit at the predicted position';
     case 'NO_PHOTOS':
-      return 'No SPHEREx photos of the right spot';
+      return 'No SPHEREx image covers the predicted position';
     default:
       return 'Not searched yet';
   }
@@ -38,7 +38,7 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
   // one segment per verdict, in the same words the chips use; each one also filters the list
   const parts: [string, number, string, (o: Obj) => boolean][] = [
     [verdictWord('FOUND'), t.found, 'var(--gold)', (o) => o.verdict === 'FOUND' && !isKnown(o)],
-    ['Known, seen', t.known, 'var(--ink)', (o) => o.verdict === 'FOUND' && isKnown(o)],
+    ['Control (known)', t.known, 'var(--ink)', (o) => o.verdict === 'FOUND' && isKnown(o)],
     [verdictWord('HINT'), t.hints, 'var(--blue)', (o) => o.verdict === 'HINT'],
     [verdictWord('TOO_FAINT'), t.tooFaint, '#5a5f6b', (o) => o.verdict === 'TOO_FAINT'],
     [verdictWord('NO_PHOTOS'), t.noPhotos, '#30343d', (o) => o.verdict === 'NO_PHOTOS'],
@@ -59,7 +59,7 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
       <p class="rs-listhead mono" aria-live="polite"></p>
       <ol class="rs-list"></ol>
       <button class="rs-more btn btn-s" hidden></button>
-      <div class="rs-foot">${provenance(sample, 'Rewind on NASA SPHEREx')}<span class="muted mono">${plural(idx.headline_stats.frames_read, 'photo')} read</span></div>
+      <div class="rs-foot">${provenance(sample, 'Rewind on NASA SPHEREx')}<span class="muted mono">${plural(idx.headline_stats.frames_read, 'image')} analysed</span></div>
     </div>`;
   root.appendChild(card);
   const toggle = card.querySelector('.rs-toggle') as HTMLButtonElement;

@@ -572,7 +572,7 @@ export const tuneGame: View = async (body, ctx) => {
     if (solo && (!prev || totalS < prev)) save({ best: totalS });
     const stars = times.reduce((a: number, t) => a + starsFor(t), 0);
     const days = find?.days_before_first_known_obs ?? 18;
-    const photos = /stack of (\d+) photos/.exec(find?.verdict_text ?? '')?.[1];
+    const photos = /stack of (\d+) (?:photos|images)/.exec(find?.verdict_text ?? '')?.[1];
     // the picture is the player's own stack only if the last round really was 2025 YH5; otherwise Rewind's
     const last = rounds[total - 1];
     const tunedYH5 = !sample && /2025\s*YH5/i.test(`${last.object ?? ''} ${last.title}`);
@@ -585,8 +585,8 @@ export const tuneGame: View = async (body, ctx) => {
         <div class="tr-end-art">${art ? '' : `<img src="${esc(ctx.source.base)}objects/2025yh5/stack.png" alt="Rewind's stack of SPHEREx photos that shows 2025 YH5">`}</div>
         <div class="tr-end-text">
           <p class="kicker">The real one</p>
-          <h1 class="tr-end-h">This is how Rewind found 2025 YH5.</h1>
-          <p class="tr-end-lead">A potentially hazardous asteroid, seen in SPHEREx photos <b>${days} days</b> before anyone else saw it. No single photo shows it. The right stack does${find?.best_snr ? `: S/N ${find.best_snr.toFixed(1)}` : ''}${photos ? ` from ${photos} photos` : ''}.</p>
+          <h1 class="tr-end-h">This is how Rewind recovered 2025 YH5.</h1>
+          <p class="tr-end-lead">A potentially hazardous asteroid, in SPHEREx photos taken <b>${days} days</b> before its first known observation. No single photo shows it; the stack along its motion does${find?.best_snr ? `: S/N ${find.best_snr.toFixed(1)}` : ''}${photos ? ` from ${photos} photos` : ''}.</p>
           <a class="btn btn-gold" href="#/object/2025yh5">See 2025 YH5${icon('arrow')}</a>
           <div class="tr-score">
             <p class="tr-score-big"><span class="mono">${solo ? 'Your time' : 'Rounds solved'}</span>${solo ? fmtS(totalS) : `${done.length} of ${total}`}</p>

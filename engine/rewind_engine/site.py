@@ -108,10 +108,10 @@ def story_for(obj) -> dict:
     site = f" at {obj.site}" if obj.site else ""
     if obj.role == "precovery":
         txt = (f"{obj.name} was discovered on {obj.disc_iso} by {by}{site}. "
-               f"Rewind searched SPHEREx photos taken before that date to see if the space telescope had caught it earlier.")
+               f"Rewind searched SPHEREx images taken before that date for precovery detections.")
     elif obj.role == "lost":
         txt = (f"{obj.name} was seen only from {obj.earliest_obs_iso} to {obj.last_obs_iso} and then lost. "
-               f"Rewind looked for it in SPHEREx photos outside those few days.")
+               f"Rewind searched SPHEREx images outside that short arc.")
     else:
         txt = f"{obj.name} was discovered on {obj.disc_iso} by {by}{site}."
     return dict(discovered_iso=obj.disc_iso, by=obj.by or None, site=obj.site or None, plain=txt,
@@ -298,10 +298,10 @@ def object_page(obj, fr, out, res, verdict, sentence, extra):
     return entry, flashes
 
 
-NEOWISE_TEXT = {"CONFIRMED-LIKELY": "NEOWISE also caught it in older infrared photos, and the checks agree.",
-                "HINT": "A faint NEOWISE catalog source sits on the predicted path, but the photos cannot confirm it.",
-                "NOT_SUPPORTED": "A faint NEOWISE catalog source near the path turned out not to be this object: the "
-                                 "NEOWISE photos do not show it when checked."}
+NEOWISE_TEXT = {"CONFIRMED-LIKELY": "Also detected in archival NEOWISE images, and the same checks agree.",
+                "HINT": "A faint NEOWISE catalogue source lies on the predicted path, but the images cannot confirm it.",
+                "NOT_SUPPORTED": "A faint NEOWISE catalogue source near the path is not this object: the "
+                                 "NEOWISE images do not show it when checked."}
 
 
 def neowise_block(slug, odir):

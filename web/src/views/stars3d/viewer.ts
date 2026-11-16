@@ -55,7 +55,7 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
   const um = (f: { wavelength_um: number }) => (Number.isFinite(f.wavelength_um) ? `${f.wavelength_um.toFixed(2)} µm` : 'wavelength not recorded');
   const from = waves.findIndex((f) => f.wavelength_um >= SHOWS_FROM);
   const pass = (k: number) => rel(url, m.seasons[k].png);
-  const LABEL: Record<Mode, string> = { blink: 'Before / after', passes: `${n} passes`, photos: `${frames.length} photos`, wave: 'Wavelength' };
+  const LABEL: Record<Mode, string> = { blink: 'Before / after', passes: `${n} passes`, photos: `${frames.length} images`, wave: 'Wavelength' };
   let mode = modes[0], k = 0, timer = 0, playing = !reduced;
 
   const el = document.createElement('div');
@@ -70,7 +70,7 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
     <div class="s3v-bar">
       ${modes.length > 1 ? `<div class="seg s3v-modes" role="tablist" aria-label="How to look">${modes.map((x) => `<button type="button" role="tab" data-mode="${x}" aria-selected="${x === mode}">${LABEL[x]}</button>`).join('')}</div>` : ''}
       <button type="button" class="icon-btn s3v-play" aria-label="Pause"></button>
-      <input class="s3v-range" type="range" min="0" value="0" aria-label="Photo">
+      <input class="s3v-range" type="range" min="0" value="0" aria-label="Image">
     </div>
     <p class="s3v-read" aria-live="polite"></p>
     </div>`;
@@ -93,13 +93,13 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
       read.textContent = '';
     } else if (mode === 'passes') {
       img.src = pass(kk);
-      img.alt = `${m.name}, all SPHEREx photos of the pass of ${plainDate(m.seasons[kk].iso)} added up`;
+      img.alt = `${m.name}, stack of all SPHEREx images from the pass of ${plainDate(m.seasons[kk].iso)}`;
       tag.innerHTML = `<b>${kk + 1}/${n}</b> ${esc(plainDate(m.seasons[kk].iso))}`;
-      read.textContent = 'Each picture adds up all the photos of one pass.';
+      read.textContent = 'Each frame is the stack of all images from one survey pass.';
     } else if (mode === 'photos') {
       const f = frames[kk];
       img.src = rel(url, f.png);
-      img.alt = `${m.name}, one SPHEREx photo, ${um(f)}, ${plainDate(f.iso)}`;
+      img.alt = `${m.name}, one SPHEREx image, ${um(f)}, ${plainDate(f.iso)}`;
       tag.innerHTML = `<b>${kk + 1}/${frames.length}</b> ${esc(plainDate(f.iso))}`;
       ring.style.display = '';
       ring.setAttribute('cx', String(f.pred_xy[0]));
@@ -116,7 +116,7 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
       ring.setAttribute('cy', String(f.pred_xy[1]));
       read.innerHTML = on
         ? `<span class="chip chip-gold">It can show here</span> Beyond ${SHOWS_FROM} µm it glows faintly in the ring.${f.iso.startsWith('2026') ? ' In 2026 a background star can blend in.' : ''}`
-        : `<span class="chip">Too cold to show</span> A dot near the ring is the background star, not WISE 0855.`;
+        : `<span class="chip">Too cold to show</span> A source near the ring is the background star, not WISE 0855.`;
       range.setAttribute('aria-valuetext', `${f.wavelength_um.toFixed(2)} micrometres`);
     }
     over.innerHTML = mode === 'blink' ? arrow : '';
@@ -134,7 +134,7 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
     el.dataset.mode = x;
     range.max = String(count() - 1);
     range.hidden = x === 'blink' || count() < 3;
-    range.setAttribute('aria-label', x === 'wave' ? 'Wavelength of the photo' : 'Photo');
+    range.setAttribute('aria-label', x === 'wave' ? 'Wavelength of the image' : 'Image');
     el.querySelectorAll<HTMLElement>('[data-mode]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === x)));
     // the wavelength reveal starts short and plays up to where WISE 0855 appears
     k = 0;

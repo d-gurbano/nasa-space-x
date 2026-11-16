@@ -12,7 +12,7 @@ import { simpleSpectrum, TYPE_PLAIN } from './panel-chart';
 import { el, esc, fixPlural, fmt, plural, provenance } from './dom';
 import { verdictWord } from './topbar';
 import { beforeWhat, daysBefore, isKnown, seenNotEarlier } from '../lib/rank';
-import { farText, oneSentence, shortDate } from './panel-text';
+import { engineText, farText, oneSentence, shortDate } from './panel-text';
 import type { Level } from '../scene/Scene';
 
 const KIND: Record<string, string> = {
@@ -21,11 +21,11 @@ const KIND: Record<string, string> = {
 
 const icon = (d: string) => `<svg viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
 const TABS: [id: string, label: string, title: string, icon: string][] = [
-  ['photos', 'Photos', 'What SPHEREx saw', icon('<rect x="2" y="3" width="12" height="10" rx="2"/><circle cx="6" cy="7" r="1.1"/><path d="m2.5 12 3.5-3 2.5 2 2-1.5 3 2.5"/>')],
-  ['sure', 'Found?', 'How sure are we?', icon('<circle cx="8" cy="8" r="6"/><path d="m5.4 8.2 1.8 1.8 3.4-3.6"/>')],
-  ['future', 'Future', 'Where is it going?', icon('<path d="M2 12.5c2.5-6 7-8 11.5-7.5"/><path d="m11 2.6 2.8 2.3-2.3 2.6"/><circle cx="2.6" cy="12.6" r="0.9"/>')],
-  ['made', 'Made of', 'What is it made of?', icon('<path d="M8 2 13 7 8 14 3 7z"/><path d="M3 7h10"/>')],
-  ['story', 'Story', 'How it was discovered', icon('<path d="M8 4.2C6.8 3.4 5 3.2 2.5 3.4v8.8c2.5-.2 4.3 0 5.5.8 1.2-.8 3-1 5.5-.8V3.4C11 3.2 9.2 3.4 8 4.2z"/><path d="M8 4.2V13"/>')],
+  ['photos', 'Images', 'SPHEREx detections', icon('<rect x="2" y="3" width="12" height="10" rx="2"/><circle cx="6" cy="7" r="1.1"/><path d="m2.5 12 3.5-3 2.5 2 2-1.5 3 2.5"/>')],
+  ['sure', 'Evidence', 'Detection tests', icon('<circle cx="8" cy="8" r="6"/><path d="m5.4 8.2 1.8 1.8 3.4-3.6"/>')],
+  ['future', 'Orbit', 'Orbit uncertainty', icon('<path d="M2 12.5c2.5-6 7-8 11.5-7.5"/><path d="m11 2.6 2.8 2.3-2.3 2.6"/><circle cx="2.6" cy="12.6" r="0.9"/>')],
+  ['made', 'Spectrum', 'Reflectance spectrum', icon('<path d="M8 2 13 7 8 14 3 7z"/><path d="M3 7h10"/>')],
+  ['story', 'Discovery', 'Discovery circumstances', icon('<path d="M8 4.2C6.8 3.4 5 3.2 2.5 3.4v8.8c2.5-.2 4.3 0 5.5.8 1.2-.8 3-1 5.5-.8V3.4C11 3.2 9.2 3.4 8 4.2z"/><path d="M8 4.2V13"/>')],
 ];
 
 const CK_ICON: Record<string, string> = {
@@ -118,7 +118,7 @@ export class ObjectPanel {
       <div class="op-tabs" role="tablist" aria-label="About this object">${TABS.map(([id, label, , ico], k) =>
         `<button role="tab" id="op-tab-${id}" aria-controls="op-pane-${id}" aria-selected="${k === 0}" tabindex="${k === 0 ? 0 : -1}">${ico}<span>${label}</span></button>`).join('')}</div>
       <div class="op-panes">${TABS.map(([id, , title], k) =>
-        `<section class="op-pane" role="tabpanel" id="op-pane-${id}" aria-labelledby="op-tab-${id}"${k === 0 ? '' : ' hidden'}><h3 class="op-h">${title}</h3>${panes[id] || '<p class="muted">Nothing to show here for this object.</p>'}</section>`).join('')}</div>`;
+        `<section class="op-pane" role="tabpanel" id="op-pane-${id}" aria-labelledby="op-tab-${id}"${k === 0 ? '' : ' hidden'}><h3 class="op-h">${title}</h3>${panes[id] || '<p class="muted">No data for this object.</p>'}</section>`).join('')}</div>`;
     this.wireTabs();
     this.body.querySelector<HTMLButtonElement>('.op-view')?.addEventListener('click', () => this.hooks.onView(this.level === 'close' ? 'orbit' : 'close'));
     this.setLevel(this.level);
@@ -186,25 +186,25 @@ export class ObjectPanel {
       sub = `${v === 'FOUND' ? '' : 'HINT: not every detection test passed. '}${dates}`;
     } else if (v === 'FOUND') {
       num = fmt(stacked);
-      what = `${stacked === 1 ? 'photo shows' : 'photos added together show'} it`;
-      sub = known ? 'A known object. It shows what SPHEREx can see.' : claim && /not earlier/i.test(claim) ? 'Not earlier than the known observations.' : '';
+      what = `${stacked === 1 ? 'SPHEREx image' : 'SPHEREx images stacked'}`;
+      sub = known ? 'Control object: known for years, run to show a clear SPHEREx detection. Not a precovery.' : claim && /not earlier/i.test(claim) ? 'Detected, but not earlier than the first known observation: extra positions, not a precovery.' : '';
     } else if (v === 'HINT') {
       num = fmt(photos);
-      what = `${photos === 1 ? 'photo' : 'photos'} checked`;
-      sub = 'A hint, not a sure find.';
+      what = `${photos === 1 ? 'image' : 'images'} searched`;
+      sub = 'HINT: a signal is present but not every detection test passes.';
     } else {
       num = fmt(photos);
-      what = v === 'TOO_FAINT' ? `${photos === 1 ? 'photo' : 'photos'} searched` : v === 'NO_PHOTOS' ? 'photos of the right spot' : `${photos === 1 ? 'photo' : 'photos'} so far`;
-      sub = v === 'TOO_FAINT' ? 'Nothing shows at the predicted spot.' : v === 'NO_PHOTOS' ? 'SPHEREx was not looking there at the right time.' : 'Not searched yet.';
+      what = v === 'TOO_FAINT' ? `${photos === 1 ? 'image' : 'images'} searched` : v === 'NO_PHOTOS' ? 'SPHEREx images cover the predicted position' : `${photos === 1 ? 'image' : 'images'} so far`;
+      sub = v === 'TOO_FAINT' ? 'No significant signal at the predicted position.' : v === 'NO_PHOTOS' ? 'SPHEREx did not image the predicted position in the searched window.' : 'Not searched yet.';
     }
     const early = !known && days !== null && days > 0 && (v === 'FOUND' || v === 'HINT');
     return `<header class="op-head">
-      <div class="pn-title"><h2 class="op-name">${esc(p.name ?? o.name)}</h2>${seenNotEarlier(o) ? '<span class="verdict-chip v-seen">Seen, not earlier</span>' : `<span class="verdict-chip v-${v.toLowerCase()}">${known && v === 'FOUND' ? 'Seen' : verdictWord(v)}</span>`}</div>
+      <div class="pn-title"><h2 class="op-name">${esc(p.name ?? o.name)}</h2>${seenNotEarlier(o) ? '<span class="verdict-chip v-seen">Detected, not earlier</span>' : `<span class="verdict-chip v-${v.toLowerCase()}">${known && v === 'FOUND' ? 'Control' : verdictWord(v)}</span>`}</div>
       <p class="op-type">${bits.map(esc).join(' <span aria-hidden="true">·</span> ')}</p>
       <div class="op-stat${v === 'FOUND' || v === 'HINT' ? ' op-stat-gold' : ''}">
         <span class="op-num">${num}</span>
-        <p class="op-stat-text"><strong>${early ? '<span class="sr-only">Seen </span>' : ''}${esc(what)}</strong>${sub ? `<span>${esc(sub)}</span>` : ''}</p>
-        ${hasPath ? `<button class="op-view" aria-pressed="false" title="Fly to the object, or back out to its whole orbit">${icon('<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/>')}<span>Close-up</span></button>` : ''}
+        <p class="op-stat-text"><strong>${early ? '<span class="sr-only">Detected </span>' : ''}${esc(what)}</strong>${sub ? `<span>${esc(sub)}</span>` : ''}</p>
+        ${hasPath ? `<button class="op-view" aria-pressed="false" title="Zoom the 3D view to the object, or out to its whole orbit">${icon('<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/>')}<span>Close-up</span></button>` : ''}
       </div>
     </header>`;
   }
@@ -246,12 +246,12 @@ export class ObjectPanel {
     const items = this.photoList(p);
     if (!items.length) {
       const none = !(p.spherex?.frames?.length ?? 0);
-      return `<p class="op-empty">${none ? `SPHEREx has no photos of the right spot at the right time${p.verdict === 'NO_PHOTOS' ? '' : ' yet'}.` : 'No picture was kept for these photos.'}</p>`;
+      return `<p class="op-empty">${none ? `No SPHEREx image covers the predicted position in the searched window${p.verdict === 'NO_PHOTOS' ? '' : ' yet'}.` : 'No cutout was saved for these images.'}</p>`;
     }
     const url = (rel: string) => esc(this.hooks.url(p.slug, rel));
     return `<div class="op-photo${items.length > 1 ? '' : ' op-photo-one'}">
         <figure class="stamp op-big"><img alt="" width="256" height="256"><span class="stamp-cross" aria-hidden="true"></span></figure>
-        ${items.length > 1 ? `<div class="op-strip" role="listbox" aria-label="Pick a day">${items.map((x, i) =>
+        ${items.length > 1 ? `<div class="op-strip" role="listbox" aria-label="Select a night">${items.map((x, i) =>
           `<button role="option" aria-selected="${i === 0}" aria-label="${esc(x.date)}${x.dim ? ', no detection' : ''}" title="${esc(x.date)}${x.dim ? ' (no detection)' : ''}"${x.dim ? ' class="op-nodet"' : ''}><img src="${url(x.src)}" alt="" loading="lazy" width="44" height="44"><span>${esc(x.label)}</span></button>`).join('')}</div>` : ''}
       </div>
       <p class="op-cap mono" aria-live="polite"></p>
@@ -286,8 +286,8 @@ export class ObjectPanel {
     const cloneLine = cs?.n_clones != null && cs.false_alarm_rate != null
       ? `<p class="hint">Orbit-uncertainty search: ${fmt(cs.n_clones)} orbit clones stacked; false-alarm probability ${farText(cs.false_alarm_rate, cs.n_null_trials)}. Informational, not one of the nine checks.</p>`
       : '';
-    const line = oneSentence(fixPlural(p.verdict_text ?? ''), (p as ObjectPage & { claim?: string | null }).claim ?? o.claim);
-    const full = fixPlural(p.verdict_text ?? '');
+    const line = oneSentence(engineText(fixPlural(p.verdict_text ?? '')), (p as ObjectPage & { claim?: string | null }).claim ?? o.claim);
+    const full = engineText(fixPlural(p.verdict_text ?? ''));
     const pass = rows.filter((r) => r[0] === 'ok').length;
     return `<p class="op-lead">${esc(line)}</p>
       ${rows.length ? `<p class="op-score mono">${pass} of ${rows.length} checks pass</p>
@@ -374,9 +374,9 @@ export class ObjectPanel {
     const who = whoWhere(s.by, s.site);
     // the engine's story repeats the discovery sentence (with "Mt." inside the site name, so it
     // cannot be split on full stops); drop it and the boilerplate that follows
-    const more = fixPlural(s.plain ?? '')
+    const more = engineText(fixPlural(s.plain ?? ''))
       .replace(/^.*?\bwas discovered on \S+(?: by .*?\(\w+\))?\.\s*/, '')
-      .replace(/^Rewind searched SPHEREx photos taken before that date[^.]*\.\s*/, '')
+      .replace(/^Rewind searched SPHEREx (?:photos|images) taken before that date[^.]*\.\s*/, '')
       .trim();
     const firstObs = p.first_known_obs_iso ?? o.first_known_obs_iso;
     const obsLine = firstObs && s.discovered_iso && firstObs.slice(0, 10) < s.discovered_iso.slice(0, 10)

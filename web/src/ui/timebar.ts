@@ -160,7 +160,7 @@ export function mountTimebar(root: HTMLElement, flashes: FlashEvent[], opts: {
         <span class="tb-pop-name">${esc(o?.name ?? f.slug)}${o ? `<span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Known' : verdictWord(o.verdict)}</span>` : ''}</span>
         <span class="tb-pop-when">${esc(plainDate(f.iso))}${f.snr != null ? ` / S/N ${f.snr.toFixed(1)}` : ''}</span>
         <span class="tb-pop-label">${esc(fixPlural(f.label))}</span>
-        ${n > 1 ? `<span class="tb-pop-more">The strongest of ${n} photos taken around this date. The arrow buttons step through all of them.</span>` : ''}
+        ${n > 1 ? `<span class="tb-pop-more">The strongest of ${n} SPHEREx detections around this date. The arrow buttons step through all of them.</span>` : ''}
       </div>`;
     const w = track.clientWidth, pw = pop.offsetWidth;
     pop.style.left = Math.max(0, Math.min(w - pw, ((frac(sorted[m.first].mjd) + frac(sorted[m.last].mjd)) / 2) * w - pw / 2)) + 'px';
