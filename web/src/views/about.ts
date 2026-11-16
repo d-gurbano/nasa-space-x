@@ -183,7 +183,7 @@ export const aboutView: View = (body, ctx) => {
           <p>An earlier position lengthens the observed arc. Right after discovery, when the arc is only days long, this can make the predicted uncertainty several times smaller. Once there are months of follow-up, it changes little.</p>
         </li>
       </ol>
-      <p class="ab-how-more"><a href="#/object/2025yh5">Open 2025 YH5</a></p>`)}
+      <p class="ab-how-more"><a class="btn" href="#/object/2025yh5">Open 2025 YH5${icon('arrow')}</a></p>`)}
 
     ${section('The telescope', 'NASA SPHEREx maps the whole sky every six months', `
       <ul class="ab-gallery">${NASA_IMG.map((m) => `<li><figure><img src="${nasa(m.id)}" alt="${esc(m.title)}" loading="lazy" /><figcaption><b>${esc(m.title)}</b><span class="ab-credit mono">NASA/JPL-Caltech, ${m.id}</span></figcaption></figure></li>`).join('')}</ul>`)}

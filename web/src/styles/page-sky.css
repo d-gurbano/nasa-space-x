@@ -4,8 +4,8 @@
 .sky-lead { max-width: 640px; margin: 0 0 var(--g4); font-size: var(--fs-l); line-height: 1.5; color: var(--ink-2); }
 
 /* ---------- form ---------- */
-.sky-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--g2); }
-.sky-field { display: flex; flex-direction: column; gap: var(--g); min-width: 0; }
+.sky-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--g2); padding-bottom: 26px; }
+.sky-field { position: relative; display: flex; flex-direction: column; gap: var(--g); min-width: 0; }
 .sky-field:first-child { flex: 1 1 320px; }
 .sky-input {
   width: 100%; height: 48px; padding: 0 var(--g2); font-size: var(--fs-m); color: var(--ink);
@@ -16,7 +16,8 @@
 .sky-input:hover, .sky-input:focus { border-color: var(--ink-3); background: var(--fill-2); }
 .sky-size { margin-bottom: 0; }
 .sky-size button { height: 40px; font-family: var(--mono); }
-.sky-size-hint { font-size: var(--fs-xs); color: var(--ink-3); }
+.sky-size-hint { position: absolute; left: 4px; top: calc(100% + 8px); white-space: nowrap; font-size: var(--fs-xs); color: var(--ink-3); }
+.sky-go { height: 48px; }
 .sky-err { margin: var(--g) 0 0; font-size: var(--fs-s); }
 
 /* waiting for the index: the form is there, but quiet */
