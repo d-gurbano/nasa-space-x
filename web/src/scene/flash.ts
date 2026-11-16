@@ -72,7 +72,7 @@ export class FlashFx {
     // explain the gold line while it is visible
     scene.labels.add({
       id: 'beam',
-      text: 'SPHEREx looking at it',
+      text: 'SPHEREx line of sight',
       cls: 'label-beam',
       priority: 9.5,
       pos: (o) => (this.active && this.active.t < DURATION * 0.85 ? o.copy(this.a).lerp(this.b, 0.5) : null),

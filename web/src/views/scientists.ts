@@ -7,38 +7,45 @@ import { engineText } from '../ui/panel-text';
 import { GLOSSARY } from '../lib/glossary';
 import { alarmLine, decoyTally, tally as benchTally, usable, type Bench } from './benchmark/logic';
 import { mpcLine } from '../lib/mpc';
-import { isKnown, tally } from '../lib/rank';
+import { framesRead, isKnown, phaLine, tally } from '../lib/rank';
 import { getJson } from '../lib/data';
 import { button, icon, section, stat } from '../ui/components';
 import { esc, fixPlural, fmt, plural, provenance } from '../ui/dom';
 import { verdictWord } from '../ui/topbar';
 import { reducedMotion } from '../state';
 import { rel, type View } from './page';
+import { HIT_RATE_LABEL, HIT_RATE_PLAIN, hitRows, LIVE, LIVE_LABEL, LIVE_PLAIN, LIVE_TEXT, VALIDATION, type HitRates } from './findings';
 import { bytes, filterRows, gainRange, inTab, km, lead, notEarlier, snrBar, sortRows, splitContract, toCsv, type Row, type Sort, type SortKey, type Tab } from './scientists/logic';
 
 const PAGE = 25;
+
+// hit rate by type: from benchmark.json once it loads, from findings.ts until then
+const rateCard = (data?: HitRates | null) => `<p class="kicker">Hit rate by type, ${HIT_RATE_LABEL}</p>
+  <table class="data-table sci-rates"><thead><tr><th scope="col">Type</th><th scope="col">Found, of those with SPHEREx images</th><th scope="col">Rate</th></tr></thead>
+  <tbody>${hitRows(data).map(([w, n, p]) => `<tr><td>${w}</td><td>${n}</td><td>${p}</td></tr>`).join('')}</tbody></table>
+  <p>${esc(HIT_RATE_PLAIN)}</p>`;
 const KIND: Record<string, string> = { neo: 'NEO', comet: 'Comet', mba: 'Main belt', lost: 'Lost', famous: 'Known' };
 
 // the engine's nine checks and four verdicts come from one shared list (src/lib/checks.ts)
 const VERDICTS: [string, string][] = Object.entries(VERDICT_DEF);
 
 const LIMITS: [string, string][] = [
-  ['Detections are stack-level', 'Most finds are below the noise in every single exposure; positions come from per-night shift-and-stack centroids, each given an uncertainty of at least 2″.'],
-  ['Photometry is a quick look', 'Forced PSF photometry on Level 2 images. Each exposure samples a different wavelength (linear variable filters), so stacked fluxes mix wavelengths and are not colour-corrected.'],
-  ['Orbit uncertainties are linear', 'Covariance clones from kete least-squares fits, propagated with gravity only. Non-gravitational forces on comets are not modelled; a fit that does not converge is flagged, not used.'],
-  ['Static-sky subtraction can fail', 'Near bright stars and in crowded fields the reference image leaves residuals; the "Static sky subtracted" and null-path checks are there to catch them, at the cost of completeness.'],
-  ['Small validation sample', 'The blind test has 23 usable real cases (only 3 comets) and 22 empty-sky decoys. The recovery fraction and false-alarm rate carry wide statistical uncertainty.'],
-  ['Data release', 'SPHEREx quick-release (QR3) and DR1 Level 2 images from IRSA. Later calibrations may change fluxes and positions slightly.'],
-  ['Not submitted, not peer-reviewed', 'No position has been sent to the Minor Planet Center. This is a NASA Space Apps 2026 hackathon project.'],
+  ['Detections are stack-level', 'Most finds are below the noise in every single exposure. The positions are centroids of per-day shift-and-stack images, each given an uncertainty of at least 2″.'],
+  ['Photometry is a quick look', 'We measure forced PSF photometry on Level 2 images. Each exposure samples a different wavelength (linear variable filters), so a stacked flux mixes wavelengths and is not colour-corrected.'],
+  ['Orbit uncertainties are linear', 'The uncertainties come from covariance clones of kete least-squares fits, propagated with gravity only. We do not model non-gravitational forces on comets. A fit that does not converge is flagged and not used.'],
+  ['Static-sky subtraction can fail', 'Near bright stars and in crowded fields the reference image leaves residuals. The "Static sky subtracted" and null-path checks are there to catch them, at some cost in completeness.'],
+  ['Small validation sample', 'The blind test has 23 usable real cases (only 3 comets) and 22 empty-sky decoys. The recovery fraction and the false-alarm rate therefore have wide statistical uncertainties.'],
+  ['Data release', 'We used SPHEREx quick-release (QR3) and DR1 Level 2 images from IRSA. Later calibrations may change fluxes and positions slightly.'],
+  ['Not submitted, not peer-reviewed', 'We have not sent any position to the Minor Planet Center. This is a NASA Space Apps 2026 hackathon project.'],
 ];
 
 const STEPS = (searched: number, frames: number): [string, string, string][] => [
-  ['Targets', 'New asteroids and comets from the MPC and JPL SBDB, lost objects whose search area is small enough, and a few well-known objects as controls.', `${fmt(searched)} objects`],
-  ['Images', 'Each orbit is propagated over the SPHEREx survey to list every Level 2 image that covers the predicted position (NASA/IPAC IRSA, QR3 and DR1).', `${fmt(frames)} images analysed`],
-  ['Clean', 'A cutout is taken at the predicted position, the static sky is subtracted using other SPHEREx images of the same field, and forced PSF flux is measured.', 'flux, error, flags'],
-  ['Stack', 'The cleaned cutouts are shifted and co-added along the predicted motion, per night and over all nights. The S/N is calibrated against identical stacks along offset (null) trajectories.', 'null-calibrated S/N'],
-  ['Checks', 'Nine checks per object: null trajectories, time-shift test, single-night stacks, a sign test, and injection–recovery of synthetic sources to measure the local limit.', '9 pass or fail marks'],
-  ['Verdict and orbit', 'FOUND only when every check passes. For a find, the measured positions join the MPC observations and the orbit is refit with kete.', 'verdict, positions, refit'],
+  ['Targets', 'We take new asteroids and comets from the MPC and JPL SBDB, lost objects with a small enough search area, and a few well-known objects as controls.', `${fmt(searched)} objects`],
+  ['Images', 'Rewind propagates each orbit over the SPHEREx survey and lists every Level 2 image that covers the predicted position (NASA/IPAC IRSA, QR3 and DR1).', `${fmt(frames)} images analysed`],
+  ['Clean', 'Rewind cuts out the predicted position and subtracts the static sky, using other SPHEREx images of the same field. It then measures forced PSF flux.', 'flux, error, flags'],
+  ['Stack', 'The cleaned cutouts are shifted along the predicted motion and added up, per day and over all days. The S/N is calibrated against identical stacks along offset (null) trajectories.', 'null-calibrated S/N'],
+  ['Checks', 'Each object gets nine checks. They include null trajectories, a time-shift test, single-day stacks, a sign test, and injection-recovery of synthetic sources to measure the local limit.', '9 pass or fail marks'],
+  ['Verdict and orbit', 'The verdict is FOUND only when every check passes. For a find, we add the measured positions to the MPC observations and refit the orbit with kete.', 'verdict, positions, refit'],
 ];
 
 // line icons for the six method steps, drawn on a 24 grid; the gold part marks what the step adds
@@ -76,7 +83,7 @@ interface Impact {
   spherex_positions?: number; sigma_floor_arcsec?: number; arc_days_before?: number; arc_days_after?: number;
   one_year_after_last_obs?: Sigma | null; at_discovery_scenario?: Sigma | null;
 }
-interface FindPage { name: string; sample?: boolean; impact?: Impact | null; checks?: { orbit_fit?: { positions?: Position[] } | null } }
+interface FindPage { name: string; sample?: boolean; facts?: { pha?: boolean } | null; impact?: Impact | null; checks?: { orbit_fit?: { positions?: Position[] } | null } }
 interface Find { o: Row; impact: Impact | null; lines: string[] }
 interface Crosscheck {
   summary: { already_in_site: number; crosscheck_same_verdict: number };
@@ -102,19 +109,20 @@ export const scientistsView: View = (body, ctx) => {
     `<th scope="col" class="${cls}" aria-sort="none"><button class="sci-sort${tip ? ' tip tip-r tip-down' : ''}" data-sort="${k}"${tip ? ` data-tip="${esc(tip)}"` : ''}>${esc(label)}</button></th>`;
 
   body.innerHTML = `
-    <p class="lead">Method, full results, detection tests, validation, limitations and every data file.</p>
+    <p class="lead">This page gives the method, the full results, the detection checks, the validation tests, the limitations and every data file.</p>
     <dl class="stats sci-stats">
       ${stat(fmt(t.searched), 'objects searched')}
-      ${stat(t.found, early ? `FOUND, ${early} of them precoveries (before the first known observation)` : 'FOUND in SPHEREx images', 'stat-gold')}
+      ${stat(t.found, early ? `FOUND, ${early} of them precoveries made before the first known observation` : 'FOUND in SPHEREx images', 'stat-gold')}
       ${stat(t.known, 'control objects detected')}
       ${stat(t.hints, 'HINT (never upgraded)', 'stat-blue')}
       ${stat(t.tooFaint, 'below the local limit')}
       ${stat(t.noPhotos, 'no SPHEREx coverage')}
     </dl>
+    <p class="hint sci-pha" hidden></p>
     <nav class="sci-nav" aria-label="On this page"><div class="sci-nav-track">${nav.map(([id, label]) => `<button type="button" class="sci-nav-btn" data-go="sci-${id}">${label}</button>`).join('')}</div></nav>
 
-    ${section('Method', 'From a new orbit to a verdict, in six steps', `
-      <ol class="sci-steps">${STEPS(t.searched, source.index.headline_stats.frames_read).map(([h, p, out], i) => `<li class="sci-step">
+    ${section('Method', 'Six steps from a new orbit to a verdict', `
+      <ol class="sci-steps">${STEPS(t.searched, framesRead(rows)).map(([h, p, out], i) => `<li class="sci-step">
         <div class="sci-step-head"><span class="sci-step-num" aria-hidden="true">${i + 1}</span></div>
         <span class="sci-step-ico">${STEP_ICONS[i]}</span>
         <h3>${h}</h3><p>${p}</p><p class="sci-out mono">${esc(out)}</p></li>`).join('')}</ol>`, 'sci-sec sci-s-method')}
@@ -127,7 +135,7 @@ export const scientistsView: View = (body, ctx) => {
       </div>
       <table class="data-table sci-table">
         <thead><tr>
-          ${th('name', 'Object')}${th('kind', 'Type', 'sci-wide')}${th('verdict', 'Verdict', 'sci-left')}${th('snr', 'S/N', 'sci-snr', 'Null-calibrated S/N of the stack. Bar: square-root scale, tick at S/N 5')}
+          ${th('name', 'Object')}${th('kind', 'Type', 'sci-wide')}${th('verdict', 'Verdict', 'sci-left')}${th('snr', 'S/N', 'sci-snr', 'Null-calibrated S/N of the stack. The bar uses a square-root scale, with a tick at S/N 5')}
           ${th('frames', 'Images', 'sci-wide')}${th('discovered', 'Discovered', 'sci-wide')}${th('lead', 'vs first known obs.', 'sci-wide', 'Against the first known observation anywhere (JPL SBDB)')}
           <th scope="col"><span class="sr-only">Details</span></th>
         </tr></thead>
@@ -140,7 +148,7 @@ export const scientistsView: View = (body, ctx) => {
         ${provenance(source.sample, 'NASA SPHEREx')}
       </div>`, 'sci-sec sci-s-results')}
 
-    ${section('Orbit impact', 'What the finds do to the orbit', `<div class="sci-impact"><p class="muted">Loading the orbit fits...</p></div>`, 'sci-sec sci-s-impact')}
+    ${section('Orbit impact', 'How the finds change the orbits', `<div class="sci-impact"><p class="muted">Loading the orbit fits...</p></div>`, 'sci-sec sci-s-impact')}
 
     ${section('Definitions', 'Nine checks, four verdicts', `
       <div class="sci-defs">
@@ -152,17 +160,24 @@ export const scientistsView: View = (body, ctx) => {
       </div>
       <p class="hint">Each object.json carries the measured numbers behind every check and the pass marks in checks.passed.</p>`, 'sci-sec sci-s-checks')}
 
-    ${section('Validation', 'How the pipeline was tested', `
+    ${section('Validation', 'How we tested the pipeline', `
       <div class="sci-cards">
         <article class="card card-pad sci-bm"><p class="kicker">Blind test</p><p class="muted">Loading...</p></article>
         <article class="card card-pad sci-cross"><p class="kicker">Two machines</p><p class="muted">Loading...</p></article>
+        <article class="card card-pad sci-rate">${rateCard()}</article>
+        <article class="card card-pad sci-live"><p class="kicker">Live test, ${LIVE_LABEL}</p>
+          <p class="sci-big">${LIVE.too_faint} of ${LIVE.searched}<span>too faint in the public SPHEREx images</span></p>
+          <p>${esc(LIVE_TEXT)}</p><p>${esc(LIVE_PLAIN)}</p></article>
       </div>
+      <div class="sci-cards sci-vals">${VALIDATION.map(([h, label, line, more]) => `<article class="card card-pad">
+        <p class="kicker">${esc(h)}, ${label}</p><p>${esc(line)}</p>
+        <details class="sci-fold"><summary>Details</summary><p>${esc(more)}</p></details></article>`).join('')}</div>
       <article class="card card-pad sci-ai">
         <p class="chip chip-ai">AI, tested and reported</p>
         <ul>
-          <li><h3>Real-or-artifact score: works, advisory only</h3><p>A small CNN separates known asteroids from injected artifacts with accuracy 0.974 and AUC 0.998 on held-out sky (1,043 samples), against 0.931 and 0.986 for gradient boosting. The negatives are injected, so this does not measure performance on real artifacts. No verdict rule uses the score.</p></li>
-          <li><h3>Expected-sky U-Net: not better, not used</h3><p>A U-Net that predicts the static sky did not beat the plain reference: false alarms at bright stars rose to 18.3%, against about 10%. It is not in the engine.</p></li>
-          <li><h3>Outside its range on bright objects</h3><p>On real objects the CNN scores lower than gradient boosting (433 Eros 0.76 against 0.99, 3I/ATLAS 0.35 against 0.66). Bright objects and comas are outside its training set.</p></li>
+          <li><h3>Real-or-artifact score, advisory only</h3><p>A small neural network (CNN) separates known asteroids from injected artifacts with accuracy 0.974 and AUC 0.998 on held-out sky (1,043 samples), against 0.931 and 0.986 for gradient boosting. The negatives are injected, so this does not measure performance on real artifacts. No verdict rule uses the score.</p></li>
+          <li><h3>Expected-sky U-Net, not used</h3><p>We trained a U-Net to predict the static sky. It did no better than the plain reference image. False alarms at bright stars rose to 18.3%, against about 10%, so the engine does not use it.</p></li>
+          <li><h3>Bright objects are outside the CNN's range</h3><p>On real objects the CNN scores lower than gradient boosting (433 Eros 0.76 against 0.99, 3I/ATLAS 0.35 against 0.66). Bright objects and comas are outside its training set.</p></li>
         </ul>
         <p class="hint">From the Kaggle training run of 2026-11-15 (T4 GPU, 8,792 SPHEREx frames). MEASURED on held-out data.</p>
       </article>`, 'sci-sec sci-s-validation')}
@@ -180,17 +195,17 @@ export const scientistsView: View = (body, ctx) => {
           <span class="sci-file-meta"><span>${fileType(f)}</span><span class="sci-size"></span></span></a></li>`).join('')}
         <li><div class="sci-file sci-file-static">
           <span class="sci-file-ico">${ICO_FOLDER}</span>
-          <span class="sci-file-name">objects/&lt;slug&gt;/object.json</span><span class="sci-file-desc">One per object: images, checks, uncertainty cloud, spectrum. Open a row in the results table for its link.</span>
+          <span class="sci-file-name">objects/&lt;slug&gt;/object.json</span><span class="sci-file-desc">One file per object, with its images, checks, uncertainty cloud and spectrum. Open a row in the results table for its link.</span>
           <span class="sci-file-meta"><span>JSON, one per object</span></span></div></li>
       </ul>`, 'sci-sec sci-s-files')}
 
     ${section('Data contract', 'The format of every file', `
-      <p>The analysis engine writes plain JSON and PNG files; this website only reads them. Times are MJD (UTC) plus ISO strings, 3D positions are heliocentric ecliptic J2000 in AU, angles are in degrees, and images are north up and east left with one brightness stretch per object and no smoothing.</p>
+      <p>The analysis engine writes plain JSON and PNG files, and this website only reads them. Times are MJD (UTC) plus ISO strings. 3D positions are heliocentric ecliptic J2000 in AU, and angles are in degrees. Images are north up and east left, with one brightness stretch per object and no smoothing.</p>
       <div class="sci-contract"></div>
       <p><a class="sci-link" href="DATA-CONTRACT.md" target="_blank" rel="noopener">Open the full DATA-CONTRACT.md</a></p>`, 'sci-sec sci-s-contract')}
 
     ${section('Positions', 'Measured positions in MPC 80-column format', `
-      <div class="note note-warn"><strong>For expert review, never submitted</strong><p>These lines have not been sent to the Minor Planet Center or anywhere else. The observatory code is left as XXX, and the second line that space-based observations need (the spacecraft position) is not included.</p></div>
+      <div class="note note-warn"><strong>For expert review, not submitted</strong><p>We have not sent these lines to the Minor Planet Center or anywhere else. The observatory code is 288, the MPC code for SPHEREx. The second line that space-based observations need (the spacecraft position) is not included.</p></div>
       <div class="sci-mpc"><p class="muted">Loading the positions...</p></div>`, 'sci-sec sci-s-mpc')}
 
     ${section('Cite', 'How to cite and reproduce', `
@@ -198,7 +213,7 @@ export const scientistsView: View = (body, ctx) => {
         <p class="kicker">Suggested citation</p>
         <p class="mono">Bazarov, R. &amp; Gurbanov, D. (2026). Rewind: SPHEREx precoveries of recently discovered asteroids and comets. NASA International Space Apps Challenge 2026. ${esc(location.origin + location.pathname)}</p>
         <p class="kicker">Reproduce</p>
-        <p>Every number on this site is read from the files under Downloads; the format is in the data contract above. Images: NASA SPHEREx Level 2 (IRSA). Orbits and observations: JPL SBDB / Horizons and the Minor Planet Center. Orbit fits: kete (Caltech/IPAC). Please also cite SPHEREx and IRSA as in the acknowledgements below.</p>
+        <p>Every number on this site is read from the files under Downloads, in the format given by the data contract above. The images are NASA SPHEREx Level 2 (IRSA). Orbits and observations come from JPL SBDB, JPL Horizons and the Minor Planet Center. Orbit fits use kete (Caltech/IPAC). Please also cite SPHEREx and IRSA as in the acknowledgements below.</p>
       </div>`, 'sci-sec sci-s-cite')}
 
     <footer class="sci-ack">
@@ -311,7 +326,7 @@ export const scientistsView: View = (body, ctx) => {
     const pages = Math.max(1, Math.ceil(all.length / PAGE));
     state.page = Math.min(state.page, pages - 1);
     const from = state.page * PAGE;
-    tbody.innerHTML = all.slice(from, from + PAGE).map(rowHtml).join('') || `<tr><td colspan="8" class="empty">No object matches. Try another name or verdict.</td></tr>`;
+    tbody.innerHTML = all.slice(from, from + PAGE).map(rowHtml).join('') || `<tr><td colspan="8" class="empty">No object matches this search. Try another name or verdict.</td></tr>`;
     $('.sci-count').textContent = all.length ? `${from + 1} to ${Math.min(from + PAGE, all.length)} of ${all.length}` : '0 objects';
     $<HTMLButtonElement>('.sci-prev').disabled = state.page === 0;
     $<HTMLButtonElement>('.sci-next').disabled = state.page >= pages - 1;
@@ -374,14 +389,15 @@ export const scientistsView: View = (body, ctx) => {
     // counted from the cases (v2 marks cases with no usable test as "unknown"); decoys are patches of empty sky
     const bt = benchTally((data.cases ?? []).filter(usable));
     const decoys = decoyTally(data.decoys ?? []);
+    $('.sci-rate').innerHTML = rateCard((data as Bench & { archive_search_hit_rate?: { by_type?: HitRates } }).archive_search_hit_rate?.by_type);
     const err = data.summary?.pos_err_arcsec;
     $('.sci-bm').innerHTML = `<p class="kicker">Blind test</p>
-      <p class="sci-big">${bt.found} of ${bt.seen}<span>recovered as FOUND, of the test objects SPHEREx recorded</span></p>
+      <p class="sci-big">${bt.found} of ${bt.seen}<span>test objects recorded by SPHEREx were recovered as FOUND</span></p>
       <p class="mono">${bt.hint} HINT · ${bt.missed} missed · ${alarmLine(bt, decoys).replace('false alarms', 'false FOUNDs').replace('false alarm ', 'false FOUND ')}</p>
-      <p>${esc(engineText(data.summary?.plain) || `Rewind recovered ${bt.found} of ${bt.seen} detectable known objects, in ${plural(bt.total, 'case')}.`)}</p>
+      <p>${esc(engineText(data.summary?.plain) || `Rewind recovered ${bt.found} of ${bt.seen} detectable known objects in ${plural(bt.total, 'case')}.`)}</p>
       ${err?.median != null ? `<p class="mono">Position error: median ${err.median} arcsec${err.p90 != null ? `, 90% within ${err.p90}` : ''}${err.n ? ` (n = ${err.n})` : ''}.</p>` : ''}
       <p class="sci-card-foot"><a class="sci-link" href="#/blind-test">See every case</a>${provenance(sample, 'NASA SPHEREx')}</p>`;
-  }).catch(() => alive && ($('.sci-bm').innerHTML = `<p class="kicker">Blind test</p><p class="muted">The benchmark file is not in this data set.</p>`));
+  }).catch(() => alive && ($('.sci-bm').innerHTML = `<p class="kicker">Blind test</p><p class="muted">This data set has no blind-test file.</p>`));
 
   getJson<Crosscheck>(source.base + 'kaggle_crosscheck.json').then((x) => {
     if (!alive) return;
@@ -391,14 +407,14 @@ export const scientistsView: View = (body, ctx) => {
     const name = (slug: string) => rows.find((o) => o.slug === slug)?.name ?? slug;
     $('.sci-cross').innerHTML = `<p class="kicker">Two machines</p>
       <p class="sci-big">${same} of ${cc.length}<span>same verdict</span></p>
-      <p>${cc.length} objects, run on a Mac and on Kaggle from the same code. ${same === cc.length ? 'Every verdict agrees.' : `${cc.length - same} verdicts differ.`} The S/N is identical for ${equal} and differs a little for ${cc.length - equal}, for example where the earlier Mac run picked its reference photos under an older rule.</p>
+      <p>We ran ${cc.length} objects with the same code on a Mac and on Kaggle. ${same === cc.length ? 'Every verdict agrees.' : `${cc.length - same} verdicts differ.`} The S/N is identical for ${equal} and differs a little for ${cc.length - equal}. In some of those, the earlier Mac run chose its reference images under an older rule.</p>
       <details class="sci-fold"><summary>Show the ${cc.length} objects</summary>
-        <table class="data-table sci-cc"><thead><tr><th scope="col">Object</th><th scope="col">Mac</th><th scope="col">Kaggle</th><th scope="col">S/N Mac</th><th scope="col">S/N Kaggle</th><th scope="col">Photos</th></tr></thead>
+        <table class="data-table sci-cc"><thead><tr><th scope="col">Object</th><th scope="col">Mac</th><th scope="col">Kaggle</th><th scope="col">S/N Mac</th><th scope="col">S/N Kaggle</th><th scope="col">Images</th></tr></thead>
         <tbody>${cc.map((c) => `<tr><td><a href="#/object/${esc(c.slug)}">${esc(name(c.slug))}</a></td><td>${chipFor(c.mac_verdict)}</td><td>${chipFor(c.kaggle_verdict)}</td><td>${c.mac_snr.toFixed(2)}</td><td>${c.kaggle_snr.toFixed(2)}</td><td>${c.mac_frames === c.kaggle_frames ? c.mac_frames : `${c.mac_frames} / ${c.kaggle_frames}`}</td></tr>`).join('')}</tbody></table>
       </details>`;
   }).catch(() => {
     if (!alive) return;
-    $('.sci-cross').innerHTML = `<p class="kicker">Two machines</p><p class="muted">The cross-check file is not in this data set.</p>`;
+    $('.sci-cross').innerHTML = `<p class="kicker">Two machines</p><p class="muted">This data set has no cross-check file.</p>`;
     body.querySelector('.sci-files a[href$="kaggle_crosscheck.json"]')?.closest('li')?.remove();
   });
 
@@ -416,9 +432,12 @@ export const scientistsView: View = (body, ctx) => {
     const finds: Find[] = targets.map((o, k) => {
       const p = pages[k];
       const lines = (p?.checks?.orbit_fit?.positions ?? []).filter((q) => [q.mjd, q.ra, q.dec].every(Number.isFinite))
-        .map((q) => mpcLine({ name: o.name.replace(/\s*\(.*\)$/, ''), mjd: q.mjd, ra: q.ra, dec: q.dec, note2: 'S', code: 'XXX' }));
+        .map((q) => mpcLine({ name: o.name.replace(/\s*\(.*\)$/, ''), mjd: q.mjd, ra: q.ra, dec: q.dec, note2: 'S', code: '288' }));
       return { o, impact: p?.impact ?? null, lines };
     });
+    const pha = $('.sci-pha');
+    pha.textContent = phaLine(pages);
+    pha.hidden = !pha.textContent;
     impact(finds.filter((f) => f.impact));
     mpc(finds.filter((f) => f.lines.length));
   });
@@ -435,14 +454,14 @@ export const scientistsView: View = (body, ctx) => {
     const cell = (s: Sigma | null | undefined, none: string) => {
       const v = sig(s);
       if (!v) return `<td colspan="2" class="sci-na">${esc(s?.error ? 'fit too weak to sample' : none)}</td>`;
-      return `<td>${arrow(km(v.sigma3_km_before!), km(v.sigma3_km_after!))}${v.converged === false ? '<sup title="Fit did not converge: unreliable">*</sup>' : ''}</td><td class="${v.factor! >= 2 && v.converged !== false ? 'gold' : ''}">${times(v.factor!)}</td>`;
+      return `<td>${arrow(km(v.sigma3_km_before!), km(v.sigma3_km_after!))}${v.converged === false ? '<sup title="The fit did not converge, so this number is unreliable">*</sup>' : ''}</td><td class="${v.factor! >= 2 && v.converged !== false ? 'gold' : ''}">${times(v.factor!)}</td>`;
     };
     box.innerHTML = `
       <dl class="stats sci-gain">
-        ${best.map(({ f, s }) => stat(times(s!.factor!), `${f.o.name}, had Rewind run at discovery: ${km(s!.sigma3_km_before!)} to ${km(s!.sigma3_km_after!)} km`, 'stat-gold')).join('')}
-        ${today.length ? stat(gainRange(today), 'today, now that weeks to a year of follow-up exist') : ''}
+        ${best.map(({ f, s }) => stat(times(s!.factor!), `${f.o.name}, if Rewind had run at discovery, from ${km(s!.sigma3_km_before!)} to ${km(s!.sigma3_km_after!)} km`, 'stat-gold')).join('')}
+        ${today.length ? stat(gainRange(today), 'today, after weeks to a year of follow-up') : ''}
       </dl>
-      <p>Precovery positions matter most in the first days after discovery, when the arc is short${best.length ? `: for ${best.length} of ${finds.length} objects the at-discovery scenario shows a ${best.map(({ s }) => times(s!.factor!)).reverse().join(' to ')} reduction in 1-year uncertainty` : ''}.${today.length ? ` With today's follow-up arcs (weeks to a year) the same positions reduce it by ${gainRange(today)}.` : ''}</p>
+      <p>Precovery positions help most in the first days after discovery, when the arc is short.${best.length ? ` For ${best.length} of ${finds.length} objects, a fit to only the first days of observations shows a ${best.map(({ s }) => times(s!.factor!)).reverse().join(' to ')} reduction in the 1-year uncertainty.` : ''}${today.length ? ` With today's follow-up arcs (weeks to a year), the same positions reduce it by ${gainRange(today)}.` : ''}</p>
       <div class="sci-scroll"><table class="data-table sci-impact-table">
         <thead><tr><th scope="col">Object</th><th scope="col">First known obs.</th><th scope="col">Earlier by</th><th scope="col">Positions</th><th scope="col">Arc, days</th><th scope="col" colspan="2">3 sigma in 1 yr, today (km)</th><th scope="col" colspan="2">At discovery (km)</th></tr></thead>
         <tbody>${finds.map(({ o, impact: m }) => `<tr>
@@ -456,8 +475,8 @@ export const scientistsView: View = (body, ctx) => {
         </tr>`).join('')}</tbody>
       </table></div>
       ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => sig(x)?.converged === false)) ? '<p class="hint"><span class="sci-foot">*</span> The fit did not converge, so this number is unreliable.</p>' : ''}
-      ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => { const v = sig(x); return v?.factor != null && v.factor < 0.95 && v.converged !== false; })) ? '<p class="hint">A factor below 1 means the formal uncertainty grew when the SPHEREx positions were added. This can happen when a new position pulls a short-arc least-squares solution, or when its assigned weight (σ ≥ 2″) understates its true error; non-gravitational forces on comets are not modelled.</p>' : ''}
-      <p class="hint">COMPUTED with kete least-squares fits of the real MPC observations, without and with the SPHEREx positions (each given an uncertainty of at least ${finds[0].impact!.sigma_floor_arcsec ?? 2} arcsec). 3 sigma is the largest axis of 300 covariance clones (linear, gravity only), one year after the last observation. "At discovery" uses only the MPC observations of the first 7 days plus the SPHEREx positions that are earlier than them. First known observation: JPL SBDB, 2026-11-15.</p>`;
+      ${finds.some((f) => [f.impact!.one_year_after_last_obs, f.impact!.at_discovery_scenario].some((x) => { const v = sig(x); return v?.factor != null && v.factor < 0.95 && v.converged !== false; })) ? '<p class="hint">A factor below 1 means the formal uncertainty grew when the SPHEREx positions were added. This can happen when a new position pulls a short-arc least-squares solution, or when its assigned weight (σ ≥ 2″) understates its true error. We do not model non-gravitational forces on comets.</p>' : ''}
+      <p class="hint">COMPUTED. We fit the real MPC observations with kete (least squares), without and with the SPHEREx positions, each given an uncertainty of at least ${finds[0].impact!.sigma_floor_arcsec ?? 2} arcsec. 3 sigma is the largest axis of 300 covariance clones (linear, gravity only), one year after the last observation. "At discovery" uses only the MPC observations of the first 7 days plus the earlier SPHEREx positions. First known observations are from JPL SBDB, queried 2026-11-15.</p>`;
   };
 
   const mpc = (finds: Find[]) => {
@@ -483,7 +502,7 @@ export const scientistsView: View = (body, ctx) => {
         <div class="sci-panel-head"><p class="mono"><span class="sci-tag">MPC 80-col</span><span class="sci-mpc-title"></span></p>${copyButton}</div>
         <pre class="sci-code" tabindex="0" aria-label="MPC 80-column lines"></pre>
       </div>
-      <p class="hint">Each line is the measured centre of one stack (one night of images, or all nights when a single night is too weak), from the SPHEREx frames used in the detection. These are the positions added in the orbit refits above. Note 2 is S (space-based).</p>
+      <p class="hint">Each line is the measured centre of one stack, from the SPHEREx frames used in the detection. A stack is one day of images, or all days when a single day is too weak. These are the positions added in the orbit refits above. Note 2 is S (space-based).</p>
       <p class="sci-prov">${provenance(source.sample, 'NASA SPHEREx')}</p>`;
     $('.sci-pick').addEventListener('click', (e) => {
       const k = (e.target as HTMLElement).closest<HTMLElement>('[data-k]')?.dataset.k;

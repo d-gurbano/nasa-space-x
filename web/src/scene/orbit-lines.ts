@@ -2,6 +2,7 @@
 // dimmer below the planets' plane so tilted orbits read as 3D, and gone far from the Sun.
 // The geometry is offsets from the dot and the line object sits at the dot (in doubles on the
 // CPU), so line and dot agree at every zoom. Drop lines tie each object to the planets' plane.
+// Near the camera every line fades out, so a close view never shows one as a streak across the screen.
 import * as THREE from 'three';
 import { eclToThree } from './asteroids';
 import type { OrbitPath } from './orbits';
@@ -13,7 +14,9 @@ attribute float aU;   // -1 (behind the object) .. 0 (the object) .. 1 (ahead)
 uniform float uCap;   // AU from the Sun where the line has faded out
 varying float vU;
 varying float vFade;
+varying vec3 vMv;
 void main() {
+  vMv = (modelViewMatrix * vec4(position, 1.0)).xyz;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   #include <logdepthbuf_vertex>
   vec3 w = (modelMatrix * vec4(position, 1.0)).xyz;
@@ -22,8 +25,12 @@ void main() {
   vFade = (1.0 - smoothstep(uCap * 0.55, uCap, length(w))) * mix(0.42, 1.0, smoothstep(-0.03, 0.03, w.y));
 }`;
 
+// AU from the camera: gone inside the first, full beyond the second (the home view is 3+ AU from every orbit)
+const nearFadeGlsl = 'float NEAR_FADE(vec3 v) { return smoothstep(0.15, 1.0, length(v)); }';
+
 const fragment = /* glsl */ `
 #include <common>
+${nearFadeGlsl}
 #include <logdepthbuf_pars_fragment>
 uniform vec3 uColor;
 uniform float uGain;  // overall brightness, eased
@@ -31,10 +38,11 @@ uniform float uFloor; // brightness of the far side of the orbit, 0 = only a tra
 uniform vec2 uLen;    // how far the glow reaches behind and ahead of the object
 varying float vU;
 varying float vFade;
+varying vec3 vMv;
 void main() {
   #include <logdepthbuf_fragment>
   float glow = exp(-abs(vU) / (vU < 0.0 ? uLen.x : uLen.y));
-  float a = (uFloor + (1.0 - uFloor) * glow) * vFade * uGain;
+  float a = (uFloor + (1.0 - uFloor) * glow) * vFade * uGain * NEAR_FADE(vMv);
   gl_FragColor = vec4(mix(uColor, vec3(1.0), 0.45 * smoothstep(0.55, 1.0, glow)), a);
 }`;
 
@@ -50,6 +58,8 @@ export const LINE_LOOK = {
   found: { color: 0xf2b544, rest: [0.9, 0.16], hover: [1.25, 0.5], len: [0.2, 0.05] },
   hint: { color: 0x7fbcf2, rest: [0.5, 0], hover: [1.15, 0.45], len: [0.09, 0.02] },
   faint: { color: 0x7fbcf2, rest: [0, 0], hover: [1, 0.4], len: [0.09, 0.02] },
+  // the guided tour's object: the whole orbit as one clean gold line, with a soft tail behind the object
+  tour: { color: 0xf2b544, rest: [1.1, 0.4], hover: [1.1, 0.4], len: [0.35, 0.03] },
 } satisfies Record<string, LineLook>;
 
 export class OrbitLine {
@@ -127,7 +137,9 @@ export class DropLines {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(max * 6), 3));
     g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(max * 6), 3));
-    this.lines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const m = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    fadeNear(m);
+    this.lines = new THREE.LineSegments(g, m);
     this.lines.frustumCulled = false;
   }
 
@@ -149,4 +161,14 @@ export class DropLines {
     pos.needsUpdate = true;
     col.needsUpdate = true;
   }
+}
+
+/** The same fade near the camera for a built-in line material (drop lines, planet orbits). */
+export function fadeNear(m: THREE.Material) {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vNearMv;').replace('#include <project_vertex>', '#include <project_vertex>\nvNearMv = mvPosition.xyz;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>\nvarying vec3 vNearMv;\n${nearFadeGlsl}`)
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.a *= NEAR_FADE(vNearMv);');
+  };
 }

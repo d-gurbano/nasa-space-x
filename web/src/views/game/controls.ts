@@ -38,7 +38,7 @@ export function directionDial(onInput: (deg: number) => void, onRelease: () => v
       <circle class="tr-dial-knob" cx="100" cy="10" r="9"/>
     </svg>
     <output class="tr-dial-val mono"></output>
-    <span class="tr-dial-note mono">Sky view: east is left</span>`;
+    <span class="tr-dial-note mono">East is left, as on the sky</span>`;
   const hand = el.querySelector('.tr-dial-hand') as SVGGElement;
   const knob = el.querySelector('.tr-dial-knob') as SVGCircleElement;
   const out = el.querySelector('output') as HTMLOutputElement;

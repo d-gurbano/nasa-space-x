@@ -133,7 +133,7 @@ body:not(.scene-ready) .timebar { visibility: hidden; }
 .op-inner > * { animation: rise var(--t-enter) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 120ms + 250ms); }
 .op-kicker { display: flex; align-items: center; gap: 12px; margin: 0 0 var(--g3); color: var(--ink-2); }
 .op-kicker::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
-.op-title { margin: 0 0 var(--g3); font: var(--w-display) var(--fs-hero) / 0.96 var(--font-display); letter-spacing: -0.035em; }
+.op-title { margin: 0 0 var(--g3); max-width: 15ch; font: var(--w-display) clamp(44px, 5.4vw, 92px) / 1 var(--font-display); letter-spacing: -0.03em; }
 .op-title em { color: var(--gold); padding-right: 0.04em; }
 .op-line { max-width: 540px; margin: 0 0 var(--g4); font-size: clamp(16px, 1.3vw, 19px); line-height: 1.55; color: var(--ink-2); }
 .op-actions { display: flex; align-items: center; gap: var(--g2); margin-bottom: var(--g5); }
@@ -462,7 +462,7 @@ body:not(.explored) .results, .obj-open .results, .page-open .results { display:
   .tb-speed { height: 40px; min-width: 64px; }
 
   .opening { padding: 80px var(--g3) calc(var(--g4) + env(safe-area-inset-bottom)); background: linear-gradient(0deg, rgba(3, 4, 7, 0.94) 28%, rgba(3, 4, 7, 0.5) 62%, transparent 86%); }
-  .op-title { font-size: clamp(44px, 13.4vw, 60px); margin-bottom: var(--g2); }
+  .op-title { font-size: clamp(34px, 9.6vw, 44px); margin-bottom: var(--g2); }
   .op-kicker { margin-bottom: var(--g2); }
   .op-line { font-size: var(--fs-m); margin-bottom: var(--g3); }
   .op-actions { margin-bottom: var(--g3); }
@@ -503,4 +503,34 @@ body:not(.explored) .results, .obj-open .results, .page-open .results { display:
   .term::after { width: 220px; }
 
   .demo-cap { left: var(--g3); right: var(--g3); bottom: var(--g4); }
+}
+
+/* ---------- page transitions (views/page.ts): the 3D scene stays, the page fades over it ---------- */
+.page.pg-in { animation: fade 300ms var(--ease) both; }
+.page .page-body.pg-rise { animation: pg-rise 320ms var(--ease-out) both; }
+@keyframes pg-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.page.pg-out .page-body { opacity: 0; transition: opacity 160ms var(--ease); }
+.page.pg-leave { opacity: 0; transition: opacity 240ms var(--ease); pointer-events: none; }
+/* pages without the orange kicker sit the title a little closer to the back link */
+.ph-plain .ph { margin-top: calc(-1 * var(--g2)); }
+@media (prefers-reduced-motion: reduce) {
+  .page.pg-in, .page .page-body.pg-rise { animation: none; }
+}
+
+/* ---------- phones: the 60% object sheet and a compact dock ---------- */
+@media (max-width: 720px) {
+  /* default: about 60% of the screen; .peek drops low above the time bar; .expanded fills it */
+  .panel { bottom: 0; height: 60vh; height: 60dvh; border-radius: var(--r2) var(--r2) 0 0; padding-bottom: env(safe-area-inset-bottom); }
+  .panel.peek { bottom: var(--tb-h, 190px); height: 30vh; height: 30dvh; border-radius: var(--r2); }
+  .panel.expanded { height: calc(100vh - 64px); height: calc(100dvh - 64px); }
+  .pn-grab { height: 28px; }
+  .pn-grab::before { top: 11px; width: 44px; margin-left: -22px; background: var(--ink-3); opacity: 0.6; }
+  .dock { gap: 4px; padding: 4px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .dock::-webkit-scrollbar { display: none; }
+  .dock > * { flex: none; }
+  .dock .dock-long, .dock-km small { display: none; }
+  .dock-btn { padding: 0 10px; }
+  .dock .seg-s button { padding: 0 10px; }
+  .dock-km { padding-right: 8px; }
+  .dock-km strong { font-size: var(--fs-xs); }
 }

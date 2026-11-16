@@ -40,11 +40,11 @@ export interface Star {
 // Context stars: SIMBAD (Hipparcos / Gaia). Sizes and temperatures: published values, rounded
 // (R Dra: a typical size for a pulsating red giant; Eps Indi B: the larger of the pair).
 export const STARS: Star[] = [
-  { id: 'barnard', slug: 'barnard', name: "Barnard's Star", kind: 'red dwarf', ra: 269.446, dec: 4.769, dist: 1.828, pmra: -801.551, pmdec: 10362.394, rv: -110.5, color: 0xff6a3d, rsun: 0.187, temp: 3100 },
+  { id: 'barnard', slug: 'barnard', name: "Barnard's Star", kind: 'red dwarf', ra: 269.446, dec: 4.769, dist: 1.828, pmra: -801.551, pmdec: 10362.394, rv: -110.5, color: 0xff8a3d, rsun: 0.187, temp: 3100 },
   { id: 'wise0855', slug: 'wise0855', name: 'WISE 0855', kind: 'brown dwarf', ra: 133.759, dec: -7.242, dist: 2.278, pmra: -8123.7, pmdec: 673.2, rv: null, color: 0xc06cff, rsun: 0.1, temp: 250 },
   { id: 'epsindib', slug: 'epsindib', name: 'Eps Indi B', kind: 'brown dwarf', ra: 331.097, dec: -56.801, dist: 3.639, pmra: 3981.977, pmdec: -2466.832, rv: -40.4, color: 0xc06cff, rsun: 0.085, temp: 1300 },
   { id: 'rwaur', slug: 'rwaur', name: 'RW Aur', kind: 'young variable star', ra: 76.956, dec: 30.401, dist: 150, pmra: 2.641, pmdec: -27.398, rv: null, far: true, color: 0x7fd8ff, rsun: 1.7, temp: 5000 },
-  { id: 'rdra', slug: 'rdra', name: 'R Dra', kind: 'pulsating red giant', ra: 248.167, dec: 66.755, dist: 400, pmra: -20.643, pmdec: 6.149, rv: null, far: true, color: 0xff3a2a, rsun: 300, temp: 2800 },
+  { id: 'rdra', slug: 'rdra', name: 'R Dra', kind: 'pulsating red giant', ra: 248.167, dec: 66.755, dist: 400, pmra: -20.643, pmdec: 6.149, rv: null, far: true, color: 0xff4f8a, rsun: 300, temp: 2800 },
   { id: 'acen', name: 'Alpha Centauri', kind: 'context', ra: 219.902, dec: -60.834, dist: 1.338, pmra: -3679.25, pmdec: 473.67, rv: -21.4, color: 0xfff1d6, rsun: 1.22, temp: 5800 },
   { id: 'sirius', name: 'Sirius', kind: 'context', ra: 101.287, dec: -16.716, dist: 2.637, pmra: -546.01, pmdec: -1223.07, rv: -5.5, color: 0xcfe0ff, rsun: 1.71, temp: 9900 },
   { id: 'procyon', name: 'Procyon', kind: 'context', ra: 114.825, dec: 5.225, dist: 3.514, pmra: -714.59, pmdec: -1036.8, rv: -3.2, color: 0xfff6e6, rsun: 2.05, temp: 6500 },

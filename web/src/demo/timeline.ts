@@ -40,7 +40,7 @@ export interface DemoFacts {
   discoveredIso: string;
   hazardous: boolean;
   daysBefore: number; // days_before_first_known_obs
-  earliestMjd: number; // the first SPHEREx photo before anyone knew
+  earliestMjd: number; // the first SPHEREx photo before the first known observation
   stackFrames: number;
   snr: number | null;
   dayPngs: string[];
@@ -81,8 +81,8 @@ export function demoFacts(objects: IndexObject[], o: IndexObject, p: ObjectPage)
     dayPngs: (p.spherex?.days ?? []).map((d) => d.png),
     cloud:
       before && after
-        ? { beforeKm: before, afterKm: after, factor: s?.factor ?? before / after, atIso: s?.at_iso ?? '', label: 'computed: if run on discovery day' }
-        : { ...DOC_SCENARIO, atIso: '', label: 'computed: if run on discovery day' },
+        ? { beforeKm: before, afterKm: after, factor: s?.factor ?? before / after, atIso: s?.at_iso ?? '', label: 'Computed for a search run on the discovery day' }
+        : { ...DOC_SCENARIO, atIso: '', label: 'Computed for a search run on the discovery day' },
     searched: t.searched,
     found: t.found,
     foundBefore: t.before,
@@ -112,19 +112,19 @@ export const captionAt = (t: number): CapId | null => CAPTIONS.find((c) => t >= 
 export function captionHtml(id: CapId, f: DemoFacts): string {
   switch (id) {
     case 'title':
-      return 'Every discovery has a <em>past.</em>';
+      return 'Finding recently discovered asteroids and comets in older <em>SPHEREx images</em>';
     case 'discover':
-      return `<span class="dm-kick">Discovery</span>${plainDate(f.discoveredIso)}: astronomers discover ${f.name}.${f.hazardous ? '<span class="dm-chip">Potentially hazardous</span>' : ''}`;
+      return `<span class="dm-kick">Discovery</span>${f.name} is discovered on ${plainDate(f.discoveredIso)}.${f.hazardous ? '<span class="dm-chip">Potentially hazardous</span>' : ''}`;
     case 'rewind':
       return `<span class="dm-kick">Rewind</span><span class="dm-date"></span>`;
     case 'flash':
-      return `<span class="dm-kick">${plainDate(f.earliestMjd)}</span>NASA's SPHEREx had already imaged it. <em>${f.daysBefore} days earlier.</em>`;
+      return `<span class="dm-kick">${plainDate(f.earliestMjd)}</span>NASA's SPHEREx imaged it <em>${f.daysBefore} days before</em> its first known observation.`;
     case 'stack':
-      return `<span class="dm-kick">Shift-and-stack</span>${f.stackFrames} images, co-added along its path. <em>The signal appears.</em>`;
+      return `<span class="dm-kick">Shift-and-stack</span>We shifted ${f.stackFrames} images along its predicted path and added them up. <em>The object appears.</em>`;
     case 'cloud':
-      return `<span class="dm-kick">Orbit uncertainty</span>3σ position one year after discovery, from the first week of observations.`;
+      return `<span class="dm-kick">Orbit uncertainty</span>The cloud shows where it could be one year after discovery (3σ), from the first week of observations alone.`;
     case 'sharper':
-      return `<span class="dm-big">${Math.round(f.cloud!.factor)}× smaller.</span><span class="dm-sub">with the SPHEREx precovery positions</span>`;
+      return `<span class="dm-big">${Math.round(f.cloud!.factor)}× smaller.</span><span class="dm-sub">after adding the SPHEREx precovery positions</span>`;
     case 'map':
       return `<span class="dm-stats"><span><b>${f.searched}</b> comets and asteroids searched.</span><span><b>${f.found}</b> FOUND in SPHEREx images.</span><span><b>${f.foundBefore}</b> before their first known observation.</span></span>`;
     case 'end':

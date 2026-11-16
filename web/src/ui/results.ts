@@ -2,14 +2,15 @@
 // then the Rewind objects ranked by verdict: the strongest 20 first, the rest on request,
 // and one verdict at a time by pressing its count. All numbers are counted from the object list.
 import type { SiteIndex } from '../lib/types';
-import { beforeWhat, daysBefore, isKnown, rankObjects, seenNotEarlier, tally } from '../lib/rank';
+import { beforeWhat, daysBefore, framesRead, isKnown, rankObjects, seenNotEarlier, tally } from '../lib/rank';
 import { el, esc, plural, provenance } from './dom';
 import { verdictWord } from './topbar';
+import { countUps } from './motion';
 
 const LIST_MAX = 20; // rows shown before "Show all"
 
 export function objectLine(o: SiteIndex['objects'][number]): string {
-  if (isKnown(o)) return 'Control object: a clear SPHEREx detection for comparison';
+  if (isKnown(o)) return 'Control object, a clear SPHEREx detection used for comparison';
   switch (o.verdict) {
     case 'FOUND':
     case 'HINT': {
@@ -31,7 +32,7 @@ export function objectLine(o: SiteIndex['objects'][number]): string {
 
 export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean, onPick: (slug: string) => void) {
   const t = tally(idx.objects);
-  const title = idx.final ? 'Final results' : "Tonight's results";
+  const title = idx.final ? 'Final results' : 'Latest results';
   const card = el('section', { class: 'results card', 'aria-label': title });
   const ranked = rankObjects(idx.objects);
   type Obj = SiteIndex['objects'][number];
@@ -54,14 +55,15 @@ export function mountResults(root: HTMLElement, idx: SiteIndex, sample: boolean,
       <div class="rs-hero"><span class="stat-num">${t.found}</span><p>${hero}</p></div>
       <div class="rs-bar" aria-hidden="true">${shown.map(([, n, c]) => `<i style="flex:${n};--c:${c}"></i>`).join('')}</div>
       <div class="rs-key" role="group" aria-label="Show one group">${shown.map(([w, n, c], k) => `<button data-k="${k}" aria-pressed="false" style="--c:${c}"><b>${n}</b>${w}</button>`).join('')}</div>
-      <p class="rs-honest">If an object is too faint to see, Rewind says so instead of guessing.</p>
-      ${ranked.length ? '' : '<p class="empty">No objects searched yet. Results appear here as soon as Rewind has checked a new asteroid or comet.</p>'}
+      <p class="rs-honest">When an object is fainter than our detection limit in these images, we mark it too faint.</p>
+      ${ranked.length ? '' : '<p class="empty">No objects have been searched yet. Results appear here after Rewind checks a new asteroid or comet.</p>'}
       <p class="rs-listhead mono" aria-live="polite"></p>
       <ol class="rs-list"></ol>
       <button class="rs-more btn btn-s" hidden></button>
-      <div class="rs-foot">${provenance(sample, 'Rewind on NASA SPHEREx')}<span class="muted mono">${plural(idx.headline_stats.frames_read, 'image')} analysed</span></div>
+      <div class="rs-foot">${provenance(sample, 'Rewind on NASA SPHEREx')}<span class="muted mono">${plural(framesRead(idx.objects), 'image')} analysed</span></div>
     </div>`;
   root.appendChild(card);
+  countUps(card.querySelector('.rs-hero')!);
   const toggle = card.querySelector('.rs-toggle') as HTMLButtonElement;
   const setOpen = (open: boolean) => {
     card.classList.toggle('collapsed', !open);

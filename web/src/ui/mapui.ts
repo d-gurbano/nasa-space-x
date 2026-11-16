@@ -30,12 +30,12 @@ const LAYER_ROWS: [Layer, string, string][] = [
 const FACTS: Record<string, string> = {
   Mercury: 'Its day side reaches about 430 °C, yet craters at its poles hold ice.',
   Venus: 'It spins backwards, and one day there lasts longer than its year.',
-  Earth: 'SPHEREx circles Earth and maps the whole sky every six months.',
+  Earth: 'SPHEREx orbits Earth and maps the whole sky every six months.',
   Mars: 'Its volcano Olympus Mons is about 22 km high, the tallest known.',
   Jupiter: 'Its gravity shapes the asteroid belt and bends the paths of many comets.',
   Saturn: 'It is less dense than water.',
   Uranus: 'It is tilted about 98 degrees, so it rolls around the Sun on its side.',
-  Neptune: 'Its winds are the fastest known, about 2,000 km/h.',
+  Neptune: 'Its winds reach about 2,000 km/h, the fastest measured on any planet.',
 };
 
 const HINT_KEY = 'rewind-map-hint';

@@ -39,7 +39,7 @@ export async function loadIndex(fetcher: Fetcher = fetch, candidates = ['data/',
       return { base, sample: !!index.sample || base.includes('sample'), index };
     }
   }
-  throw new Error('No site data found in ' + candidates.join(' or '));
+  throw new Error('No site data was found in ' + candidates.join(' or '));
 }
 
 export async function getJson<T>(url: string, fetcher: Fetcher = fetch): Promise<T> {

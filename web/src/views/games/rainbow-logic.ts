@@ -1,4 +1,4 @@
-// Match the spectrum: the pure parts (types, the chart axes, the line paths), kept apart so they can be tested.
+// Rainbow Detective: the pure parts (types, the chart axes, the line paths), kept apart so they can be tested.
 
 export type Kind = 'S' | 'C' | 'X' | 'ice';
 

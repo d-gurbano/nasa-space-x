@@ -79,6 +79,7 @@
 .dw-id { display: flex; align-items: baseline; justify-content: space-between; gap: var(--g); padding-top: 6px; }
 .dw-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--w-medium) var(--fs-l) / 1.2 var(--font-display); letter-spacing: var(--track-display); }
 .dw-num { flex: none; font-size: var(--fs-2xs); color: var(--ink-3); }
+.dw-fact { padding-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-2xs); color: var(--c); }
 
 .dw-sentence { font-size: var(--fs-s); line-height: 1.4; color: var(--ink); }
 .dw-bars { display: grid; gap: 6px; margin-top: auto; }

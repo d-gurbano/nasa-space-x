@@ -1,4 +1,4 @@
-/* Test targets: the 3D neighbourhood (s3-), its floating star card (s3c-), the SPHEREx
+/* Challenge targets: the 3D neighbourhood (s3-), its floating star card (s3c-), the SPHEREx
    viewer (s3v-), and the charts kept from the earlier page (st-, lc-). Built on the shared tokens. */
 
 /* this page gives its room to the 3D view: a compact header */
@@ -232,6 +232,7 @@
   .s3-year { width: 112px; }
   .s3-year-n { font-size: var(--fs-l); }
   .s3-year-rel { font-size: 9px; letter-spacing: 0; }
+  .s3-long { display: none; }
   .s3-moment { top: var(--g2); }
   .s3-card { bottom: var(--g); }
   .s3c-head { flex-wrap: wrap; padding: 10px 10px 10px 14px; }

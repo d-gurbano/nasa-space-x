@@ -6,7 +6,7 @@ import { isKnown, rankObjects } from '../lib/rank';
 export const VIEWS = [
   { hash: '#/sky', label: 'Sky images' },
   { hash: '#/games', label: 'Games' },
-  { hash: '#/targets', label: 'Test targets' },
+  { hash: '#/targets', label: 'Challenge targets' },
   { hash: '#/blind-test', label: 'Blind test' },
   { hash: '#/methods', label: 'Methods' },
   { hash: '#/about', label: 'About' },
@@ -18,7 +18,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
     <a class="logo" href="#/" aria-label="Rewind home">Rewind<span class="logo-dot">.</span></a>
     <div class="search">
       <svg class="search-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input type="search" placeholder="${matchMedia('(max-width: 480px)').matches ? 'Search objects' : 'Search an asteroid or comet'}" aria-label="Search objects" autocomplete="off" spellcheck="false">
+      <input type="search" aria-label="Search objects" autocomplete="off" spellcheck="false">
       <ul class="search-results" role="listbox" hidden></ul>
     </div>
     <div class="tb-end">
@@ -34,6 +34,11 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
   root.appendChild(bar);
 
   const input = bar.querySelector('input') as HTMLInputElement;
+  // phones get the one-word placeholder, so it is never cut
+  const narrow = matchMedia('(max-width: 720px)');
+  const hint = () => (input.placeholder = narrow.matches ? 'Search' : 'Search an asteroid or comet');
+  hint();
+  narrow.addEventListener('change', hint);
   const list = bar.querySelector('.search-results') as HTMLUListElement;
   const menu = bar.querySelector('.menu') as HTMLElement;
   const menuBtn = bar.querySelector('.menu-btn') as HTMLButtonElement;
@@ -47,7 +52,7 @@ export function mountTopbar(root: HTMLElement, objects: IndexObject[], sample: b
     matches = rankObjects(found).slice(0, 8);
     list.hidden = document.activeElement !== input || (!q && !matches.length);
     // say how many there are, not only how many fit
-    const head = !found.length ? 'No object with that name in Rewind' : found.length > matches.length ? `Strongest ${matches.length} of ${found.length}${q ? ' matches' : ' in Rewind'}` : `${found.length} ${q ? (found.length === 1 ? 'match' : 'matches') : 'in Rewind'}`;
+    const head = !found.length ? 'No object with that name in our list' : found.length > matches.length ? `Strongest ${matches.length} of ${found.length}${q ? ' matches' : ' in Rewind'}` : `${found.length} ${q ? (found.length === 1 ? 'match' : 'matches') : 'in Rewind'}`;
     list.innerHTML = `<li class="sr-head mono">${head}</li>` + matches
       .map((o, k) => `<li role="option" data-slug="${esc(o.slug)}" class="${k === active ? 'on' : ''}" aria-selected="${k === active}">
         <span>${esc(o.name)}</span><span class="verdict-chip v-${o.verdict.toLowerCase()}">${isKnown(o) && o.verdict === 'FOUND' ? 'Control' : verdictWord(o.verdict)}</span></li>`)

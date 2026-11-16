@@ -1,10 +1,11 @@
-// Guided rewind: frame Earth and the object, run the clock back to just before a SPHEREx
-// photo, then play forward so the flash (beam + photo card) happens on its own.
+// Guided rewind: frame Earth and the object's whole orbit, run the clock back to just before a
+// SPHEREx photo, then play forward so the flash (beam + photo card) happens on its own and the
+// clock keeps going.
 import type { FlashEvent } from './lib/types';
 import type { Scene } from './scene/Scene';
 import type { FlashFx } from './scene/flash';
 import { eclToThree } from './scene/asteroids';
-import { reducedMotion, store } from './state';
+import { isPhone, reducedMotion, store } from './state';
 
 export interface Guided {
   cancel(): void;
@@ -33,13 +34,17 @@ export function tweenTime(to: number, ms: number, isCancelled: () => boolean, mu
 
 export const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** Camera position that shows both SPHEREx (Earth) and the object at the flash. */
-export function frameFlash(scene: Scene, f: FlashEvent, extra = 1) {
-  const a = eclToThree(f.spherex_xyz_au), b = eclToThree(f.object_xyz_au);
-  const mid = a.clone().add(b).multiplyScalar(0.5);
-  const d = Math.max(0.9, a.distanceTo(b) * 1.35 + 0.35) * extra;
-  scene.flyTo(mid, d);
+/**
+ * The tour's view of the flash: the object's whole orbit with Earth's, never a dive into empty
+ * space. The photo card covers the right side on a wide screen, so the view moves left of it.
+ */
+export function frameFlash(scene: Scene, f: FlashEvent): number {
+  scene.setViewShift(isPhone ? 0 : 170, 0);
+  const at = scene.rewindPositionAt(f.slug, f.mjd) ?? eclToThree(f.object_xyz_au);
+  return scene.frameTour(f.slug, at, eclToThree(f.spherex_xyz_au));
 }
+
+const CARD_MS = 8500; // how long the tour holds the photo card while the clock plays on
 
 export function guidedRewind(scene: Scene, flash: FlashFx, f: FlashEvent, lead = 18): Guided {
   let cancelled = false;
@@ -54,7 +59,9 @@ export function guidedRewind(scene: Scene, flash: FlashFx, f: FlashEvent, lead =
   };
   stopOn.forEach((t) => window.addEventListener(t, onInput, { capture: true, once: true }));
 
+  // only this photo may flash, so the card always matches the clock
   flash.only = f;
+  scene.tour = f.slug;
   const done = (async () => {
     if (reducedMotion) {
       frameFlash(scene, f);
@@ -71,21 +78,20 @@ export function guidedRewind(scene: Scene, flash: FlashFx, f: FlashEvent, lead =
     store.speedIndex = 1; // 7 days per second
     store.direction = 1;
     store.setPlaying(true);
-    // stop right at the photo so the card can be read
-    await new Promise<void>((resolve) => {
-      const watch = () => {
-        if (cancelled || !store.playing) return resolve();
-        if (store.mjd >= f.mjd + 0.3) {
-          store.setPlaying(false);
-          return resolve();
-        }
+    // the flash fires as the clock passes the photo; the clock keeps playing while the card is up
+    const until = (ok: () => boolean) =>
+      new Promise<void>((resolve) => {
+        const watch = () => (cancelled || ok() ? resolve() : requestAnimationFrame(watch));
         requestAnimationFrame(watch);
-      };
-      requestAnimationFrame(watch);
-    });
+      });
+    await until(() => store.mjd >= f.mjd || !store.playing);
+    const t0 = performance.now();
+    await until(() => performance.now() - t0 > CARD_MS);
   })().finally(() => {
     stopOn.forEach((t) => window.removeEventListener(t, onInput, { capture: true }));
-    flash.only = null;
+    if (flash.only === f) flash.only = null;
+    scene.tour = null;
+    if (!store.selected) scene.setViewShift(0, 0);
   });
   return { cancel, done };
 }

@@ -1,5 +1,5 @@
 /* Games: the hub with three cards, the tabs, and the two newer games
-   (Match the spectrum, Predict the orbit). Stack the images is in page-detectives.css. */
+   (Rainbow Detective, Where will it be?). Tune the Rewind is in page-detectives.css. */
 
 .gm { display: grid; gap: var(--g4); }
 .gm [hidden] { display: none !important; }
@@ -107,7 +107,7 @@
 .gm-list a:hover { color: var(--gold-2); }
 .gm-list-n { color: var(--ink-3); font-size: var(--fs-s); min-width: 15ch; text-align: right; }
 
-/* ---- Match the spectrum ---- */
+/* ---- Rainbow Detective ---- */
 .rb-chart { position: relative; width: clamp(340px, calc((100svh - 250px) * 1.6), 680px); margin: 0; padding: var(--g2) var(--g2) var(--g); border: 1px solid var(--line); border-radius: var(--r2); background: radial-gradient(120% 100% at 50% 0%, #0c1019, #05070b 75%); }
 .rb-who { display: flex; align-items: baseline; gap: var(--g2); margin: 0 4px var(--g); }
 .rb-who .mono { font-size: var(--fs-2xs); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--ink-3); }
@@ -150,7 +150,7 @@
 .rb-say { margin: 0; font-size: var(--fs-l); line-height: 1.45; color: var(--ink); max-width: 38ch; }
 .rb-note { margin: var(--g) 0 0; max-width: 80ch; font-size: var(--fs-xs); line-height: 1.5; color: var(--ink-3); }
 
-/* ---- Predict the orbit ---- */
+/* ---- Where will it be? ---- */
 .wh-map { position: relative; width: clamp(320px, calc(100svh - 260px), 620px); aspect-ratio: 1; border-radius: var(--r2); overflow: hidden; background: radial-gradient(circle at 50% 50%, #0a0e17, #04060a 75%); box-shadow: 0 0 0 1px var(--line); }
 .wh-svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
 .wh-svg.done { cursor: default; }
@@ -236,7 +236,7 @@
   .pv-pop, .pv-lock, .pv-band, .pv-bar rect { opacity: 1; }
 }
 
-/* Match the spectrum: the clues. Each answer carries its type's typical curve and its tell. */
+/* Rainbow Detective: the clues. Each answer carries its type's typical curve and its tell. */
 .rb-a { min-height: 76px; }
 .rb-a .rb-mini { flex: none; width: 88px; height: 40px; }
 .rb-mini { display: block; overflow: visible; }

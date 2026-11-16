@@ -14,6 +14,7 @@ interface Scenario {
   converged?: boolean;
 }
 export type ImpactPage = Pick<ObjectPage, 'slug' | 'name'> & {
+  facts?: { pha?: boolean } | null;
   impact?: { one_year_after_last_obs?: { factor?: number } | null; at_discovery_scenario?: Scenario | null } | null;
 };
 

@@ -1,4 +1,4 @@
-// Test targets: the Sun's neighbourhood in 3D, with the five NASA challenge targets at
+// Challenge targets: the Sun's neighbourhood in 3D, with the five NASA challenge targets at
 // their real distances and a time slider that moves every star along its real space motion.
 // Clicking a star (or the Sun) flies to a close-up and opens a compact card with three tabs:
 // what SPHEREx saw (the blink and flipbook, the wavelength reveal for WISE 0855, the honest
@@ -30,28 +30,28 @@ interface Target {
 const TARGETS: Record<string, Target> = {
   barnard: {
     extra: 'barnard', kind: 'mover', tone: 'ok',
-    why: 'The largest proper motion of any star (10.4″ per year, Gaia DR3): almost two SPHEREx pixels a year, so its motion is visible across the survey.',
-    honest: 'Saturated in every SPHEREx image: its position is measured from the wings of the point-spread function.',
+    why: 'It has the largest proper motion of any star, 10.4″ per year (Gaia DR3). That is almost two SPHEREx pixels a year, so the motion shows across the survey.',
+    honest: 'It is saturated in every SPHEREx image, so we measured its position from the wings of the point-spread function.',
   },
   epsindib: {
     extra: 'eps_indi_b', kind: 'mover', tone: 'ok',
-    why: 'A binary brown dwarf moving 4.7″ per year, less than one SPHEREx pixel (6.2″): a test of sub-pixel motion.',
+    why: 'A binary brown dwarf that moves 4.7″ per year, less than one SPHEREx pixel (6.2″). It tests whether we can measure motion smaller than a pixel.',
     honest: 'The two components (~0.7″ apart) are unresolved at SPHEREx’s 6.2″ pixels and appear as one source.',
   },
   wise0855: {
     extra: 'wise0855', kind: 'cold', tone: 'warn',
     why: 'The coldest known brown dwarf. It shows up only at the longest wavelengths SPHEREx sees.',
-    honest: 'In 2026 it passes about 6.6 arcsec from a brighter background star. That star blends into the measured motion and brightness, and causes the "detections" at short wavelengths.',
+    honest: 'In 2026 it passes about 6.6 arcsec from a brighter background star. That star blends into the measured motion and brightness, and it causes the apparent detections at short wavelengths.',
   },
   rwaur: {
     extra: 'rw_aur', kind: 'bright', tone: 'warn',
-    why: 'A young T Tauri binary with circumstellar dust and deep dimming events: a test of reporting a target near saturation.',
-    honest: 'Saturated in most SPHEREx images, so the measured variability is indicative only.',
+    why: 'A young T Tauri binary with circumstellar dust and deep dimming events. It tests how we report a target near saturation.',
+    honest: 'It is saturated in most SPHEREx images, so the measured variability is approximate.',
   },
   rdra: {
     extra: 'r_dra', kind: 'bright', tone: 'warn', period: 246,
-    why: 'A Mira variable: a red giant pulsating with a ~246-day period. Far brighter than the SPHEREx saturation limit.',
-    honest: 'Saturated in most SPHEREx images: they show its extended glow, not a usable flux or position.',
+    why: 'A Mira variable, a red giant that pulsates with a period of about 246 days. It is far brighter than the SPHEREx saturation limit.',
+    honest: 'It is saturated in most SPHEREx images. They show its extended glow but give no usable flux or position.',
   },
 };
 
@@ -111,8 +111,8 @@ function moved(sum: Summary | null): { big: string; small: string } | null {
   const months = Math.round((mjdFromIso(sum.last_pass) - mjdFromIso(sum.first_pass)) / 30.44);
   const span = months >= 11 && months <= 13 ? 'a year' : plural(months, 'month');
   return {
-    big: `Moved ${sum.meas_shift_arcsec.toFixed(1)} arcsec in ${span}: ${sum.meas_shift_px.toFixed(1)} SPHEREx pixels.`,
-    small: sum.pred_shift_arcsec != null ? `Predicted from the star catalogue: ${sum.pred_shift_arcsec.toFixed(1)} arcsec.` : '',
+    big: `Moved ${sum.meas_shift_arcsec.toFixed(1)} arcsec in ${span}, or ${sum.meas_shift_px.toFixed(1)} SPHEREx pixels.`,
+    small: sum.pred_shift_arcsec != null ? `The star catalogue predicts ${sum.pred_shift_arcsec.toFixed(1)} arcsec.` : '',
   };
 }
 
@@ -128,13 +128,13 @@ function facts(s: Star, why: string): string {
   const c = compare(s), sp = speeds(s);
   const wide = `${s.rsun >= 100 ? 'about ' : ''}${c.ratio >= 100 ? fmt(c.ratio) : c.ratio >= 10 ? c.ratio.toFixed(0) : c.ratio.toFixed(1)} ×`;
   return `${stats([
-    s.kind === 'sun' ? stat('8.3 light-minutes', 'from Earth') : stat(`${lightYears(s)} light-years`, s.far ? 'away: not to scale on the map' : 'from the Sun'),
+    s.kind === 'sun' ? stat('8.3 light-minutes', 'from Earth') : stat(`${lightYears(s)} light-years`, s.far ? 'away, not to scale on the map' : 'from the Sun'),
     stat(tempLabel(s.temp), s.kind === 'brown dwarf' ? 'in its clouds' : 'at the surface'),
     stat(wide, c.body === 'Sun' ? "the Sun's width" : "Jupiter's width"),
     ...(s.kind === 'sun' ? [] : [stat(`${sp.total.toFixed(0)} km/s`, s.rv == null ? 'across the sky' : 'through space')]),
   ], 's3c-stats')}
   <p class="s3c-why">${esc(why)}</p>
-  <p class="s3c-foot">Size and temperature are published values, rounded. Rewind did not measure them.</p>`;
+  <p class="s3c-foot">Size and temperature are rounded published values. We did not measure them.</p>`;
 }
 
 export const starsView: View = async (body, ctx) => {
@@ -146,7 +146,7 @@ export const starsView: View = async (body, ctx) => {
     <div class="s3">
       <div class="s3-stage">
         <div class="s3-intro">
-          <p class="s3-lead">The five targets named in the NASA challenge: three stars and two brown dwarfs (one of them a binary). <b>Select one.</b></p>
+          <p class="s3-lead">The NASA challenge names five targets, three stars and two brown dwarfs (one of them a binary). <b>Select one</b> to see its SPHEREx images.</p>
           <ul class="s3-legend">
             ${(['red dwarf', 'brown dwarf', 'young variable star', 'pulsating red giant'] as Kind[]).map((k) => `<li><i style="--c: ${hex(STARS.find((s) => s.kind === k)!.color)}"></i>${KIND[k]}</li>`).join('')}
             <li><i class="s3-lg-trace"></i>Tap a star to see its path</li>
@@ -171,11 +171,11 @@ export const starsView: View = async (body, ctx) => {
         </div>
         <div class="s3-time">
           <button type="button" class="icon-btn s3-play" aria-label="Play through time">${icon('play')}</button>
-          <div class="s3-year"><b class="s3-year-n">${NOW}</b><span class="s3-year-rel mono">Today</span></div>
+          <div class="s3-year"><b class="s3-year-n">${NOW}</b><span class="s3-year-rel mono"></span></div>
           <div class="s3-track">
             <input class="s3-range" type="range" min="${T0}" max="${T1}" step="1" value="${NOW}" aria-label="Year">
             <button type="button" class="s3-mark s3-mark-now" style="--at: ${((NOW - T0) / (T1 - T0)).toFixed(4)}" data-year="${NOW}" aria-label="Back to today"><span>Today</span></button>
-            <button type="button" class="s3-mark s3-mark-gold" style="--at: ${((NEAREST.year - T0) / (T1 - T0)).toFixed(4)}" data-year="${Math.round(NEAREST.year)}" aria-label="Jump to Barnard's Star at its closest"><span>Closest pass</span></button>
+            <button type="button" class="s3-mark s3-mark-gold" style="--at: ${((NEAREST.year - T0) / (T1 - T0)).toFixed(4)}" data-year="${Math.round(NEAREST.year)}" aria-label="Jump to Barnard's Star at its closest"><span>Closest<span class="s3-long"> pass</span></span></button>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ export const starsView: View = async (body, ctx) => {
     off.push(() => scene?.dispose());
   } catch {
     stage.classList.add('s3-flat');
-    stage.insertAdjacentHTML('afterbegin', `<div class="s3-fallback"><p>The 3D view could not start in this browser. The stars:</p>${STARS.filter((s) => s.slug).map((s) => `<button type="button" class="chip" data-id="${s.id}">${esc(s.name)}</button>`).join('')}</div>`);
+    stage.insertAdjacentHTML('afterbegin', `<div class="s3-fallback"><p>The 3D view could not start in this browser. Choose a star below.</p>${STARS.filter((s) => s.slug).map((s) => `<button type="button" class="chip" data-id="${s.id}">${esc(s.name)}</button>`).join('')}</div>`);
     stage.querySelectorAll<HTMLButtonElement>('.s3-fallback button').forEach((b) => (b.onclick = () => pick(b.dataset.id!)));
   }
 
@@ -227,7 +227,8 @@ export const starsView: View = async (body, ctx) => {
     range.setAttribute('aria-valuetext', yearLabel(year));
     yearN.textContent = yearLabel(year);
     const d = Math.round(year - NOW);
-    yearRel.textContent = Math.abs(d) < 5 ? 'Today' : d > 0 ? `${fmt(d)} years from now` : `${fmt(-d)} years ago`;
+    // near today the Today mark on the track says it; do not repeat it here
+    yearRel.textContent = Math.abs(d) < 5 ? '' : d > 0 ? `${fmt(d)} years from now` : `${fmt(-d)} years ago`;
     const near = Math.max(0, 1 - Math.abs(year - NEAREST.year) / 600);
     moment.hidden = near <= 0;
     stage.classList.toggle('s3-near', near > 0);
@@ -300,9 +301,11 @@ export const starsView: View = async (body, ctx) => {
   };
   /** Keep the star in the open part of the view, above the card. */
   // with no card, the time bar's room: this lifts the map a little above it
+  // on a phone the intro spans the top, so the map also starts below it
   function insets() {
-    const below = (el: HTMLElement) => Math.max(0, stage.getBoundingClientRect().bottom - el.getBoundingClientRect().top);
-    scene?.setInset(0, card.hidden ? below(q('.s3-time')) : below(card));
+    const r = stage.getBoundingClientRect(), below = (el: HTMLElement) => Math.max(0, r.bottom - el.getBoundingClientRect().top);
+    const top = card.hidden && matchMedia('(max-width: 720px)').matches ? Math.max(0, q('.s3-intro').getBoundingClientRect().bottom - r.top + 8) : 0;
+    scene?.setInset(0, card.hidden ? below(q('.s3-time')) : below(card), top);
   }
 
   async function pick(id: string | null) {
@@ -321,7 +324,7 @@ export const starsView: View = async (body, ctx) => {
     const size = s.id === 'wise0855' ? `${c.line}, cold as the North Pole` : c.line;
     cid.innerHTML = `<i style="--c: ${hex(s.color)}"></i><h2 class="s3c-name">${esc(s.name)}</h2>
       <p class="s3c-meta"><span class="mono">${esc(KIND[s.kind])}</span><span class="s3c-size">${esc(size)}</span></p>`;
-    const why = t?.why ?? (s.kind === 'sun' ? 'The centre of this map. Every distance here is measured from it.' : 'A bright neighbour of the Sun, shown for scale. Not a challenge target.');
+    const why = t?.why ?? (s.kind === 'sun' ? 'The Sun sits at the centre of this map. All distances here are measured from it.' : 'A bright neighbour of the Sun, shown for scale. It is not a challenge target.');
     const names: [Tab, string][] = t ? [['view', 'SPHEREx view'], ['facts', 'Facts'], ['motion', t.kind === 'bright' ? 'Brightness' : 'Motion']] : [['facts', 'Facts']];
     ctabs.hidden = names.length < 2;
     ctabs.innerHTML = names.map(([k, label]) => `<button type="button" role="tab" data-tab="${k}">${label}</button>`).join('');
@@ -357,7 +360,7 @@ export const starsView: View = async (body, ctx) => {
         cbody.innerHTML = `<div class="s3c-chart">
           <div class="s3c-chart-say">
             <p class="s3c-big"><b>${Math.round(last.last - first.first)} years</b> of proper motion, measured in archival images back to ${Math.floor(first.first)}.</p>
-            <p class="s3c-small">Moved ${sky(last.moved)}${sum?.decades_median_resid_arcsec != null ? `. Median residual from the catalogue prediction: ${sum.decades_median_resid_arcsec.toFixed(1)} arcsec` : ''}.</p>
+            <p class="s3c-small">Moved ${sky(last.moved)}${sum?.decades_median_resid_arcsec != null ? `, with a median residual of ${sum.decades_median_resid_arcsec.toFixed(1)} arcsec from the catalogue prediction` : ''}.</p>
             <p class="s3c-small"><a href="extra/stars/${t.extra}_decades_positions.csv" download>Download the table (CSV)</a></p>
           </div>
           <div class="st-chart" data-chart></div>
@@ -367,10 +370,10 @@ export const starsView: View = async (body, ctx) => {
         const days = lc.points.map((p) => p.mjd);
         cbody.innerHTML = `<div class="s3c-chart">
           <div class="s3c-chart-say">
-            <p class="s3c-big">Brightness, as a <b>hint</b> only.</p>
+            <p class="s3c-big">Treat these brightness values as a <b>rough guide</b> only.</p>
             <p class="s3c-small">${t.period
-              ? `Only ${plural(lc.points.length, 'image')} gave a measurement, between ${plainDate(Math.min(...days))} and ${plainDate(Math.max(...days))}: too short a baseline to sample the ${t.period}-day period, which is known from AAVSO monitoring.`
-              : 'Small points: single images. Large points: median of one survey pass. Relative to the star’s median brightness.'}</p>
+              ? `Only ${plural(lc.points.length, 'image')} gave a measurement, between ${plainDate(Math.min(...days))} and ${plainDate(Math.max(...days))}. That baseline is too short to sample the ${t.period}-day period known from AAVSO monitoring.`
+              : 'Small points are single images, and large points are the median of one survey pass. Values are relative to the star’s median brightness.'}</p>
             <p class="s3c-small"><a href="extra/stars/${t.extra}_lightcurve.csv" download>Download the table (CSV)</a></p>
           </div>
           <div class="st-chart" data-chart></div>

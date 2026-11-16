@@ -52,7 +52,7 @@ export function mountPhotoCard(root: HTMLElement, opts: {
       <h3 class="pc-name">${esc(name)}</h3>
       <dl class="pc-meta mono">
         <div><dt>Date</dt><dd>${esc(plainDate(f.iso))}</dd></div>
-        <div><dt>Image</dt><dd class="pc-kind">${guessDay ? 'One night, stacked' : 'Single exposure'}</dd></div>
+        <div><dt>Image</dt><dd class="pc-kind">${guessDay ? 'One day, stacked' : 'Single exposure'}</dd></div>
         <div><dt>Wavelength</dt><dd class="pc-wl">...</dd></div>
         <div><dt>S/N</dt><dd class="pc-snr">${f.snr != null ? f.snr.toFixed(1) : '...'}</dd></div>
         ${o && isKnown(o)
@@ -85,12 +85,12 @@ export function mountPhotoCard(root: HTMLElement, opts: {
         if (f.snr == null) set('.pc-snr', frame.snr != null ? frame.snr.toFixed(1) : 'n/a');
       } else if (day || guessDay) {
         const n = day?.n_frames;
-        set('.pc-kind', n ? `${plural(n, 'exposure')} from one night, stacked` : 'One night, stacked');
+        set('.pc-kind', n ? `${plural(n, 'exposure')} from one day, stacked` : 'One day, stacked');
         const sameDay = p.spherex.frames.filter((x) => x.iso.slice(0, 10) === (day?.iso ?? f.iso).slice(0, 10)).map((x) => x.wavelength_um);
         set('.pc-wl', wl(sameDay));
         if (f.snr == null) set('.pc-snr', day?.snr != null ? day.snr.toFixed(1) : 'n/a');
       } else {
-        set('.pc-kind', 'All nights, stacked');
+        set('.pc-kind', 'All days, stacked');
         set('.pc-wl', wl(p.spherex.frames.map((x) => x.wavelength_um)));
         if (f.snr == null) set('.pc-snr', p.spherex.stack.snr != null ? p.spherex.stack.snr.toFixed(1) : 'n/a');
       }

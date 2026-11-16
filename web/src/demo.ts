@@ -60,7 +60,7 @@ export async function runDemo(o: {
     </div>
     <div class="dm-title"></div>
     <div class="dm-cap"></div>
-    <div class="dm-end"><b>Rewind</b><span>Every discovery has a <em>past.</em></span><small>NASA SPHEREx data / NASA Space Apps 2026 / Team SpaceX</small></div>
+    <div class="dm-end"><b>Rewind</b><span>Precovery in <em>SPHEREx</em> archive images</span><small>NASA SPHEREx data / NASA Space Apps 2026 / Team SpaceX</small></div>
     ${params.get('guide') === '1' ? '<div class="dm-guide"><i></i><i></i><span>REC-safe</span></div>' : ''}`;
   ui.appendChild(root);
   const $ = <E extends HTMLElement = HTMLElement>(s: string) => root.querySelector(s) as E;
@@ -140,7 +140,7 @@ export async function runDemo(o: {
     } else days.forEach((im) => (im.style.opacity = '0'));
     stack.style.opacity = shot === 'stack' ? String(Math.max(0.06 + 0.5 * (lit / Math.max(1, days.length)) ** 1.5, merge)) : '1';
     on(ring, (t >= T.flash + 0.5 && t < 13) || t >= T.merge + 0.4);
-    const footText = shot === 'stack' ? 'Below the noise in every single image; detected only in the stack.' : `${f.stackFrames} images stacked${f.snr != null ? ` · S/N ${f.snr.toFixed(1)}` : ''}`;
+    const footText = shot === 'stack' ? 'The object is below the noise in each image and shows only in the stack.' : `${f.stackFrames} images stacked${f.snr != null ? ` · S/N ${f.snr.toFixed(1)}` : ''}`;
     if (foot.textContent !== footText) foot.textContent = footText;
     if (f.cloud) {
       const r0 = 90, r1 = 90 * (f.cloud.afterKm / f.cloud.beforeKm);

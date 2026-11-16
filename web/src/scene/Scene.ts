@@ -5,9 +5,10 @@ import { type Elements, type PlanetRow, orbitPolyline, planetElements, planetPos
 import type { OrbitColumns } from '../lib/data';
 import { AsteroidCloud, eclToThree } from './asteroids';
 import { LabelLayer } from './labels';
-import { DropLines, LINE_LOOK, OrbitLine } from './orbit-lines';
+import { DropLines, LINE_LOOK, OrbitLine, fadeNear } from './orbit-lines';
+import { orbitPose } from '../demo/timeline';
 import { dotPosition, orbitPath, type Track } from './orbits';
-import { PLANET_LOOK, planetMaterial, rewindMaterial, starField, sunSprite } from './sprites';
+import { milkyWay, PLANET_LOOK, planetMaterial, rewindMaterial, starField, sunSprite } from './sprites';
 import { isPhone, reducedMotion, store } from '../state';
 
 const ORBIT_GREY = 0x5d6470;
@@ -58,6 +59,7 @@ interface Fly {
   fromDist: number;
   toDist: number;
   limits: [number, number];
+  then?: () => void; // runs when the flight ends on its own (not when the user takes over)
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -78,6 +80,9 @@ export class Scene {
   private planetOrbits: [THREE.LineBasicMaterial, number][] = []; // material and its full opacity
   private lines = new Map<number, OrbitLine>(); // orbit lines by Rewind object index
   private drops = new DropLines(64);
+  /** The guided tour's object: its orbit is one gold line and every other line steps back. */
+  tour: string | null = null;
+  private tourLine = new OrbitLine(LINE_LOOK.tour);
   readonly layers: Record<Layer, boolean> = { found: true, searched: true, neo: true, comet: true, mba: true, planets: true };
   private layerNow: Record<Layer, number> = { found: 1, searched: 1, neo: 1, comet: 1, mba: 1, planets: 1 };
   // picking: the pointer highlights the nearest pickable object, and a click selects only that one
@@ -101,7 +106,9 @@ export class Scene {
   private follow: (() => THREE.Vector3 | null) | null = null;
   private lastFollow = new THREE.Vector3();
   private hooks: ((dt: number) => void)[] = [];
-  autoRotate = !reducedMotion;
+  // on a phone the view holds still, so Jupiter stays in the home framing
+  autoRotate = !reducedMotion && !isPhone;
+  private sky = milkyWay('img/starmap_2020_2k.jpg');
   onPick: ((slug: string) => void) | null = null;
 
   constructor(private canvas: HTMLCanvasElement, labelRoot: HTMLElement) {
@@ -130,7 +137,7 @@ export class Scene {
       this.fly = null;
     });
     this.labels = new LabelLayer(labelRoot);
-    this.scene.add(starField(this.pixelRatio), this.drops.lines);
+    this.scene.add(this.sky, starField(this.pixelRatio), this.drops.lines, this.tourLine.line);
     this.addSun();
     this.pickEl = document.createElement('div');
     this.pickEl.className = 'pick';
@@ -188,7 +195,8 @@ export class Scene {
 
   private addSun() {
     this.scene.add(this.sun);
-    this.labels.add({ id: 'sun', text: 'Sun', cls: 'label-planet', priority: 6, pos: (o) => o.set(0, 0, 0), pad: () => 8 });
+    // phones have room for few names: the Sun, Earth and Jupiter always win theirs
+    this.labels.add({ id: 'sun', text: 'Sun', cls: 'label-planet', priority: isPhone ? 9.6 : 6, pos: (o) => o.set(0, 0, 0), pad: () => 8 });
   }
 
   setPlanets(planets: PlanetRow[]) {
@@ -198,6 +206,7 @@ export class Scene {
       const isEarth = p.name === 'Earth';
       const pts = orbitPolyline(planetElements(p, mjd), 720).map((v) => eclToThree(v));
       const mat = new THREE.LineBasicMaterial({ color: isEarth ? EARTH_BLUE : ORBIT_GREY, transparent: true, opacity: isEarth ? 0.75 : 0.42, depthWrite: false });
+      fadeNear(mat);
       this.planetOrbits.push([mat, mat.opacity]);
       this.scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
       const idx = planets.indexOf(p);
@@ -208,7 +217,7 @@ export class Scene {
         id: 'planet-' + p.name,
         text: isEarth ? 'Earth' : p.name,
         cls: isEarth ? 'label-planet label-earth' : 'label-planet',
-        priority: isEarth ? 9 : 5 - idx * 0.1,
+        priority: isEarth ? 9 : isPhone && p.name === 'Jupiter' ? 9.4 : 5 - idx * 0.1,
         pos: where,
         // keep the name clear of the sphere (and the ring), which grow when the camera is close
         pad: () => (look ? (look.px / 2) * THREE.MathUtils.clamp(1.2 / this.camera.position.distanceTo(where(at)), 1, 2.6) * (look.ring ? 2.2 : 1) - 3 : 0),
@@ -227,7 +236,8 @@ export class Scene {
     });
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
     g.setAttribute('look', new THREE.BufferAttribute(look, 3));
-    this.planetDots = new THREE.Points(g, planetMaterial(this.pixelRatio));
+    g.setAttribute('earth', new THREE.BufferAttribute(Float32Array.from(planets, (p) => (p.name === 'Earth' ? 1 : 0)), 1));
+    this.planetDots = new THREE.Points(g, planetMaterial(this.pixelRatio, 'img/bluemarble_1k.jpg'));
     this.planetDots.frustumCulled = false;
     this.scene.add(this.planetDots);
     this.addSpherex();
@@ -257,7 +267,9 @@ export class Scene {
     g.setAttribute('size', new THREE.BufferAttribute(Float32Array.from(list, (o) => TONE[o.tone ?? 'found'][1]), 1));
     g.setAttribute('tail', new THREE.BufferAttribute(Float32Array.from(list, (o) => (o.comet ? 1 : 0)), 1));
     g.setAttribute('fade', new THREE.BufferAttribute(new Float32Array(list.length).fill(1), 1));
-    this.rewindDots = new THREE.Points(g, rewindMaterial(this.pixelRatio));
+    // finds breathe, each at its own phase
+    g.setAttribute('pulse', new THREE.BufferAttribute(Float32Array.from(list, (o, k) => ((o.tone ?? 'found') === 'found' ? 0.05 + ((k * 0.618034) % 0.9) : 0)), 1));
+    this.rewindDots = new THREE.Points(g, rewindMaterial(this.pixelRatio, !reducedMotion));
     this.rewindDots.frustumCulled = false;
     this.rewindDots.renderOrder = 2;
     this.scene.add(this.rewindDots);
@@ -493,8 +505,20 @@ export class Scene {
     const hov = this.hover && !this.hover.planet ? this.hover.k : -1;
     const fade = this.rewindDots!.geometry.attributes.fade.array as Float32Array;
     const drops: { at: THREE.Vector3; color: THREE.Color; amount: number }[] = [];
+    const back = this.tour ? 0.12 : 1; // during the tour the other lines and every drop line are faint
     this.rewind.forEach((o, i) => {
+      if (o.slug === this.tour) {
+        this.tourLine.ease(false, close ? 0 : 1, k);
+        if (this.tourLine.line.visible && (this.tourLine.mjd !== mjd || this.tourLine.src !== o.el)) {
+          this.tourLine.set(orbitPath(o, mjd, 192));
+          this.tourLine.mjd = mjd;
+          this.tourLine.src = o.el;
+        }
+      }
       const tone = o.tone ?? 'found', look = LINE_LOOK[tone], on = i === hov;
+      // steep or open orbits (high inclination, near-parabolic, interstellar) read as straight
+      // streaks across the map from most angles: they show only under the pointer
+      const steep = o.el.e >= 0.95 || o.el.i > 40;
       let line = this.lines.get(i);
       if (!line) {
         if (!on && !look.rest[0]) return;
@@ -503,7 +527,7 @@ export class Scene {
         this.scene.add(line.line);
       }
       // an open object has its own glowing orbit; the other lines step back
-      const amount = close || o.slug === sel ? 0 : on ? 1 : mjd < o.knownMjd ? 0 : fade[i] * (sel ? 0.3 : 1);
+      const amount = close || o.slug === sel || o.slug === this.tour ? 0 : on ? 1 : steep || mjd < o.knownMjd ? 0 : fade[i] * (sel ? 0.3 : 1) * back;
       line.ease(on, amount, k);
       if (!line.line.visible) {
         if (!look.rest[0] && !on) {
@@ -518,8 +542,11 @@ export class Scene {
         line.mjd = mjd;
         line.src = o.el;
       }
-      if (tone === 'found' || on) drops.push({ at: line.line.position, color: line.color, amount: Math.min(1, line.gain) });
+      // the vertical line to the planets' plane only for the object under the pointer
+      if (on) drops.push({ at: line.line.position, color: line.color, amount: Math.min(1, line.gain) });
     });
+    if (!this.tour) this.tourLine.ease(false, 0, k);
+    else if (this.tourLine.line.visible) drops.push({ at: this.tourLine.line.position, color: this.tourLine.color, amount: back });
     this.drops.set(drops);
   }
 
@@ -591,10 +618,50 @@ export class Scene {
     return d;
   }
 
+  /**
+   * The home framing. On a wide screen: the inner system from about 32 degrees up. A phone is too
+   * narrow for that to hold Jupiter, so it looks from higher up and from the side away from
+   * Jupiter: Jupiter then sits above the Sun on the tall screen, with the inner planets in view.
+   */
+  homeView(): { dir: THREE.Vector3; dist: number } {
+    const jup = this.planets.find((p) => p.name === 'Jupiter');
+    if (!isPhone || !jup) return { dir: new THREE.Vector3(0, 2.6, 4.2).normalize(), dist: Math.hypot(2.6, 4.2) };
+    const j = eclToThree(planetPosition(jup, store.mjd));
+    const el = THREE.MathUtils.degToRad(50);
+    const h = new THREE.Vector3(-j.x, 0, -j.z).normalize().multiplyScalar(Math.cos(el));
+    const dir = h.setY(Math.sin(el)).normalize();
+    const pts = [j];
+    for (let k = 0; k < 24; k++) pts.push(new THREE.Vector3(Math.cos((k / 24) * Math.PI * 2) * 1.7, 0, Math.sin((k / 24) * Math.PI * 2) * 1.7));
+    return { dir, dist: Math.max(5, this.fitFrom(new THREE.Vector3(), dir, pts)) };
+  }
+
   /** The whole solar system, as on the home page. */
   frameSystem() {
     this.setLevel('system');
-    this.flyTo(new THREE.Vector3(0, 0, 0), 5, null, undefined, [0.15, 60]);
+    if (isPhone) {
+      const h = this.homeView();
+      this.flyTo(new THREE.Vector3(0, 0, 0), h.dist, null, h.dir, [0.15, 60]);
+    } else this.flyTo(new THREE.Vector3(0, 0, 0), 5, null, undefined, [0.15, 60]);
+  }
+
+  /**
+   * First load: a 2.5 s eased flight from far above the Sun down to the home framing. Any drag,
+   * pinch or scroll takes over at once; under reduced motion the camera starts at home.
+   */
+  private intro() {
+    const h = this.homeView();
+    this.controls.target.set(0, 0, 0);
+    this.camera.position.copy(h.dir).multiplyScalar(h.dist);
+    if (reducedMotion || new URLSearchParams(location.search).get('demo') === '1') return;
+    // start high above, turned about 50 degrees back, so the flight both descends and swings round
+    const from = h.dir.clone().setY(0).normalize().applyAxisAngle(UP, -0.9).multiplyScalar(0.14).setY(1).normalize();
+    this.camera.position.copy(from).multiplyScalar(h.dist * 9);
+    const rotate = this.autoRotate;
+    this.flyTo(new THREE.Vector3(0, 0, 0), h.dist, null, h.dir, [0.00002, 120]);
+    if (this.fly) {
+      this.fly.dur = 2500;
+      this.fly.then = () => (this.autoRotate = rotate);
+    }
   }
 
   /**
@@ -620,6 +687,26 @@ export class Scene {
     this.setLevel('orbit');
     this.flyTo(target, d, null, dir, [d * 0.3, d * 4]);
     return true;
+  }
+
+  /**
+   * The guided tour at a flash: a calm push-in that keeps the current direction, never closer than
+   * the demo's orbit framing (orbitPose) of the object's whole orbit, Earth's orbit, the Sun, the
+   * object and Earth, so the beam between them is on screen too. Returns the camera distance.
+   */
+  frameTour(slug: string, at: THREE.Vector3, earth: THREE.Vector3): number {
+    const o = this.rewindDot(slug);
+    const pts: [number, number, number][] = [[0, 0, 0], at.toArray(), earth.toArray()];
+    for (let k = 0; k < 24; k++) pts.push([Math.cos((k / 24) * Math.PI * 2), 0, Math.sin((k / 24) * Math.PI * 2)]);
+    if (o) for (const v of orbitPolyline(o.el, 128, 4)) pts.push(eclToThree(v).toArray());
+    const [w, h] = this.size;
+    // the photo card covers part of the width: frame in what is left
+    const pose = orbitPose(pts, at.toArray(), this.camera.fov, Math.max(0.3, (w - 2 * Math.abs(this.shift[0])) / w) * (w / h));
+    const off = this.camera.position.clone().sub(this.controls.target);
+    const d = Math.max(pose.dist, off.length() * 0.85);
+    this.flyTo(new THREE.Vector3(...pose.target), d, null, off, [0.15, 60]);
+    if (this.fly) this.fly.dur = 3000;
+    return d;
   }
 
   /**
@@ -698,12 +785,17 @@ export class Scene {
       f.needsUpdate = true;
       this.updateLines(ease);
     }
-    this.asteroids?.setTime(mjd, performance.now() / 1000);
+    const sec = performance.now() / 1000;
+    this.asteroids?.setTime(mjd, sec);
+    if (this.rewindDots) (this.rewindDots.material as THREE.ShaderMaterial).uniforms.uTime.value = sec;
+    // Earth turns slowly (for the look only: the real day would strobe while time plays)
+    if (this.planetDots && !reducedMotion) (this.planetDots.material as THREE.ShaderMaterial).uniforms.uSpin.value = sec * 0.06;
     // the Sun's glow keeps a minimum size on screen, however far out the camera is
     this.sun.scale.setScalar(Math.max(0.5, this.camera.position.length() * 0.17));
   }
 
   start() {
+    this.intro();
     let last = performance.now();
     const loop = () => {
       const now = performance.now();
@@ -711,6 +803,9 @@ export class Scene {
       last = now;
       if (store.playing) store.setTime(store.mjd + store.speed * dt);
       this.easeShift(dt);
+      // the Milky Way fades in once its image has loaded
+      const sky = this.sky.material.uniforms.uFade;
+      if (this.sky.visible && sky.value < 1) sky.value = reducedMotion ? 1 : Math.min(1, sky.value + dt / 2.5);
       const ease = reducedMotion ? 1 : 1 - Math.exp(-dt * 9);
       this.easeLayers(ease);
       this.updateBodies(ease);
@@ -737,6 +832,7 @@ export class Scene {
         if (t >= 1) {
           this.fly = null;
           this.setLimits(f.limits);
+          f.then?.();
           if (this.follow) this.lastFollow.copy(this.follow() ?? f.toTgt);
         }
       } else if (this.follow) {

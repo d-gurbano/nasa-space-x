@@ -9,15 +9,20 @@ import { mjdFromIso, plainDate } from '../lib/time';
 import { checkResults } from '../lib/checks';
 import type { CheckKey } from '../lib/types';
 import { simpleSpectrum, TYPE_PLAIN } from './panel-chart';
+import { COLOUR_WORD } from '../views/findings';
 import { el, esc, fixPlural, fmt, plural, provenance } from './dom';
 import { verdictWord } from './topbar';
 import { beforeWhat, daysBefore, isKnown, seenNotEarlier } from '../lib/rank';
 import { engineText, farText, oneSentence, shortDate } from './panel-text';
+import { countUps } from './motion';
 import type { Level } from '../scene/Scene';
 
 const KIND: Record<string, string> = {
-  neo: 'Near-Earth asteroid', mba: 'Main-belt asteroid', comet: 'Comet', lost: 'Lost asteroid', famous: 'Famous asteroid',
+  neo: 'Near-Earth asteroid', mba: 'Main-belt asteroid', comet: 'Comet', lost: 'Lost asteroid', famous: 'Known asteroid',
 };
+// the famous group also holds the interstellar comet 3I/ATLAS
+const kindLabel = (o: { kind: string; name: string }) =>
+  o.kind === 'famous' && /^\d+I\//.test(o.name) ? 'Interstellar comet (known object)' : KIND[o.kind] ?? o.kind;
 
 const icon = (d: string) => `<svg viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
 const TABS: [id: string, label: string, title: string, icon: string][] = [
@@ -36,7 +41,7 @@ const CK_ICON: Record<string, string> = {
 };
 const CK_WORD: Record<string, string> = { ok: 'Pass', warn: 'Weak', bad: 'Fail', na: 'Not done' };
 
-/** Per-night detection threshold (engine: a night is positive at S/N ≥ 2). */
+/** Per-day detection threshold (engine: a day is positive at S/N ≥ 2). */
 const DAY_SNR = 2;
 
 export interface PanelHooks {
@@ -46,6 +51,14 @@ export interface PanelHooks {
   onView: (level: Level) => void;
 }
 
+
+// the colour match from composition.best_match, only when the data has one; it is always a rough match
+function colourChip(p: ObjectPage): string {
+  const m = p.composition?.best_match?.trim().charAt(0).toUpperCase();
+  if (!m) return '';
+  const word = COLOUR_WORD[m] ?? TYPE_PLAIN[m] ?? `${m}-type`;
+  return `<p class="op-colours"><span class="chip">Colours: ${esc(p.composition.label || 'rough match')}, ${esc(word)} (${esc(m)})</span></p>`;
+}
 export class ObjectPanel {
   readonly root: HTMLElement;
   private body: HTMLElement;
@@ -62,9 +75,15 @@ export class ObjectPanel {
     this.initSheetDrag();
   }
 
-  /** Phones: drag the grab handle to expand or collapse the bottom sheet. */
+  /** Phones: the sheet opens at about 60% height. Drag the handle up to fill the screen, or down
+   *  to a low peek above the time bar; a tap switches between the default and the full sheet. */
   private initSheetDrag() {
     const grab = this.root.querySelector('.pn-grab') as HTMLElement;
+    const at = () => (this.root.classList.contains('expanded') ? 2 : this.root.classList.contains('peek') ? 0 : 1);
+    const go = (k: number) => {
+      this.root.classList.toggle('peek', k === 0);
+      this.root.classList.toggle('expanded', k === 2);
+    };
     let y0 = 0;
     grab.addEventListener('pointerdown', (e) => {
       y0 = e.clientY;
@@ -72,14 +91,14 @@ export class ObjectPanel {
     });
     grab.addEventListener('pointerup', (e) => {
       const dy = e.clientY - y0;
-      if (Math.abs(dy) < 6) this.root.classList.toggle('expanded');
-      else this.root.classList.toggle('expanded', dy < 0);
+      if (Math.abs(dy) < 6) go(at() === 2 ? 1 : 2);
+      else go(Math.max(0, Math.min(2, at() + (dy < 0 ? 1 : -1) * (Math.abs(dy) > 160 ? 2 : 1))));
     });
   }
 
   close() {
     this.slug = null;
-    this.root.classList.remove('pn-in', 'expanded');
+    this.root.classList.remove('pn-in', 'expanded', 'peek');
     setTimeout(() => !this.slug && (this.root.hidden = true), 300);
   }
 
@@ -88,7 +107,7 @@ export class ObjectPanel {
     this.root.hidden = false;
     void this.root.offsetWidth;
     this.root.classList.add('pn-in');
-    this.body.innerHTML = `<header class="op-head"><div class="pn-title"><h2 class="op-name">${esc(o.name)}</h2></div><p class="op-type">${esc(KIND[o.kind] ?? o.kind)}</p><p class="muted">Loading...</p></header>`;
+    this.body.innerHTML = `<header class="op-head"><div class="pn-title"><h2 class="op-name">${esc(o.name)}</h2></div><p class="op-type">${esc(kindLabel(o))}</p><p class="muted">Loading...</p></header>`;
   }
 
   fail(msg: string) {
@@ -120,6 +139,7 @@ export class ObjectPanel {
       <div class="op-panes">${TABS.map(([id, , title], k) =>
         `<section class="op-pane" role="tabpanel" id="op-pane-${id}" aria-labelledby="op-tab-${id}"${k === 0 ? '' : ' hidden'}><h3 class="op-h">${title}</h3>${panes[id] || '<p class="muted">No data for this object.</p>'}</section>`).join('')}</div>`;
     this.wireTabs();
+    countUps(this.body.querySelector('.op-head') ?? this.body);
     this.body.querySelector<HTMLButtonElement>('.op-view')?.addEventListener('click', () => this.hooks.onView(this.level === 'close' ? 'orbit' : 'close'));
     this.setLevel(this.level);
     try {
@@ -168,7 +188,7 @@ export class ObjectPanel {
   private header(o: IndexObject, p: ObjectPage, hasPath: boolean): string {
     const v = p.verdict;
     const known = isKnown(p);
-    const bits = [KIND[p.kind] ?? p.kind, p.facts?.pha ? 'Potentially hazardous' : '', p.orbit?.period_yr != null && p.orbit.period_yr < 1000 ? `${p.orbit.period_yr.toFixed(1)}-year orbit` : ''].filter(Boolean);
+    const bits = [kindLabel(p), p.facts?.pha ? 'Potentially hazardous' : '', p.orbit?.period_yr != null && p.orbit.period_yr < 1000 ? `${p.orbit.period_yr.toFixed(1)}-year orbit` : ''].filter(Boolean);
     const days = daysBefore(o);
     const claim = (p as ObjectPage & { claim?: string | null }).claim ?? o.claim;
     const photos = p.spherex?.frames?.length ?? o.n_frames ?? 0;
@@ -183,24 +203,25 @@ export class ObjectPanel {
         firstObs ? `First known observation: ${plainDate(firstObs)}` : '',
         disc && (!firstObs || disc.slice(0, 10) !== firstObs.slice(0, 10)) ? `Discovered: ${plainDate(disc)}` : '',
       ].filter(Boolean).join(' · ');
-      sub = `${v === 'FOUND' ? '' : 'HINT: not every detection test passed. '}${dates}`;
+      sub = `${v === 'FOUND' ? '' : 'This is a HINT because not every check passed. '}${dates}`;
     } else if (v === 'FOUND') {
       num = fmt(stacked);
       what = `${stacked === 1 ? 'SPHEREx image' : 'SPHEREx images stacked'}`;
-      sub = known ? 'Control object: known for years, run to show a clear SPHEREx detection. Not a precovery.' : claim && /not earlier/i.test(claim) ? 'Detected, but not earlier than the first known observation: extra positions, not a precovery.' : '';
+      sub = known ? 'A control object, known for years. We ran it to show what a clear SPHEREx detection looks like. It is not a precovery.' : claim && /not earlier/i.test(claim) ? 'Detected, but not earlier than the first known observation. The images add positions but are not a precovery.' : '';
     } else if (v === 'HINT') {
       num = fmt(photos);
       what = `${photos === 1 ? 'image' : 'images'} searched`;
-      sub = 'HINT: a signal is present but not every detection test passes.';
+      sub = 'There is a signal, but not every check passes, so this is a HINT.';
     } else {
       num = fmt(photos);
       what = v === 'TOO_FAINT' ? `${photos === 1 ? 'image' : 'images'} searched` : v === 'NO_PHOTOS' ? 'SPHEREx images cover the predicted position' : `${photos === 1 ? 'image' : 'images'} so far`;
-      sub = v === 'TOO_FAINT' ? 'No significant signal at the predicted position.' : v === 'NO_PHOTOS' ? 'SPHEREx did not image the predicted position in the searched window.' : 'Not searched yet.';
+      sub = v === 'TOO_FAINT' ? 'There is no significant signal at the predicted position.' : v === 'NO_PHOTOS' ? 'SPHEREx did not image the predicted position in the period we searched.' : 'Not searched yet.';
     }
     const early = !known && days !== null && days > 0 && (v === 'FOUND' || v === 'HINT');
     return `<header class="op-head">
       <div class="pn-title"><h2 class="op-name">${esc(p.name ?? o.name)}</h2>${seenNotEarlier(o) ? '<span class="verdict-chip v-seen">Detected, not earlier</span>' : `<span class="verdict-chip v-${v.toLowerCase()}">${known && v === 'FOUND' ? 'Control' : verdictWord(v)}</span>`}</div>
       <p class="op-type">${bits.map(esc).join(' <span aria-hidden="true">·</span> ')}</p>
+      ${colourChip(p)}
       <div class="op-stat${v === 'FOUND' || v === 'HINT' ? ' op-stat-gold' : ''}">
         <span class="op-num">${num}</span>
         <p class="op-stat-text"><strong>${early ? '<span class="sr-only">Detected </span>' : ''}${esc(what)}</strong>${sub ? `<span>${esc(sub)}</span>` : ''}</p>
@@ -213,7 +234,7 @@ export class ObjectPanel {
   private photoList(p: ObjectPage): { src: string; label: string; date: string; text: string; alt: string; dim?: boolean }[] {
     const sx = p.spherex;
     const days = (sx?.days ?? []).filter((d) => d.png);
-    // show the year on the strip when the nights span more than one year (e.g. a lone night months earlier)
+    // show the year on the strip when the days span more than one year (e.g. a lone day months earlier)
     const years = new Set(days.map((d) => d.iso.slice(0, 4)));
     const ref = p.first_known_obs_iso ? mjdFromIso(p.first_known_obs_iso) : null;
     const items = days.map((d) => {
@@ -222,7 +243,7 @@ export class ObjectPanel {
       const when = lead != null && lead >= 1 ? `, ${plural(lead, 'day')} before first known obs.` : '';
       return {
         src: d.png, label: years.size > 1 ? shortDate(plainDate(d.iso)) : plainDate(d.iso).replace(/ \d{4}$/, ''), date: dateOr(d.iso),
-        text: `${plural(d.n_frames, 'image')} stacked${d.snr != null ? `, S/N ${n1(d.snr)}` : ''}${d.snr != null && !detected ? ` (below ${DAY_SNR}: no detection this night)` : ''}${when}`,
+        text: `${plural(d.n_frames, 'image')} stacked${d.snr != null ? `, S/N ${n1(d.snr)}` : ''}${d.snr != null && !detected ? ` (below ${DAY_SNR}, so no detection on this day)` : ''}${when}`,
         alt: `Shift-and-stack of ${d.n_frames} SPHEREx images from ${dateOr(d.iso)}`,
         dim: d.snr != null && !detected,
       };
@@ -230,7 +251,7 @@ export class ObjectPanel {
     const st = sx?.stack;
     if (st?.png) {
       const n = st.n_frames ?? sx.frames.length;
-      items.unshift({ src: st.png, label: 'All', date: `Shift-and-stack of ${plural(n, 'image')}, all nights`, text: st.snr != null ? `S/N ${n1(st.snr)}` : '', alt: `Shift-and-stack of all ${n} SPHEREx images`, dim: false });
+      items.unshift({ src: st.png, label: 'All', date: `Shift-and-stack of ${plural(n, 'image')}, all days`, text: st.snr != null ? `S/N ${n1(st.snr)}` : '', alt: `Shift-and-stack of all ${n} SPHEREx images`, dim: false });
     }
     if (items.length) return items;
     // no stacks: fall back to the single photos the engine kept a picture of
@@ -246,16 +267,16 @@ export class ObjectPanel {
     const items = this.photoList(p);
     if (!items.length) {
       const none = !(p.spherex?.frames?.length ?? 0);
-      return `<p class="op-empty">${none ? `No SPHEREx image covers the predicted position in the searched window${p.verdict === 'NO_PHOTOS' ? '' : ' yet'}.` : 'No cutout was saved for these images.'}</p>`;
+      return `<p class="op-empty">${none ? `No SPHEREx image covers the predicted position in the period we searched${p.verdict === 'NO_PHOTOS' ? '' : ' yet'}.` : 'We did not save a cutout for these images.'}</p>`;
     }
     const url = (rel: string) => esc(this.hooks.url(p.slug, rel));
     return `<div class="op-photo${items.length > 1 ? '' : ' op-photo-one'}">
         <figure class="stamp op-big"><img alt="" width="256" height="256"><span class="stamp-cross" aria-hidden="true"></span></figure>
-        ${items.length > 1 ? `<div class="op-strip" role="listbox" aria-label="Select a night">${items.map((x, i) =>
+        ${items.length > 1 ? `<div class="op-strip" role="listbox" aria-label="Select a day">${items.map((x, i) =>
           `<button role="option" aria-selected="${i === 0}" aria-label="${esc(x.date)}${x.dim ? ', no detection' : ''}" title="${esc(x.date)}${x.dim ? ' (no detection)' : ''}"${x.dim ? ' class="op-nodet"' : ''}><img src="${url(x.src)}" alt="" loading="lazy" width="44" height="44"><span>${esc(x.label)}</span></button>`).join('')}</div>` : ''}
       </div>
       <p class="op-cap mono" aria-live="polite"></p>
-      <p class="op-note">Circle: predicted position.${items.length > 1 ? ` Select a night to see that night's stack; faded nights are below S/N ${DAY_SNR}.` : ''} ${provenance(sample, 'NASA SPHEREx')}</p>`;
+      <p class="op-note">The circle marks the predicted position.${items.length > 1 ? ` Select a day to see its stack. Faded days are below S/N ${DAY_SNR}.` : ''} ${provenance(sample, 'NASA SPHEREx')}</p>`;
   }
 
   private wirePhotos(p: ObjectPage) {
@@ -268,7 +289,7 @@ export class ObjectPanel {
       const it = items[k];
       img.src = this.hooks.url(p.slug, it.src);
       img.alt = it.alt;
-      cap.innerHTML = `<span class="gold">${esc(it.date)}</span>${it.text ? `<span title="S/N: stack flux divided by the scatter of the same stack along offset (null) paths. The detection threshold is 5 for the full stack and 2 for a single night.">${esc(it.text)}</span>` : ''}`;
+      cap.innerHTML = `<span class="gold">${esc(it.date)}</span>${it.text ? `<span title="S/N is the stack flux divided by the scatter of the same stack along offset (null) paths. The detection threshold is 5 for the full stack and 2 for a single day.">${esc(it.text)}</span>` : ''}`;
       buttons.forEach((b, i) => b.setAttribute('aria-selected', String(i === k)));
     };
     buttons.forEach((b, i) => b.addEventListener('click', () => show(i)));
@@ -284,17 +305,17 @@ export class ObjectPanel {
     }
     const cs = c?.clone_search;
     const cloneLine = cs?.n_clones != null && cs.false_alarm_rate != null
-      ? `<p class="hint">Orbit-uncertainty search: ${fmt(cs.n_clones)} orbit clones stacked; false-alarm probability ${farText(cs.false_alarm_rate, cs.n_null_trials)}. Informational, not one of the nine checks.</p>`
+      ? `<p class="hint">We also stacked along ${fmt(cs.n_clones)} orbit clones that span the orbit uncertainty. The false-alarm probability is ${farText(cs.false_alarm_rate, cs.n_null_trials)}. This search is for information only and is not one of the nine checks.</p>`
       : '';
     const line = oneSentence(engineText(fixPlural(p.verdict_text ?? '')), (p as ObjectPage & { claim?: string | null }).claim ?? o.claim);
     const full = engineText(fixPlural(p.verdict_text ?? ''));
     const pass = rows.filter((r) => r[0] === 'ok').length;
     return `<p class="op-lead">${esc(line)}</p>
       ${rows.length ? `<p class="op-score mono">${pass} of ${rows.length} checks pass</p>
-      <ul class="op-checks">${rows.map(([s, t, x]) => `<li class="ck-${s}"><span class="op-ck" role="img" aria-label="${CK_WORD[s]}" title="${CK_WORD[s]}">${CK_ICON[s]}</span><div><strong>${esc(t)}</strong><p>${esc(x)}</p></div></li>`).join('')}</ul>` : '<p class="muted">No SPHEREx images, so there is nothing to test.</p>'}
+      <ul class="op-checks">${rows.map(([s, t, x]) => `<li class="ck-${s}"><span class="op-ck" role="img" aria-label="${CK_WORD[s]}" title="${CK_WORD[s]}">${CK_ICON[s]}</span><div><strong>${esc(t)}</strong><p>${esc(x)}</p></div></li>`).join('')}</ul>` : '<p class="muted">There are no SPHEREx images to test.</p>'}
       ${cloneLine}
-      ${c?.real_or_fake_score != null ? `<p class="hint">CNN real-or-artifact score: ${Math.round(c.real_or_fake_score * 100)} / 100. Advisory only; no verdict rule uses it.</p>` : ''}
-      ${full && full !== line ? `<details class="op-more"><summary>Engine verdict text</summary><p>${esc(full)}</p></details>` : ''}`;
+      ${c?.real_or_fake_score != null ? `<p class="hint">CNN real-or-artifact score: ${Math.round(c.real_or_fake_score * 100)} / 100. This score is advisory, and no verdict rule uses it.</p>` : ''}
+      ${full && full !== line ? `<details class="op-more"><summary>Full verdict text</summary><p>${esc(full)}</p></details>` : ''}`;
   }
 
   // ---------- Future: next close pass, Before / After uncertainty ----------
@@ -306,7 +327,7 @@ export class ObjectPanel {
       pass = `<p class="op-big-line"><strong>${esc(plainDate(ca.iso))}</strong></p>
         <p>Nominal distance <strong>${ld} lunar distances</strong> (${kmText(ca.dist_ld * 384400)}), JPL SBDB. ${p.facts.sentry ? 'Listed on JPL Sentry (impact monitoring).' : 'Not on the JPL Sentry impact-risk list.'}</p>`;
     } else {
-      pass = `<p>${p.facts?.neo ? 'No close approach to Earth is listed in JPL SBDB.' : 'Not a near-Earth object: its orbit does not come close to Earth\'s.'}</p>`;
+      pass = `<p>${p.facts?.neo ? 'No close approach to Earth is listed in JPL SBDB.' : 'This is not a near-Earth object. Its orbit does not come close to Earth\'s.'}</p>`;
     }
     // One number, one definition: the 3σ largest-axis uncertainty one year after the last
     // observation (the same figure as the Methods table). The 3D cloud's own 1σ value is
@@ -320,19 +341,19 @@ export class ObjectPanel {
       const r = before / after;
       if (r >= 1.05) return `×${fmt(r, r >= 10 ? 0 : 1)} smaller with the SPHEREx positions.`;
       if (r <= 0.95) return `×${fmt(1 / r, 1)} larger with the SPHEREx positions. A formal uncertainty can grow when a new position pulls the least-squares solution; non-gravitational forces (comets) are not modelled.`;
-      return 'No meaningful change (within 5%): the existing follow-up arc already constrains the orbit.';
+      return 'No meaningful change (within 5%). The existing follow-up observations already constrain the orbit.';
     };
     if (yr && yr.sigma3_km_before != null && yr.sigma3_km_after != null) {
       heading = `3σ positional uncertainty on ${plainDate(yr.iso)} (1 year after the last observation)`;
       const max = Math.max(yr.sigma3_km_before, yr.sigma3_km_after);
       const atDisc = disc && disc.factor != null && disc.converged !== false
-        ? `<p>At-discovery scenario (MPC observations of the first 7 days only): adding the SPHEREx positions ${disc.sigma3_km_before != null && disc.sigma3_km_after != null ? `takes the 1-year 3σ uncertainty from ${kmText(disc.sigma3_km_before)} to ${kmText(disc.sigma3_km_after)} (factor ×${disc.factor.toFixed(disc.factor >= 2 ? 1 : 2)}; above 1 means smaller)` : `changes the 1-year 3σ uncertainty by a factor ×${disc.factor.toFixed(disc.factor >= 2 ? 1 : 2)} (above 1 means smaller)`}.</p>`
+        ? `<p>In an at-discovery scenario that uses only the MPC observations from the first 7 days, adding the SPHEREx positions ${disc.sigma3_km_before != null && disc.sigma3_km_after != null ? `takes the 1-year 3σ uncertainty from ${kmText(disc.sigma3_km_before)} to ${kmText(disc.sigma3_km_after)} (factor ×${disc.factor.toFixed(disc.factor >= 2 ? 1 : 2)}; above 1 means smaller)` : `changes the 1-year 3σ uncertainty by a factor ×${disc.factor.toFixed(disc.factor >= 2 ? 1 : 2)} (above 1 means smaller)`}.</p>`
         : disc?.error || disc?.converged === false
-          ? '<p class="hint">At-discovery scenario: the short-arc fit was too weak to sample, so no number is given.</p>'
+          ? '<p class="hint">For the at-discovery scenario, the short-arc fit was too weak to sample, so we give no number.</p>'
           : '';
       unc = `<div class="op-unc">${row('MPC observations only', yr.sigma3_km_before, max, 'unc-before')}${row('+ SPHEREx positions', yr.sigma3_km_after, max, 'unc-after')}</div>
         <p>${change(yr.sigma3_km_before, yr.sigma3_km_after)}</p>${atDisc}
-        <p class="hint">Largest axis of the 3σ cloud from covariance clones of kete least-squares fits (gravity only). The Before / After control under the 3D view shows a 1σ cloud.</p>`;
+        <p class="hint">This is the largest axis of the 3σ cloud of orbit clones drawn from kete least-squares fits (gravity only). The Before / After control under the 3D view shows a 1σ cloud.</p>`;
     } else if (c?.before?.length && c.before_sigma_km_at?.km != null) {
       const b = c.before_sigma_km_at, a = c.after_sigma_km_at;
       const hasAfter = !!c.after && a?.km != null;
@@ -340,7 +361,7 @@ export class ObjectPanel {
       const max = Math.max(b.km, hasAfter ? a!.km : 0);
       unc = `<div class="op-unc">${row('MPC observations only', b.km, max, 'unc-before')}${hasAfter ? row('+ SPHEREx positions', a!.km, max, 'unc-after') : ''}</div>
         <p>${hasAfter ? change(b.km, a!.km) : 'No SPHEREx positions were added to the fit for this object.'}</p>
-        <p class="hint">Largest axis of the 1σ clone cloud (gravity only). Switch Before / After under the 3D view to see it.</p>`;
+        <p class="hint">This is the largest axis of the 1σ clone cloud (gravity only). Switch Before / After under the 3D view to see it.</p>`;
     } else {
       unc = `<p class="muted">${hasPath ? 'No uncertainty estimate for this object.' : 'No orbit for this object in the data set.'}</p>`;
     }
@@ -351,19 +372,19 @@ export class ObjectPanel {
   // ---------- Made of: the spectrum, simplified ----------
   private made(p: ObjectPage, sample: boolean): string {
     const c = p.composition;
-    if (!c?.points?.length) return `<p class="op-empty">Too little flux in the SPHEREx images for a spectrum.</p>`;
+    if (!c?.points?.length) return `<p class="op-empty">The SPHEREx images hold too little flux for a spectrum.</p>`;
     // a taxonomic match needs at least 3 channels measured at S/N ≥ 2
     const strong = c.points.filter((x) => x.err > 0 && Math.abs(x.value) / x.err >= 2).length;
     const usable = strong >= 3;
     const plain = usable && c.best_match ? TYPE_PLAIN[c.best_match.trim().charAt(0).toUpperCase()] : null;
     const lead = !usable
-      ? `Too noisy to classify: only ${strong} of ${c.points.length} spectral bins have S/N ≥ 2.`
+      ? `The spectrum is too noisy to classify. Only ${strong} of ${c.points.length} spectral bins have S/N ≥ 2.`
       : c.best_match
         ? `Closest template: <strong>${esc(c.best_match)}-type</strong>${plain ? ` (${plain})` : ''}. <span class="chip">${esc(c.label ?? 'rough match')}</span>`
         : 'No template fits better than the others.';
     return `<p class="op-lead">${lead}</p>
       ${simpleSpectrum(c)}
-      <p class="op-note">Relative reflectance = measured flux divided by the flux expected for a solar-coloured source, normalised below 1.3 µm. Beyond about 3.5 µm, thermal emission adds to reflected light for near-Earth objects, so templates are least reliable there. ${provenance(sample, 'NASA SPHEREx')}</p>`;
+      <p class="op-note">Relative reflectance is the measured flux divided by the flux expected for a solar-coloured source, normalised below 1.3 µm. Beyond about 3.5 µm, thermal emission adds to reflected light for near-Earth objects, so templates are least reliable there. ${provenance(sample, 'NASA SPHEREx')}</p>`;
   }
 
   // ---------- Story: the discovery in a few lines ----------
@@ -376,11 +397,11 @@ export class ObjectPanel {
     // cannot be split on full stops); drop it and the boilerplate that follows
     const more = engineText(fixPlural(s.plain ?? ''))
       .replace(/^.*?\bwas discovered on \S+(?: by .*?\(\w+\))?\.\s*/, '')
-      .replace(/^Rewind searched SPHEREx (?:photos|images) taken before that date[^.]*\.\s*/, '')
+      .replace(/^(?:Rewind|We) searched SPHEREx (?:photos|images) taken before that date[^.]*\.\s*/, '')
       .trim();
     const firstObs = p.first_known_obs_iso ?? o.first_known_obs_iso;
     const obsLine = firstObs && s.discovered_iso && firstObs.slice(0, 10) < s.discovered_iso.slice(0, 10)
-      ? `<p>Earliest observation on record at the Minor Planet Center: <strong>${esc(plainDate(firstObs))}</strong>, earlier than the discovery date because earlier observations were linked to the object afterwards. Rewind's lead times are counted from this earlier date.</p>`
+      ? `<p>The earliest observation on record at the Minor Planet Center is from <strong>${esc(plainDate(firstObs))}</strong>. It is earlier than the discovery date because older observations were linked to the object later. We count lead times from this earlier date.</p>`
       : '';
     const sources = (s.sources ?? []).filter(Boolean);
     const credits = (p.credits ?? []).filter(Boolean);
@@ -420,7 +441,7 @@ function checkDetail(k: CheckKey, p: ObjectPage): string {
     }
     case 'cleaned': {
       const ss = c.static_sky_subtracted?.snr;
-      return ss != null ? `After subtracting a static-sky reference built from other SPHEREx images of the field: S/N ${ss.toFixed(1)}.` : '';
+      return ss != null ? `S/N ${ss.toFixed(1)} after subtracting a static-sky reference built from other SPHEREx images of the field.` : '';
     }
     case 'nulls': {
       const np = c.null_paths;
@@ -431,14 +452,14 @@ function checkDetail(k: CheckKey, p: ObjectPage): string {
       if (!ts?.snr?.length || ts.shifts_days.length < 2) return '';
       const at = ts.shifts_days[ts.snr.indexOf(Math.max(...ts.snr))];
       const step = Math.abs(ts.shifts_days[1] - ts.shifts_days[0]) * 24;
-      return `Re-stacked with the ephemeris shifted in time (steps of ${step.toFixed(2)} h): S/N peaks at Δt = ${at === 0 ? '0' : (at * 24).toFixed(2) + ' h'}.`;
+      return `We re-stacked with the ephemeris shifted in time, in steps of ${step.toFixed(2)} h. S/N peaks at Δt = ${at === 0 ? '0' : (at * 24).toFixed(2) + ' h'}.`;
     }
     case 'days':
-      return c.per_day_positive ? `Positive (S/N ≥ ${DAY_SNR}) on ${c.per_day_positive} nights when each night is stacked alone.` : '';
+      return c.per_day_positive ? `Positive (S/N ≥ ${DAY_SNR}) on ${c.per_day_positive} days when each day is stacked alone.` : '';
     case 'detectable': {
       const inj = c.injection;
       return inj?.recovered_fraction_at_object_mag != null
-        ? `Synthetic sources at the predicted magnitude: ${Math.round(inj.recovered_fraction_at_object_mag * 100)}% recovered${inj.limit_ab_mag != null ? `; 50% completeness limit AB ${inj.limit_ab_mag.toFixed(1)}` : ''}.`
+        ? `${Math.round(inj.recovered_fraction_at_object_mag * 100)}% of synthetic sources planted at the predicted magnitude were recovered.${inj.limit_ab_mag != null ? ` The 50% completeness limit is AB ${inj.limit_ab_mag.toFixed(1)}.` : ''}`
         : '';
     }
     case 'sign_test': {
@@ -450,7 +471,7 @@ function checkDetail(k: CheckKey, p: ObjectPage): string {
     case 'orbit': {
       const f = c.orbit_fit;
       return f?.rms_arcsec_after != null && f.rms_arcsec_before != null
-        ? `Refit with ${plural(f.new_points, 'SPHEREx position')}: RMS ${f.rms_arcsec_after.toFixed(2)}″ (was ${f.rms_arcsec_before.toFixed(2)}″).`
+        ? `A refit with ${plural(f.new_points, 'SPHEREx position')} gives an RMS of ${f.rms_arcsec_after.toFixed(2)}″ (${f.rms_arcsec_before.toFixed(2)}″ before).`
         : '';
     }
   }
@@ -473,6 +494,10 @@ function hostOf(u: string) {
 export function kmText(km: number): string {
   if (km >= 1e6) return `${fmt(km / 1e6, km >= 1e7 ? 0 : 1)} million km`;
   return `${fmt(Math.round(km / (km > 1e4 ? 1000 : 1)) * (km > 1e4 ? 1000 : 1))} km`;
+}
+/** "± 1,200 km", or "under 1 km" for known objects whose uncertainty is negligible. */
+export function uncText(km: number): string {
+  return km < 1 ? 'under 1 km' : '± ' + kmText(km);
 }
 function sizeText(d: number) {
   return d >= 1 ? `${d.toFixed(1)} km` : `${Math.round(d * 1000)} m`;

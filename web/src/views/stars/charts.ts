@@ -1,4 +1,4 @@
-// Charts for the Test targets page: plain SVG drawn to the width it is given, with one
+// Charts for the Challenge targets page: plain SVG drawn to the width it is given, with one
 // readout line under the plot that follows the pointer, a tap, or the arrow keys, and a
 // table of the same numbers.
 import { dateFromMjd, mjdFromDate, plainDate } from '../../lib/time';
@@ -174,7 +174,7 @@ export function curveChart(host: HTMLElement, lc: { points: LcPoint[]; medians: 
     `${bands.map((b) => `<li><span class="lg-dot lc-lg${b}"></span>${BANDS[b]}, middle of a pass</li>`).join('')}
      <li><span class="lg-dot lc-lg-sat"></span>Single image, saturated</li>
      ${lc.points.some((p) => !p.saturated) ? '<li><span class="lg-dot lc-lg-ok"></span>Single image, unsaturated</li>' : ''}
-     <li><span class="lg-tick"></span>SPHEREx looked</li>
+     <li><span class="lg-tick"></span>SPHEREx observed</li>
      ${out ? `<li>${plural(out, 'image')} beyond ${lim}% ${out === 1 ? 'is' : 'are'} not drawn</li>` : ''}`,
     draw,
     Math.max(0, lc.medians.filter((m) => m.band === bands[0]).length - 1),

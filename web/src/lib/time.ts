@@ -51,6 +51,7 @@ export function mjdFromFrac(f: number, start: number, end: number): number {
   return start + Math.min(1, Math.max(0, f)) * (end - start);
 }
 
-export function todayMjd(): number {
-  return Math.floor(mjdFromDate(new Date()));
+/** The viewer's local calendar date, as the MJD of that date at 00:00 UTC (so the UTC readouts show it). */
+export function todayMjd(now = new Date()): number {
+  return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000 + MJD_UNIX_EPOCH;
 }

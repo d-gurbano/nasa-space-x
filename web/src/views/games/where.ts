@@ -1,4 +1,4 @@
-// Predict the orbit: three known positions of a real Rewind find on a map seen from above the
+// Where will it be?: three known positions of a real Rewind find on a map seen from above the
 // solar system. Drag the marker to where it will be 30 days later, then see the true spot and
 // how big the guess area is one year ahead, without and with the older SPHEREx positions.
 import { getJson } from '../../lib/data';
@@ -7,6 +7,7 @@ import type { ObjectPage } from '../../lib/types';
 import { icon } from '../../ui/components';
 import { esc } from '../../ui/dom';
 import type { View } from '../page';
+import { confetti } from './confetti';
 import { AHEAD_DAYS, AU_KM, buildRound, dist2, factorText, fmtKm, pickRounds, scoreGuess, type P2, type WhereRound } from './where-logic';
 
 const S = 600; // chart size in SVG units
@@ -19,7 +20,7 @@ export const whereGame: View = async (body, ctx) => {
   );
   const rounds = pickRounds(built.filter((r): r is WhereRound => !!r));
   if (!rounds.length) {
-    body.innerHTML = `<p class="muted">No orbits to play with yet.</p>`;
+    body.innerHTML = `<p class="muted">No orbits are available for this game yet.</p>`;
     return;
   }
   const total = rounds.length;
@@ -40,7 +41,7 @@ export const whereGame: View = async (body, ctx) => {
         <div class="gm-side">
           <div class="wh-ask">
             <p class="gm-q">Where will it be <b>${AHEAD_DAYS} days later</b>?</p>
-            <p class="gm-sub">Three known positions, 15 days apart. Drag the gold marker to your guess.</p>
+            <p class="gm-sub">The three dots are known positions, 15 days apart. Drag the gold marker to where you think the object will be.</p>
             <button class="btn btn-primary wh-lock">Lock in my guess${icon('arrow')}</button>
           </div>
           <div class="wh-reveal" hidden></div>
@@ -160,20 +161,21 @@ export const whereGame: View = async (body, ctx) => {
       ask.hidden = true;
       reveal.hidden = false;
       reveal.innerHTML = `
-        <p class="wh-pts"><b>+${pts}</b><span>${pts >= 85 ? 'Spot on.' : pts >= 55 ? 'Close.' : pts > 0 ? 'Not far.' : 'It went elsewhere.'} ${esc(fmtKm(missKm))} off.</span></p>
+        <p class="wh-pts"><b>+${pts}</b><span>${pts >= 85 ? 'Very close.' : pts >= 55 ? 'Close.' : pts > 0 ? 'Not far.' : 'Some way off.'} Your guess was ${esc(fmtKm(missKm))} from the true position.</span></p>
         <div class="wh-lens">
           <svg viewBox="-100 -100 200 200" aria-hidden="true">${ell(z.before_km, 'wh-e-before')}${ell(z.after_km, 'wh-e-after')}<circle class="wh-e-c" r="2.5"/></svg>
           <div class="wh-lens-t">
             <p class="wh-factor">${esc(factorText(z.factor))}</p>
-            <p class="wh-leg"><i class="before"></i>Without the old photos<b class="mono">${esc(fmtKm(z.before_km))}</b></p>
-            <p class="wh-leg"><i class="after"></i>With SPHEREx${days ? `, ${days} days earlier` : ''}<b class="mono">${esc(fmtKm(z.after_km))}</b></p>
+            <p class="wh-leg"><i class="before"></i>Without the SPHEREx positions<b class="mono">${esc(fmtKm(z.before_km))}</b></p>
+            <p class="wh-leg"><i class="after"></i>With the SPHEREx positions${days ? ` (${days} days earlier)` : ''}<b class="mono">${esc(fmtKm(z.after_km))}</b></p>
           </div>
         </div>
-        <p class="gm-sub">The guess area one year ahead${z.scenario ? ', as if Rewind had run in discovery week (computed scenario)' : ', from every observation so far (computed)'}.</p>
+        <p class="gm-sub">The ellipses show where the object could be one year later (the 3σ uncertainty region)${z.scenario ? ', as if we had run Rewind in the week of discovery (computed scenario)' : ', from every observation so far (computed)'}.</p>
         <div class="gm-row">
-          <button class="btn btn-primary wh-next">${last5 ? 'See my score' : 'Next asteroid'}${icon('arrow')}</button>
+          <button class="btn btn-primary wh-next">${last5 ? 'See my score' : 'Next object'}${icon('arrow')}</button>
           <a class="btn btn-ghost" href="#/object/${esc(r.slug)}">Open ${esc(r.name)}</a>
         </div>`;
+      if (pts >= 85) confetti(q('.wh-pts'));
       const next = q<HTMLButtonElement>('.wh-next');
       next.onclick = () => (last5 ? end() : play(k + 1));
       next.focus({ preventScroll: true });
@@ -187,10 +189,10 @@ export const whereGame: View = async (body, ctx) => {
     fin.hidden = false;
     body.closest('.page')?.scrollTo(0, 0);
     fin.innerHTML = `
-      <p class="kicker">Predict the orbit</p>
+      <p class="kicker">Where will it be?</p>
       <h2 class="gm-end-h"><b class="mono">${sum}</b> of ${total * 100}</h2>
-      <p class="gm-end-lead">${sum >= total * 75 ? 'You think like an orbit.' : sum >= total * 45 ? 'A good eye for motion.' : 'Orbits curve and speed up. That is why every extra position counts.'}</p>
-      <ol class="gm-list">${rounds.map((r, i) => `<li><a href="#/object/${esc(r.slug)}">${esc(r.name)}</a><span class="mono">+${scores[i] ?? 0}</span><span class="gm-list-n">old photos: ${esc(factorText(r.sizes.factor))}</span></li>`).join('')}</ol>
+      <p class="gm-end-lead">${sum >= total * 75 ? 'Your guesses followed the orbits closely.' : sum >= total * 45 ? 'Most of your guesses were close.' : 'Orbits curve, and objects speed up near the Sun. Each extra position helps pin an orbit down.'}</p>
+      <ol class="gm-list">${rounds.map((r, i) => `<li><a href="#/object/${esc(r.slug)}">${esc(r.name)}</a><span class="mono">+${scores[i] ?? 0}</span><span class="gm-list-n">with SPHEREx: ${esc(factorText(r.sizes.factor))}</span></li>`).join('')}</ol>
       <div class="gm-row"><button class="btn btn-primary gm-again">Play again</button><button class="btn btn-ghost" data-game="hub">All games</button></div>`;
     q<HTMLButtonElement>('.gm-again').onclick = () => {
       scores = [];

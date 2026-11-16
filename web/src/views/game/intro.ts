@@ -39,7 +39,7 @@ function photo(i: number, stacked: boolean): HTMLCanvasElement {
 const ease = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.pow(1 - t, 3));
 const clamp = (t: number) => Math.max(0, Math.min(1, t));
 
-export const INTRO_LINES = ['Six photos. The asteroid is too faint to see in any of them.', 'Slide each one back along its path.', 'Add them up. There it is.'];
+export const INTRO_LINES = ['Here are six images. The asteroid is too faint to see in any of them.', 'Shift each image back along the asteroid’s path.', 'Added together, the six faint dots make one clear dot.'];
 
 /**
  * Play the film into `canvas`; `caption(i)` is told which line to show. Resolves when it ends or

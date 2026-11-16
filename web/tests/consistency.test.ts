@@ -19,9 +19,16 @@ const pages: ObjectPage[] = readdirSync(join(BASE, 'objects'))
 
 describe('check definitions', () => {
   it('lists the same nine checks as the engine', () => {
-    const src = readFileSync(join(__dirname, '..', '..', 'engine', 'rewind_engine', 'verdict.py'), 'utf8');
-    const body = src.slice(src.indexOf('def checks_passed'), src.indexOf('return c', src.indexOf('def checks_passed')));
-    const engineKeys = [...body.matchAll(/^\s+(\w+)=/gm)].map((m) => m[1]).filter((k) => k !== 'c');
+    // the engine source when it sits next to web/, otherwise the check keys the engine wrote into the data
+    const py = join(__dirname, '..', '..', 'engine', 'rewind_engine', 'verdict.py');
+    let engineKeys: string[];
+    if (existsSync(py)) {
+      const src = readFileSync(py, 'utf8');
+      const body = src.slice(src.indexOf('def checks_passed'), src.indexOf('return c', src.indexOf('def checks_passed')));
+      engineKeys = [...body.matchAll(/^\s+(\w+)=/gm)].map((m) => m[1]).filter((k) => k !== 'c');
+    } else {
+      engineKeys = [...new Set(pages.flatMap((p) => Object.keys(p.checks?.passed ?? {})))];
+    }
     expect(new Set(CHECKS.map((c) => c.key))).toEqual(new Set(engineKeys));
     expect(N_CHECKS).toBe(9);
   });
@@ -85,7 +92,7 @@ describe('blind test', () => {
 });
 
 describe('engine text', () => {
-  const OLD = /\bphotos?\b|fake path|hint, not a find|before anyone|sky-cleaned stack|Nothing shows|too faint for SPHEREx here|pretend/i;
+  const OLD = /\bphotos?\b|fake path|hint, not a find|before anyone|sky-cleaned|Nothing shows|too faint for SPHEREx here|pretend|^Rewind (?:found|detected)|: the |—/i;
   it('every verdict sentence in the data reads in the current wording', () => {
     for (const o of index.objects) {
       const t = engineText(o.verdict_text);
@@ -103,13 +110,23 @@ describe('engine text', () => {
   });
   it('rewrites the blind-test summary and leaves new wording alone', () => {
     const old = 'Rewind found 10 of 18 known objects that were visible in SPHEREx before the pretend discovery date (7 more were hints, 1 missed), with 0 false alarms in 23 real cases and 22 empty-sky decoys.';
-    expect(engineText(old)).toBe('With the observed arc truncated, Rewind recovered 10 of 18 known objects that were detectable in SPHEREx before the truncation date (7 more were HINT, 1 missed), with 0 false FOUNDs in 23 real cases and 22 empty-sky decoys.');
-    const fresh = 'Rewind detected X in SPHEREx images taken 1-18 days before the first known observation (2025-12-20): null-calibrated S/N 34.4.';
+    expect(engineText(old)).toBe("With each object's observations cut off at an earlier date, Rewind recovered 10 of 18 known objects that were detectable in SPHEREx before that date. Another 7 were HINT and 1 was missed. There were 0 false FOUND verdicts in 23 real cases and 22 empty-sky decoys.");
+    const fresh = 'We detected X in SPHEREx images taken 1-18 days before the first known observation (2025-12-20). The static-sky-subtracted stack of 81 images has a null-calibrated S/N of 34.4.';
     expect(engineText(fresh)).toBe(fresh);
   });
-  it('the one-line summary still cuts at the colon', () => {
+  it('says days, not nights (SPHEREx is in Earth orbit; stacks are per UTC day)', () => {
+    expect(engineText('There is a signal where X should be (S/N 4.2), but not every test passes (it is not seen on 2 separate days; the signal rests on a single day), so this is a hint, not a find.'))
+      .toBe('There is a signal at the predicted position of X (S/N 4.2), but not every check passes (positive on fewer than 2 days; signal depends on a single day), so this is a HINT, not a detection.');
+    for (const o of pages) {
+      const t = engineText(o.verdict_text);
+      expect(t, o.slug).not.toMatch(/\bnights?\b/i);
+      if (/separate days|single day/.test(o.verdict_text ?? '')) expect(t, o.slug).not.toMatch(/not seen on 2 separate days|rests on a single day/);
+    }
+  });
+  it('the one-line summary keeps the claim and drops the numbers', () => {
     const t = engineText('Rewind found 2025 YH5 in SPHEREx photos taken 1-18 days before the first known observation (2025-12-20): S/N 34.4 in the sky-cleaned stack of 81 photos.');
-    expect(oneSentence(t)).toBe('Rewind detected 2025 YH5 in SPHEREx images taken 1-18 days before the first known observation.');
+    expect(t).toBe('We detected 2025 YH5 in SPHEREx images taken 1-18 days before the first known observation (2025-12-20). The static-sky-subtracted stack of 81 images has a null-calibrated S/N of 34.4.');
+    expect(oneSentence(t)).toBe('We detected 2025 YH5 in SPHEREx images taken 1-18 days before the first known observation.');
   });
 });
 

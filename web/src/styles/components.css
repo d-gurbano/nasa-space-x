@@ -131,3 +131,32 @@ button.chip-gold:hover { color: var(--gold-2); border-color: var(--gold); }
 .ph-kicker { color: var(--gold); margin-bottom: var(--g2); }
 .ph-title { margin: 0; font: var(--w-display) clamp(36px, 5.2vw, 72px) / 1.02 var(--font-display); letter-spacing: var(--track-display); text-wrap: balance; }
 .ph-lead { margin: var(--g3) 0 0; max-width: 640px; font-size: var(--fs-l); line-height: 1.5; color: var(--ink-2); }
+
+/* ---------- motion (src/ui/motion.ts) ---------- */
+/* scroll reveal: one class, added and later removed by the script; --ri staggers a batch by 60 ms */
+.reveal { opacity: 0; transform: translateY(16px); }
+.reveal.in { opacity: 1; transform: none; transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out); transition-delay: calc(var(--ri, 0) * 60ms); }
+/* count-up digits: equal-width figures so the number does not wobble while it counts */
+.cu { display: inline-block; font-variant-numeric: tabular-nums; }
+
+/* micro-interactions: a small press on everything clickable, a glow on the main actions */
+.btn { transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast), box-shadow var(--t); }
+.btn-primary:hover { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.07), 0 0 28px rgba(255, 255, 255, 0.22); }
+.btn-gold:hover { box-shadow: 0 0 0 4px rgba(242, 181, 68, 0.12), 0 0 28px rgba(242, 181, 68, 0.38); }
+.icon-btn, .seg button, button.chip { transition: color var(--t), border-color var(--t), background var(--t), transform var(--t-fast); }
+.icon-btn:active, .seg button:active, button.chip:active, .dock-btn:active, .op-view:active, .op-tabs button:active { transform: scale(0.96); }
+.btn:active { transform: scale(0.98); }
+.chip, .verdict-chip { transition: color var(--t), border-color var(--t), background var(--t); }
+
+/* images: a soft shimmer until the photo arrives (the script marks loaded images with .ld) */
+.op-big img:not(.ld), .op-strip img:not(.ld), .pc-img img:not(.ld), .stamp img:not(.ld), .page-content img:not(.ld) {
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.03) 70%) 0 0 / 300% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .btn:active, .icon-btn:active, .seg button:active, button.chip:active, .dock-btn:active, .op-view:active, .op-tabs button:active { transform: none; }
+  .op-big img:not(.ld), .op-strip img:not(.ld), .pc-img img:not(.ld), .stamp img:not(.ld), .page-content img:not(.ld) { animation: none; }
+}

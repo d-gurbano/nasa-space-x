@@ -33,11 +33,12 @@ import { mountOpening } from './ui/opening';
 import { mountTopbar } from './ui/topbar';
 import { mountResults } from './ui/results';
 import { isPre, mountMapUi } from './ui/mapui';
-import { isKnown, knownSince, pickShowcase, rankObjects, tally } from './lib/rank';
+import { framesRead, isKnown, knownSince, pickShowcase, rankObjects, tally } from './lib/rank';
 import { guidedRewind, type Guided } from './guided';
 import { runDemo } from './demo';
 import { isPhone, reducedMotion, store } from './state';
 import { esc, fmt } from './ui/dom';
+import { watchImages } from './ui/motion';
 
 const ui = document.getElementById('ui')!;
 const canvas = document.getElementById('scene') as HTMLCanvasElement;
@@ -55,10 +56,10 @@ function legacyHash() {
 const VIEWS: Record<string, [string, string, View]> = {
   sky: ['Sky images', 'SPHEREx images of any position, queried live', skyView],
   games: ['Games', 'The pipeline, one step at a time', detectivesView],
-  targets: ['Test targets', 'Stars and brown dwarfs named in the challenge', starsView],
+  targets: ['Challenge targets', 'Stars and brown dwarfs named in the challenge', starsView],
   'blind-test': ['Blind test', 'Recovering known objects without their later observations', benchmarkView],
-  methods: ['Methods', 'Pipeline, full results, checks, downloads', scientistsView],
-  about: ['About Rewind', 'Team / credits / AI use', aboutView],
+  methods: ['Methods', 'Pipeline, full results, checks and downloads', scientistsView],
+  about: ['About Rewind', 'Team, credits and use of AI', aboutView],
 };
 export let source: DataSource;
 const NAMED = 10; // Rewind objects that carry a name in the 3D view; with the planets that is about 20 labels
@@ -74,10 +75,11 @@ export function loadPage(slug: string): Promise<ObjectPage> {
 }
 
 async function boot() {
+  watchImages();
   try {
     source = await loadIndex();
   } catch (e) {
-    ui.innerHTML = `<p class="fatal" role="alert"><strong>No data to show yet</strong>Rewind could not find its data files (data/index.json or data-sample/index.json). If you are running the site yourself, run <code>npm run sync-data</code> or rebuild the sample with <code>npm run sample</code>, then reload. <span class="muted">(${esc(e)})</span></p>`;
+    ui.innerHTML = `<p class="fatal" role="alert"><strong>No data to show yet</strong>The site could not find its data files (data/index.json or data-sample/index.json). If you run the site yourself, run <code>npm run sync-data</code> or rebuild the sample with <code>npm run sample</code>, then reload. <span class="muted">(${esc(e)})</span></p>`;
     return;
   }
   document.body.classList.toggle('is-sample', source.sample);
@@ -158,6 +160,7 @@ async function boot() {
   if (!isPhone || deepLink) loadHeavy();
 
   let demo = 0;
+  let tour: Guided | null = null;
   // ---------- flash, photo card, object panel, cloud ----------
   const card = mountPhotoCard(ui, {
     sample: source.sample,
@@ -165,7 +168,10 @@ async function boot() {
     photoUrl,
     page: loadPage,
     onOpen: select,
-    onHide: () => (scene.labels.focus = null),
+    onHide: () => {
+      scene.labels.focus = null;
+      tour?.cancel(); // closing the card ends the tour
+    },
   });
   // the object in the photo is the one in focus: its label shows "Before first known obs."
   const flash = new FlashFx(scene, idx.flash_events, (f) => {
@@ -263,7 +269,7 @@ async function boot() {
   const panelShift = () => {
     if (!store.selected) return;
     const phone = window.matchMedia('(max-width: 720px)').matches;
-    if (phone) scene.setViewShift(0, Math.round(window.innerHeight * 0.22));
+    if (phone) scene.setViewShift(0, Math.round(window.innerHeight * 0.26));
     else scene.setViewShift(Math.round((panel.root.offsetWidth || 440) / 2), 0);
   };
   window.addEventListener('resize', panelShift);
@@ -271,7 +277,13 @@ async function boot() {
     document.body.classList.add('explored');
     document.body.classList.remove('hero');
     ui.querySelectorAll('.opening, .captions').forEach((e) => e.remove());
+    stopIntroRewind();
+  };
+  // the opening's eight-month rewind passes other photo dates: they must not pop up their cards
+  let introMuted = false;
+  const stopIntroRewind = () => {
     cancelAnimationFrame(demo);
+    if (introMuted) flash.muted = introMuted = false;
   };
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
@@ -295,11 +307,11 @@ async function boot() {
 
   // the photo first-time visitors are shown: strongest find before discovery (?flash=<slug> overrides)
   const params = new URLSearchParams(location.search);
-  // chosen fresh from index.json: FOUND before HINT, highest null-scaled S/N, never a known object
-  const showcase = pickShowcase(idx, loadPage, params.get('flash'));
+  // chosen fresh from index.json: FOUND before HINT, the strongest single photo, never a known object
+  const showcase = pickShowcase(idx, params.get('flash'));
   if (params.get('demo') === '1') {
     await loadHeavy();
-    runDemo({ scene, cloud, flash, showcase: await showcase, page: loadPage, ui });
+    runDemo({ scene, cloud, flash, showcase, page: loadPage, ui });
     return;
   }
   if (deepLink) {
@@ -307,35 +319,35 @@ async function boot() {
     route();
     return;
   }
-  let tour: Guided | null = null;
   let tourAsked = false;
-  const startTour = async () => {
-    if (tourAsked) return;
+  const startTour = () => {
+    if (tourAsked || !showcase) return;
     tourAsked = true;
-    const sc = await showcase;
-    if (tour || !sc) return;
-    tour = guidedRewind(scene, flash, sc.flash);
+    card.hide();
+    tour = guidedRewind(scene, flash, showcase.flash);
   };
   // only claim "SPHEREx saw it" in the opening if at least one new object is a sure find
   const t = tally(idx.objects);
   mountOpening(ui, {
     stats: [
-      [String(t.before), t.before === 1 ? 'precovery: detected before its first known observation' : 'precoveries: detected before their first known observation', true],
+      [String(t.before), t.before === 1 ? 'object detected before its first known observation (a precovery)' : 'objects detected before their first known observation (precoveries)', true],
       [String(t.searched), 'asteroids and comets searched'],
-      [fmt(idx.headline_stats.frames_read), 'SPHEREx images analysed'],
+      [fmt(framesRead(idx.objects)), 'SPHEREx images analysed'],
     ],
-    lastCaption: t.before ? undefined : 'Highlighted: an earlier SPHEREx image of the same field.',
+    lastCaption: t.before ? undefined : 'The highlighted image is an earlier SPHEREx image of the same field.',
     start: loadHeavy,
     onCaption: (i) => {
-      cancelAnimationFrame(demo);
+      stopIntroRewind();
       if (reducedMotion) return;
       if (i === 1) {
-        // a gentle rewind of about eight months
+        // a gentle rewind of about eight months, without flashes
         const from = store.mjd, to = from - 240, t0 = performance.now();
+        flash.muted = introMuted = true;
         const step = () => {
           const k = Math.min(1, (performance.now() - t0) / 3200);
           store.setTime(from + (to - from) * (1 - Math.pow(1 - k, 3)));
           if (k < 1) demo = requestAnimationFrame(step);
+          else stopIntroRewind();
         };
         demo = requestAnimationFrame(step);
       } else if (i === 2) {
@@ -343,7 +355,7 @@ async function boot() {
       }
     },
     onDone: () => {
-      cancelAnimationFrame(demo);
+      stopIntroRewind();
       document.body.classList.add('explored');
       // after Skip or the last caption, make sure the visitor sees one flash without touching anything
       startTour();
@@ -373,11 +385,11 @@ function fpsMeter(scene: Scene) {
   requestAnimationFrame(tick);
 }
 
-// Without WebGL the 3D view is gone, but the pages (Games, Test targets, ...) still work.
+// Without WebGL the 3D view is gone, but the pages (Games, Challenge targets, ...) still work.
 function noWebgl() {
   document.body.classList.add('scene-ready', 'explored', 'no-webgl');
   mountTopbar(ui, source.index.objects, source.sample, () => {});
-  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which Rewind needs for the 3D solar system. Try another browser, or turn on hardware acceleration. The other pages still work: <a href="#/sky">Sky images</a>, <a href="#/games">Games</a>, <a href="#/targets">Test targets</a>, <a href="#/blind-test">Blind test</a>, <a href="#/methods">Methods</a>, <a href="#/about">About</a>.</p>`);
+  ui.insertAdjacentHTML('beforeend', `<p class="fatal" role="alert"><strong>The 3D view could not start</strong>This browser or device could not start WebGL, which the 3D solar system needs. Try another browser, or turn on hardware acceleration. You can still open <a href="#/sky">Sky images</a>, <a href="#/games">Games</a>, <a href="#/targets">Challenge targets</a>, <a href="#/blind-test">Blind test</a>, <a href="#/methods">Methods</a> and <a href="#/about">About</a>.</p>`);
   const host = new PageHost(ui, makeCtx(source));
   const route = () => {
     legacyHash();

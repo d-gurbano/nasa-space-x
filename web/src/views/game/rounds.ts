@@ -77,12 +77,12 @@ export function synthRound(seed: number, peak: number, nFrames: number, hours: n
 
 export function sampleRounds(): SampleRound[] {
   const plan: [string, string, number, number, number, number][] = [
-    ['A bright asteroid', 'In every photo you can already see it. Stack along its path and it gets brighter still.', 5, 10, 6, 30],
-    ['A dimmer one', 'Fainter now. Its trail is still there if you look hard.', 2.6, 12, 6, 34],
-    ['Faint and fast', 'It moves far between photos. The speed matters as much as the direction.', 1.8, 14, 5, 46],
-    ['Barely there', 'Hardly visible in any photo. Only the right motion brings it out.', 1.2, 18, 8, 26],
-    ['Lost in the noise', 'No single photo shows it. This is the kind of object Rewind looks for.', 0.9, 22, 8, 30],
-    ['A faint find', 'Like 2025 YH5: invisible in every photo, clear in the right stack.', 0.75, 24, 9, 28],
+    ['A bright asteroid', 'You can already see it in every image. Stacking along its path makes it brighter.', 5, 10, 6, 30],
+    ['A dimmer one', 'This one is fainter. You can still make out its trail if you look closely.', 2.6, 12, 6, 34],
+    ['Faint and fast', 'It moves a long way between images, so the speed matters as much as the direction.', 1.8, 14, 5, 46],
+    ['Barely there', 'You can hardly see it in any one image. Only the right motion brings it out.', 1.2, 18, 8, 26],
+    ['Lost in the noise', 'No single image shows it. Rewind searches for objects this faint.', 0.9, 22, 8, 30],
+    ['A faint find', 'Like 2025 YH5, it cannot be seen in any single image but is clear in the right stack.', 0.75, 24, 9, 28],
   ];
   return plan.map(([title, explain, peak, n, hours, travel], i) => ({
     ...synthRound(101 + i * 17, peak, n, hours, travel),

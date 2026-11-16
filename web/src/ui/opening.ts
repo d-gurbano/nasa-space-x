@@ -3,11 +3,12 @@
 import { el } from './dom';
 import { icon, stat } from './components';
 import { reducedMotion } from '../state';
+import { countUps } from './motion';
 
 const CAPTIONS = [
-  'Each point is a catalogued asteroid or comet, placed on its JPL orbit.',
-  'Drag the timeline back to before discovery.',
-  'Highlighted: a SPHEREx image that recorded the object before its first known observation.',
+  'Each dot is a known asteroid or comet, placed on its orbit from JPL.',
+  'Drag the time bar back to dates before each object was first seen.',
+  "A gold flash marks a SPHEREx image taken before the object's first known observation.",
 ];
 
 export interface OpeningHooks {
@@ -26,22 +27,23 @@ export function mountOpening(root: HTMLElement, hooks: OpeningHooks) {
   o.innerHTML = `
     <div class="op-inner">
       <p class="op-kicker kicker" style="--i:0">NASA Space Apps 2026 · SPHEREx</p>
-      <h1 class="op-title" style="--i:1">Every discovery<br>has a <em>past.</em></h1>
-      <p class="op-line" style="--i:2">Rewind searches NASA SPHEREx survey images for recently discovered asteroids and comets, in the weeks before anyone had reported them. Each precovery is an earlier position on the object’s path; how much it tightens the orbit depends on how short the observed arc still is.</p>
+      <h1 class="op-title" style="--i:1">Finding recently discovered asteroids and comets in <em>older SPHEREx images</em></h1>
+      <p class="op-line" style="--i:2">Rewind searches NASA SPHEREx survey images for recently discovered asteroids and comets, in the days and weeks before their first known observation. Each of these earlier detections (a precovery) adds a position on the object’s path. A precovery helps the orbit most when the object has been observed for only a short time.</p>
       <div class="op-actions" style="--i:3">
-        <button class="btn btn-primary op-start">Start the rewind${icon('arrow')}</button>
+        <button class="btn btn-primary op-start">Start${icon('arrow')}</button>
         <span class="op-status" aria-live="polite"></span>
       </div>
       <dl class="stats op-stats" style="--i:4">${hooks.stats.map(([num, label, gold]) => stat(num, label, gold ? 'stat-gold' : '')).join('')}</dl>
     </div>`;
   document.body.classList.add('hero');
   root.appendChild(o);
+  countUps(o, 700); // the numbers count as they rise in (see .op-inner in app.css)
   const btn = o.querySelector('.op-start') as HTMLButtonElement;
   const status = o.querySelector('.op-status') as HTMLElement;
 
   btn.addEventListener('click', async () => {
     btn.disabled = true;
-    status.textContent = 'Loading orbits...';
+    status.textContent = 'Loading orbits…';
     await hooks.start();
     status.textContent = '';
     document.body.classList.remove('hero');

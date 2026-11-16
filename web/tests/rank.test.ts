@@ -57,34 +57,45 @@ describe('time bar marks', () => {
 });
 
 describe('showcase pick', () => {
-  const page = (stack: number, mean: number, std: number) => async () => ({ spherex: { stack: { snr: stack } }, checks: { null_paths: { snr_mean: mean, snr_std: std } } }) as any;
-  it('prefers FOUND, uses null-scaled S/N, skips known objects', async () => {
+  it('prefers FOUND, picks the object with the strongest single photo, skips known objects', async () => {
     const { pickShowcase } = await import('../src/lib/rank');
     const idx = {
-      objects: [o('eros', 'FOUND', 'famous', 99, 1000), o('h1', 'HINT', 'comet', 9, 62000), o('f1', 'FOUND', 'comet', 3, 62000)],
-      flash_events: [f('eros', 61000, 70), f('h1', 61900, 5), f('f1', 61950, 2), f('f1', 61960, 3)],
+      objects: [o('eros', 'FOUND', 'famous', 99, 1000), o('h1', 'HINT', 'comet', 9, 62000), o('v1', 'FOUND', 'comet', 9, 62000), o('yh5', 'FOUND', 'neo', 5, 62000)],
+      flash_events: [f('eros', 61000, 70), f('h1', 61900, 30), f('v1', 61950, 4.3), f('yh5', 61940, 7), f('yh5', 61960, 18.4), f('yh5', 61970, 13)],
     };
-    const pages: Record<string, () => Promise<any>> = { h1: page(9, 0, 1), f1: page(3, 0, 1) };
-    const s = await pickShowcase(idx, (slug) => pages[slug]());
-    expect(s!.object.slug).toBe('f1');
+    const s = pickShowcase(idx);
+    expect(s!.object.slug).toBe('yh5');
     expect(s!.flash.mjd).toBe(61960);
+    expect(s!.score).toBe(18.4);
     expect(s!.sure).toBe(true);
+  });
+  it('?flash=<slug> overrides the pick', async () => {
+    const { pickShowcase } = await import('../src/lib/rank');
+    const idx = { objects: [o('v1', 'FOUND', 'comet', 9, 62000), o('yh5', 'FOUND', 'neo', 5, 62000)], flash_events: [f('v1', 61950, 4.3), f('yh5', 61960, 18.4)] };
+    expect(pickShowcase(idx, 'v1')!.object.slug).toBe('v1');
+    expect(pickShowcase(idx, 'nope')!.object.slug).toBe('yh5');
   });
   it('never shows a photo taken after the first known observation', async () => {
     const { pickShowcase } = await import('../src/lib/rank');
     const late = { ...f('w2', 61900, 30), before_first_known_obs: false };
     const idx = { objects: [o('w2', 'FOUND', 'comet', 30, 62000), o('yh5', 'FOUND', 'neo', 9, 62000)], flash_events: [late, f('yh5', 61950, 4), { ...f('yh5', 61990, 8), before_first_known_obs: false }] };
-    const s = await pickShowcase(idx, page(9, 0, 1));
+    const s = pickShowcase(idx);
     expect(s!.object.slug).toBe('yh5');
     expect(s!.flash.mjd).toBe(61950);
   });
-  it('falls back to the best HINT by null-scaled S/N', async () => {
+  it('falls back to the HINT with the strongest single photo', async () => {
     const { pickShowcase } = await import('../src/lib/rank');
-    const idx = { objects: [o('a', 'HINT', 'comet', 5.4, 62000), o('b', 'HINT', 'comet', 4.4, 62000)], flash_events: [f('a', 61900, 3), f('b', 61900, 2)] };
-    // a: (5.4 - 0.1) / 1.2 = 4.4; b: (4.4 + 0.95) / 1.06 = 5.0
-    const pages: Record<string, () => Promise<any>> = { a: page(5.4, 0.1, 1.2), b: page(4.4, -0.95, 1.06) };
-    const s = await pickShowcase(idx, (slug) => pages[slug]());
+    const idx = { objects: [o('a', 'HINT', 'comet', 5.4, 62000), o('b', 'HINT', 'comet', 4.4, 62000)], flash_events: [f('a', 61900, 3), f('b', 61900, 4), f('a', 61910, 2)] };
+    const s = pickShowcase(idx);
     expect(s!.object.slug).toBe('b');
     expect(s!.sure).toBe(false);
+  });
+  it('picks 2025 YH5 from the real index', async () => {
+    const { pickShowcase } = await import('../src/lib/rank');
+    const fs = await import('node:fs');
+    const path = new URL('../public/data/index.json', import.meta.url);
+    if (!fs.existsSync(path)) return;
+    const s = pickShowcase(JSON.parse(fs.readFileSync(path, 'utf8')));
+    expect(s!.object.slug).toBe('2025yh5');
   });
 });

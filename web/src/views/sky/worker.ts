@@ -103,7 +103,7 @@ async function readFrame(req: LoadRequest, key: string): Promise<FrameResult> {
       if (y > y1) y1 = y;
     }
   const [cx, cy] = wcs.world2pix(req.ra, req.dec);
-  if (cx < 0 || cy < 0 || cx > nx - 1 || cy > ny - 1) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'The position is just outside this image' };
+  if (cx < 0 || cy < 0 || cx > nx - 1 || cy > ny - 1) return { type: 'frame', job: req.job, key, ok: false, reason: 'edge', message: 'The position falls outside the edge of this image' };
   const [ex, ey] = wcs.world2pix(...offsetToSky(req.ra, req.dec, 10, 0));
   const [nxx, nyy] = wcs.world2pix(...offsetToSky(req.ra, req.dec, 0, 10));
   const c0 = Math.max(0, Math.floor(x0)), c1 = Math.min(nx - 1, Math.ceil(x1));

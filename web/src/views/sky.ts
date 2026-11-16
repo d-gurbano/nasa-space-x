@@ -32,8 +32,8 @@ const TARGETS = [
   { id: 'rdra', name: 'R Draconis', what: 'Mira variable (pulsating red giant), period ~246 d', ra: 248.167378, dec: 66.755007, pmra: -20.643, pmdec: 6.149, epoch: 2016, source: 'Gaia DR3' },
 ];
 const FIELDS = [
-  { id: 'nep', name: 'North ecliptic pole deep field', what: 'Imaged on almost every orbit', ra: 270, dec: 66.5607 },
-  { id: 'sep', name: 'South ecliptic pole deep field', what: 'Imaged on almost every orbit', ra: 90, dec: -66.5607 },
+  { id: 'nep', name: 'North ecliptic pole deep field', what: 'Imaged on almost every orbit, in about 29,000 images', ra: 270, dec: 66.5607 },
+  { id: 'sep', name: 'South ecliptic pole deep field', what: 'Imaged on almost every orbit, in about 6,800 images', ra: 90, dec: -66.5607 },
 ];
 
 interface Loaded { frame: Frame; data: Float32Array; noise: number; mjd: number; x: number; y: number; jac: [number, number, number, number] }
@@ -77,31 +77,33 @@ export const skyView: View = async (body, ctx) => {
   const meta = await loadMeta();
   const finds = ctx.source.sample ? [] : ctx.source.index.objects.filter((o) => o.verdict === 'FOUND');
   // a place to try, as a card: a button that loads it live, or (with no index yet) a link to its ready-made page
-  const spot = (t: { id: string; name: string; what: string }, thumb: boolean) => {
-    const inner = `<span class="sky-thumb">${thumb ? `<img src="${esc(ctx.source.base)}stars/${t.id}/stack.png" alt="" loading="lazy">` : ''}</span><span class="sky-card-name">${esc(t.name)}</span><span class="sky-card-what">${esc(t.what)}</span>`;
+  // thumbnails: a target's stacked picture; a deep field's stamp (a median of 12 real SPHEREx frames, made once offline)
+  const spot = (t: { id: string; name: string; what: string }, thumb: string) => {
+    const inner = `<span class="sky-thumb"><img src="${esc(thumb)}" alt="" loading="lazy"></span><span class="sky-card-name">${esc(t.name)}</span><span class="sky-card-what">${esc(t.what)}</span>`;
     return `<li>${meta ? `<button type="button" class="sky-card" data-preset="${t.id}">${inner}</button>` : `<a class="sky-card" href="#/targets">${inner}</a>`}</li>`;
   };
   const soon = !meta
-    ? 'Until then, these targets open with images already processed by Rewind.'
+    ? 'Until then, these targets open with images we processed in advance.'
     : meta.partial
       ? `For now it covers these spots${meta.n_shortlist_paths ? ` and the paths of ${fmt(meta.n_shortlist_paths)} comets and asteroids` : ''}.`
       : '';
   body.innerHTML = `
-    <p class="sky-lead">Enter coordinates (ICRS). Rewind queries the IRSA SPHEREx image index live, cuts out every image that covers the position, and plays them in time order.</p>
+    <p class="sky-lead">Enter a sky position in ICRS coordinates. Rewind finds every public SPHEREx image that covers it, reads a cutout of each live from NASA's IRSA archive, and plays them in time order.</p>
     <form class="sky-form" novalidate>
       <label class="sky-field"><span class="kicker">Position (RA Dec)</span>
         <input class="sky-input mono" name="pos" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="133.7595 -7.2421  or  08 55 02.3 -07 14 31" aria-describedby="sky-err"></label>
       <div class="sky-field"><span class="kicker">Patch width</span>
-        <div class="seg sky-size" role="radiogroup" aria-label="Patch width in arcseconds">${SIZES.map((s) => `<button type="button" role="radio" data-size="${s}" aria-checked="false" aria-selected="false">${s}"</button>`).join('')}</div></div>
-      <button class="btn btn-primary sky-go" type="submit">Show this field${icon('arrow')}</button>
+        <div class="seg sky-size" role="radiogroup" aria-label="Patch width in arcseconds">${SIZES.map((s) => `<button type="button" role="radio" data-size="${s}" aria-checked="false" aria-selected="false">${s}"</button>`).join('')}</div>
+        <span class="sky-size-hint mono" aria-live="polite"></span></div>
+      <button class="btn btn-primary sky-go" type="submit">Show this position${icon('arrow')}</button>
     </form>
     <p class="sky-err warn" id="sky-err" role="alert" hidden></p>
     <section class="sky-presets" aria-label="Example fields">
-      ${soon ? `<div class="sky-soon"><i aria-hidden="true"></i><p><b>Full-sky index arriving soon</b><span>${esc(soon)}</span></p></div>` : '<p class="kicker">Try</p>'}
-      <ul class="sky-cards">${TARGETS.map((t) => spot(t, true)).join('')}${meta ? FIELDS.map((t) => spot(t, false)).join('') : ''}</ul>
+      ${soon ? `<div class="sky-soon"><i aria-hidden="true"></i><p><b>The full-sky index is not ready yet</b><span>${esc(soon)}</span></p></div>` : '<p class="kicker">Try</p>'}
+      <ul class="sky-cards">${TARGETS.map((t) => spot(t, `${ctx.source.base}stars/${t.id}/stack.png`)).join('')}${meta ? FIELDS.map((t) => spot(t, `img/sky/${t.id}.png`)).join('') : ''}</ul>
       ${meta ? `<div class="sky-more">
         ${finds.length ? `<select class="chip sky-finds" aria-label="A Rewind find, where SPHEREx saw it"><option value="">A Rewind find...</option>${finds.map((o) => `<option value="${esc(o.slug)}">${esc(o.name)}</option>`).join('')}</select>` : ''}
-        <button class="chip chip-gold sky-lucky">Random spot</button>
+        <button class="chip chip-gold sky-lucky">Random position</button>
       </div>` : ''}
     </section>
     <div class="sky-out" aria-live="polite"></div>`;
@@ -113,6 +115,7 @@ export const skyView: View = async (body, ctx) => {
   const err = body.querySelector('.sky-err') as HTMLElement;
   const out = body.querySelector('.sky-out') as HTMLElement;
   const sizeBtns = [...body.querySelectorAll<HTMLButtonElement>('.sky-size button')];
+  const sizeHint = body.querySelector('.sky-size-hint') as HTMLElement;
   let size = 120;
   let timer = 0;
   let alive = true;
@@ -120,6 +123,7 @@ export const skyView: View = async (body, ctx) => {
   const setSize = (s: number) => {
     size = SIZES.includes(s) ? s : 120;
     sizeBtns.forEach((b) => ['aria-selected', 'aria-checked'].forEach((a) => b.setAttribute(a, String(+b.dataset.size! === size))));
+    sizeHint.textContent = `${size} arcsec, about ${Math.round(size / PIXEL_ARCSEC)} SPHEREx pixels`;
   };
   const fail = (msg: string) => {
     err.textContent = msg;
@@ -137,7 +141,7 @@ export const skyView: View = async (body, ctx) => {
     return;
   }
   const coverage = meta.partial
-    ? `Our index is partial for now: it covers ${(meta.areas ?? []).length ? 'the 5 challenge targets, the 2 deep fields and ' : ''}the paths of ${meta.n_shortlist_paths ?? 'the'} shortlisted comets and asteroids (${fmt(meta.n_frames)} images).`
+    ? `Our index is partial for now. It covers ${(meta.areas ?? []).length ? 'the 5 challenge targets, the 2 deep fields and ' : ''}the paths of ${meta.n_shortlist_paths ?? 'the'} shortlisted comets and asteroids (${fmt(meta.n_frames)} images).`
     : `The index lists ${fmt(meta.n_frames)} public SPHEREx Level 2 images over the whole sky.`;
 
   // ---------- one request ----------
@@ -148,7 +152,7 @@ export const skyView: View = async (body, ctx) => {
     const my = (job = ++jobs);
     input.value = formatCoords(ra, dec);
     setUrl({ ra, dec, size, target: o.target });
-    out.innerHTML = `<p class="sky-status mono">Querying which SPHEREx images cover this position...</p>`;
+    out.innerHTML = `<p class="sky-status mono">Looking up the SPHEREx images that cover this position...</p>`;
     const cells = await Promise.all(cellsFor(ra, dec, meta.cell_deg).map(loadShard));
     if (!alive || my !== job) return;
     const found = cells.filter((c): c is { f: Row[] } => !!c);
@@ -160,8 +164,8 @@ export const skyView: View = async (body, ctx) => {
       out.innerHTML = `<div class="sky-empty card card-pad">
         <p class="kicker">${esc(formatCoords(ra, dec))}</p>
         <h2 class="sky-empty-title">${partial ? 'This position is not in our index yet' : 'No SPHEREx images here'}</h2>
-        <p>${partial ? esc(coverage) + ' SPHEREx may have imaged this position; our partial index cannot look it up yet.' : 'No image in the public SPHEREx releases (' + esc(meta.releases.join(', ').toUpperCase()) + ') covers this position.'}</p>
-        <p><button class="btn btn-s sky-lucky">Take me to a covered spot${icon('arrow')}</button></p></div>`;
+        <p>${partial ? esc(coverage) + ' SPHEREx may have imaged this position, but our partial index does not include it yet.' : 'No image in the public SPHEREx releases (' + esc(meta.releases.join(', ').toUpperCase()) + ') covers this position.'}</p>
+        <p><button class="btn btn-s sky-lucky">Show a covered position${icon('arrow')}</button></p></div>`;
     } else renderViewer(res, o, my);
     out.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
   };
@@ -205,9 +209,9 @@ export const skyView: View = async (body, ctx) => {
           <div class="card card-pad sky-spec">
             <p class="kicker">Spectrum of the ringed pixel</p>
             <div class="sky-chart"></div>
-            <p class="hint">${chip('Quick look, not calibrated photometry', 'chip-gold')} SPHEREx's linear variable filters put each position at a different wavelength in each exposure, so every image adds one spectral point. Value: mean surface brightness within 6 arcsec of the ring, minus the median of the same cutout. Click or tap the image to move the ring.</p>
+            <p class="hint">${chip('Quick look, not calibrated photometry', 'chip-gold')} SPHEREx's linear variable filters put each position at a different wavelength in each exposure, so each image adds one point to the spectrum. Each point is the mean surface brightness within 6 arcsec of the ring, minus the median of the same cutout. Click or tap the image to move the ring.</p>
           </div>
-          <p class="hint">Each cutout has its median background subtracted, and all cutouts share one stretch. SPHEREx pixels are ${PIXEL_ARCSEC} arcsec, so point sources are only a few pixels across. Dark blue marks pixels with no data, such as the overexposed core of a very bright star. ${esc(coverage)}</p>
+          <p class="hint">Each cutout has its median background subtracted, and all cutouts share one stretch. SPHEREx pixels are ${PIXEL_ARCSEC} arcsec, so a point source covers only a few pixels. Dark blue marks pixels with no data, such as the overexposed core of a very bright star. ${esc(coverage)}</p>
           <button class="btn btn-s sky-more" hidden></button>
         </div>
       </div>`;
@@ -335,10 +339,10 @@ export const skyView: View = async (body, ctx) => {
         selB.value = ps.some((p) => String(p.pass) === keepB) && keepB !== selA.value ? keepB : String(ps[ps.length - 1]?.pass ?? 0);
       }
       modeHint.textContent = mode === 'flip'
-        ? 'Images in time order. Fixed sources stay put; anything that shifts between images is moving. Brightness also changes because each image samples a different wavelength.'
+        ? 'The images play in time order. Fixed sources stay in place, and a source that shifts from image to image is moving. Brightness also changes, because each image samples a different wavelength.'
         : mode === 'seasons'
-          ? 'Median stack of all loaded images from one survey pass. SPHEREx revisits each position about every 6 months.'
-          : 'Difference image: later pass minus earlier pass. Grey means no change; a moving source appears as a negative (earlier position) next to a positive (later position).';
+          ? 'Each frame is the median of all loaded images from one survey pass. SPHEREx returns to each position about every 6 months.'
+          : 'This is the later pass minus the earlier pass. Grey means no change. A moving source shows as a dark spot at its earlier position beside a bright spot at its later one.';
       play.innerHTML = icon(timer ? 'pause' : 'play');
       play.setAttribute('aria-label', timer ? 'Pause' : 'Play');
       draw();
@@ -361,7 +365,7 @@ export const skyView: View = async (body, ctx) => {
       if (pending) prog.textContent = `Reading image ${batchRead - pending + 1} of ${batchRead} from IRSA...`;
       else {
         const took = t0 ? `Read ${plural(batchRead, 'image')} in ${((performance.now() - t0) / 1000).toFixed(1)} s (${(batchBytes / 1e6).toFixed(1)} MB from IRSA). ` : '';
-        prog.textContent = `${took}Showing ${res.loaded.size} of ${res.all.length}.${edge ? ` ${plural(edge, 'image')} skipped: the position falls on the detector edge.` : ''}${bad ? ` ${plural(bad, 'image')} could not be read from IRSA.` : ''}`;
+        prog.textContent = `${took}Showing ${res.loaded.size} of ${res.all.length}.${edge ? ` ${plural(edge, 'image')} skipped because the position falls on the detector edge.` : ''}${bad ? ` ${plural(bad, 'image')} could not be read from IRSA.` : ''}`;
         if (bad && !res.loaded.size) prog.innerHTML = `<span class="warn">Could not reach NASA's archive (nasa-irsa-spherex on AWS). Check the connection and try again.</span>`;
       }
       out.querySelector('.sky-progress')!.classList.toggle('done', !pending);
@@ -475,7 +479,7 @@ export const skyView: View = async (body, ctx) => {
     if (t) {
       const at = properMotion(t.ra, t.dec, t.pmra, t.pmdec, t.epoch);
       const [ra, dec] = at(J2026);
-      return show(ra, dec, { target: id, name: t.name, mover: { at, label: 'Predicted spot' } });
+      return show(ra, dec, { target: id, name: t.name, mover: { at, label: 'Predicted position' } });
     }
     const f = FIELDS.find((x) => x.id === id);
     if (f) return show(f.ra, f.dec, { target: id, name: f.name });
@@ -489,7 +493,7 @@ export const skyView: View = async (body, ctx) => {
       if (!best) throw new Error('no position');
       const at = trackMover(frames.map((f) => ({ mjd: f.mjd, ra: f.pred_ra, dec: f.pred_dec })));
       const here = at(best.mjd) ?? [best.ra, best.dec];
-      return show(here[0], here[1], { target: id, name: `${o.name}, where it was on ${plainDate(best.mjd)}`, focusMjd: best.mjd, mover: { at, label: 'Predicted spot' } });
+      return show(here[0], here[1], { target: id, name: `${o.name}, where it was on ${plainDate(best.mjd)}`, focusMjd: best.mjd, mover: { at, label: 'Predicted position' } });
     } catch {
       fail(`Could not load the position of ${o.name}.`);
     }
@@ -503,9 +507,9 @@ export const skyView: View = async (body, ctx) => {
       const row = rows[Math.floor(Math.random() * rows.length)];
       // a point well inside that photo: its centre, moved by up to half a degree
       const [ra, dec] = offsetToSky(row[3], row[4], (Math.random() - 0.5) * 3600, (Math.random() - 0.5) * 3600);
-      return show(ra, dec, { name: 'A random covered spot' });
+      return show(ra, dec, { name: 'A random covered position' });
     }
-    fail('Could not find a covered spot. Try again.');
+    fail('Could not find a covered position. Try again.');
   };
 
   form.addEventListener('submit', (e) => {

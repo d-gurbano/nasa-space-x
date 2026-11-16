@@ -51,7 +51,7 @@ export function section(kicker: string, title: string, html: string, cls = ''): 
 }
 
 export function pageHeader(kicker: string, title: string, lead = ''): string {
-  return `<header class="ph"><p class="kicker ph-kicker">${esc(kicker)}</p><h1 class="ph-title">${esc(title)}</h1>${lead ? `<p class="ph-lead">${esc(lead)}</p>` : ''}</header>`;
+  return `<header class="ph">${kicker ? `<p class="kicker ph-kicker">${esc(kicker)}</p>` : ''}<h1 class="ph-title">${esc(title)}</h1>${lead ? `<p class="ph-lead">${esc(lead)}</p>` : ''}</header>`;
 }
 
 /** Segmented tabs. Each button carries data-tab; the caller listens for clicks. */

@@ -140,8 +140,13 @@ export class AsteroidCloud {
       // ecliptic -> three: (x, z, -y)
       P.set([b.P[0], b.P[2], -b.P[1]], r * 3);
       Q.set([b.Q[0], b.Q[2], -b.Q[1]], r * 3);
-      O.set([a, e, d[o + iM] * DEG, meanMotion(a)], r * 4);
       const flag = d[o + iflag];
+      // The table's main-belt sample bunches up in mean anomaly (most rows sit near perihelion on
+      // one side of the Sun), so the belt looked lopsided. Its background dots keep their real orbits
+      // but get an even spread of phases along them, so the belt reads as the ring it is.
+      // Near-Earth objects, comets and new objects keep their real positions.
+      const spread = !(flag & (FLAG.NEO | FLAG.COMET | FLAG.NEW));
+      O.set([a, e, spread ? ((r * 0.6180339887) % 1) * 2 * Math.PI : d[o + iM] * DEG, meanMotion(a)], r * 4);
       let disc = -1e6;
       if (idisc >= 0 && d[o + idisc] > 0) disc = d[o + idisc] - orb.epoch_mjd;
       else if (flag & FLAG.NEW) disc = NEW_SINCE_MJD - orb.epoch_mjd;

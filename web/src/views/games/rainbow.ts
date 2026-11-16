@@ -1,9 +1,10 @@
-// Match the spectrum: SPHEREx splits light into 102 colours. Each round shows one object's colour
+// Rainbow Detective: SPHEREx splits light into 102 colours. Each round shows one object's colour
 // fingerprint (brightness vs wavelength, 0.75 to 5 um). Match it to what the object is made of,
 // then see the typical curve of that type laid over it and one feature explained.
 import { icon } from '../../ui/components';
 import { esc, provenance } from '../../ui/dom';
 import { reducedMotion } from '../../state';
+import { confetti } from './confetti';
 import type { View } from '../page';
 import { hue, linePath, scaleTo, UM_MAX, UM_MIN, ux, yRange, type Kind, type RainbowData, type RainbowRound } from './rainbow-logic';
 
@@ -24,10 +25,10 @@ const FEATURE: Record<Kind, { from: number; to: number; text: string } | { at: n
 
 // the hint: the wavelengths that tell this round apart
 const HINT: Record<Kind, { from: number; to: number; text: string }> = {
-  S: { from: 0.86, to: 1.16, text: 'Is there a dip here?' },
-  C: { from: 1.0, to: 2.5, text: 'Flat or rising here?' },
-  X: { from: 1.0, to: 2.5, text: 'Flat or rising here?' },
-  ice: { from: 2.85, to: 3.3, text: 'Is there a deep dip here?' },
+  S: { from: 0.86, to: 1.16, text: 'Look for a dip here' },
+  C: { from: 1.0, to: 2.5, text: 'Check if the curve is flat or rising here' },
+  X: { from: 1.0, to: 2.5, text: 'Check if the curve is flat or rising here' },
+  ice: { from: 2.85, to: 3.3, text: 'Look for a deep dip here' },
 };
 
 // chart geometry, in SVG units
@@ -49,7 +50,7 @@ const kindIcon = (k: Kind) => `<svg viewBox="0 0 24 24" aria-hidden="true">${KIN
 export const rainbowGame: View = async (body, ctx) => {
   const { data, sample } = await ctx.load<RainbowData>('games/rainbow.json');
   if (!data.rounds?.length) {
-    body.innerHTML = `<p class="muted">No rounds yet.</p>`;
+    body.innerHTML = `<p class="muted">No rounds are available yet.</p>`;
     return;
   }
   const um = data.um;
@@ -66,7 +67,7 @@ export const rainbowGame: View = async (body, ctx) => {
   body.innerHTML = `
     <div class="rb">
       <header class="gm-bar">
-        <h2 class="gm-title">Match the spectrum</h2>
+        <h2 class="gm-title">Rainbow Detective</h2>
         <ol class="gm-prog" aria-label="Rounds"></ol>
         <button type="button" class="btn btn-ghost rb-guide-open">Field guide</button>
         <p class="gm-score"><span class="mono">Score</span><b class="mono rb-pts">0</b></p>
@@ -92,8 +93,8 @@ export const rainbowGame: View = async (body, ctx) => {
         </figure>
         <div class="gm-side">
           <div class="rb-ask">
-            <p class="gm-q">What is it <b>made of</b>?</p>
-            <p class="gm-sub">A dip is an absorption band: a mineral or ice absorbing light at that wavelength. Point at an answer to overlay its template on the mystery spectrum.</p>
+            <p class="gm-q">Choose what it is <b>made of</b>.</p>
+            <p class="gm-sub">A dip in the curve is an absorption band, where a mineral or ice absorbs light at that wavelength. Point at an answer to lay its typical curve over this spectrum.</p>
             <div class="rb-answers">${KINDS.map((k) => `<button class="rb-a rb-a-${k.id}" data-a="${k.id}">${mini(k.id, 88, 40)}<span><b>${k.name}</b><small>${k.tell}</small></span><kbd class="mono">${k.key}</kbd></button>`).join('')}</div>
             <div class="gm-row"><button type="button" class="btn btn-ghost rb-hint">Hint</button></div>
           </div>
@@ -105,8 +106,8 @@ export const rainbowGame: View = async (body, ctx) => {
     <div class="gm-end" hidden></div>
     <dialog class="rb-guide" aria-labelledby="rb-guide-h">
       <p class="kicker">Field guide</p>
-      <h2 id="rb-guide-h" class="rb-guide-h">Four shapes to know</h2>
-      <p class="gm-sub">Each curve is the mean spectrum of one taxonomic type across the near- and mid-infrared, 0.75 to 5 µm (all invisible to the eye). Match the shape, not the height.</p>
+      <h2 id="rb-guide-h" class="rb-guide-h">Four spectrum shapes</h2>
+      <p class="gm-sub">Each curve is the average spectrum of one surface type from 0.75 to 5 µm. These near- and mid-infrared wavelengths are invisible to the eye. Match the shape of the curve, not its height.</p>
       <ol class="rb-guide-list">${KINDS.map((k) => `<li>${mini(k.id, 200, 96)}<b>${kindIcon(k.id)}${k.name}</b><span>${k.tell}</span></li>`).join('')}</ol>
       <div class="gm-row"><button type="button" class="btn btn-primary rb-guide-ok">Got it</button></div>
     </dialog>`;
@@ -161,7 +162,7 @@ export const rainbowGame: View = async (body, ctx) => {
       const last = Math.max(...vals.map((v, i) => (v == null ? -1 : i)));
       if (last >= 0 && last < um.length - 1) {
         const a = X(Math.sqrt(um[last] * um[last + 1]));
-        gap = `<rect class="rb-gap" x="${a}" y="${Y0 - 8}" width="${X1 - a}" height="${Y1 - Y0 + 8}" fill="url(#rb-hatch)"/><text class="rb-gap-t" x="${(a + X1) / 2}" y="${Y0 + 14}">Air blocks these colours</text><text class="rb-gap-t" x="${(a + X1) / 2}" y="${Y0 + 32}">for ground telescopes.</text><text class="rb-gap-t gold" x="${(a + X1) / 2}" y="${Y0 + 54}">SPHEREx sees them from space.</text>`;
+        gap = `<rect class="rb-gap" x="${a}" y="${Y0 - 8}" width="${X1 - a}" height="${Y1 - Y0 + 8}" fill="url(#rb-hatch)"/><text class="rb-gap-t" x="${(a + X1) / 2}" y="${Y0 + 14}">Air blocks these colours</text><text class="rb-gap-t" x="${(a + X1) / 2}" y="${Y0 + 32}">for ground telescopes.</text><text class="rb-gap-t gold" x="${(a + X1) / 2}" y="${Y0 + 54}">SPHEREx measures them from space.</text>`;
       }
     }
     const line = pts.length
@@ -181,7 +182,7 @@ export const rainbowGame: View = async (body, ctx) => {
     q('.rb').hidden = false;
     q('.gm-end').hidden = true;
     q('.gm-prog').innerHTML = rounds.map((_, i) => `<li class="${i < k ? (results[i].ok ? 'ok' : 'no') : i === k ? 'now' : ''}"></li>`).join('');
-    q('.rb-kind').textContent = r.kind === 'spherex' ? 'Bonus: a real Rewind find' : `Round ${k + 1} of ${rounds.length}`;
+    q('.rb-kind').textContent = r.kind === 'spherex' ? 'Bonus round with one of our finds' : `Round ${k + 1} of ${rounds.length}`;
     q('.rb-name').textContent = r.name;
     ask.hidden = false;
     reveal.hidden = true;
@@ -217,8 +218,9 @@ export const rainbowGame: View = async (body, ctx) => {
         <p class="rb-verdict rb-v-${r.truth}">${kindIcon(r.truth)}${esc(NAME[r.truth])}${r.kind === 'spherex' && r.label ? ` <span class="mono">(${esc(r.label)})</span>` : ''}</p>
         <p class="gm-q">${ok ? 'Right.' : `Not ${esc(NAME[a].toLowerCase())}.`} <span class="rb-plus mono">+${ok ? 10 : 0}</span></p>
         <p class="rb-say">${esc(r.say)}</p>
-        ${r.kind === 'model' ? `<p class="gm-sub">This round is a model built from lab ice bands, not a measured comet.</p>` : r.kind === 'measured' ? `<p class="gm-sub">A real spectrum from the NASA IRTF telescope, resampled to SPHEREx wavelengths.</p>` : ''}
+        ${r.kind === 'model' ? `<p class="gm-sub">This round is a model built from lab ice bands, not a measured comet.</p>` : r.kind === 'measured' ? `<p class="gm-sub">This is a measured spectrum from NASA’s IRTF telescope, resampled to SPHEREx wavelengths.</p>` : ''}
         <div class="gm-row"><button class="btn btn-primary rb-next">${last ? 'See my score' : 'Next'}${icon('arrow')}</button>${r.slug ? `<a class="btn btn-ghost" href="#/object/${esc(r.slug)}">Open ${esc(r.name)}</a>` : ''}</div>`;
+      if (ok) confetti(reveal.querySelector<HTMLElement>('.gm-q') ?? reveal);
       next = () => (last ? end() : play(k + 1));
       const btn = q<HTMLButtonElement>('.rb-next');
       btn.onclick = () => next?.();
@@ -235,9 +237,9 @@ export const rainbowGame: View = async (body, ctx) => {
     fin.hidden = false;
     body.closest('.page')?.scrollTo(0, 0);
     fin.innerHTML = `
-      <p class="kicker">Match the spectrum</p>
+      <p class="kicker">Rainbow Detective</p>
       <h2 class="gm-end-h"><b class="mono">${right * 10}</b> of ${n * 10}</h2>
-      <p class="gm-end-lead">SPHEREx measures 102 spectral channels from 0.75 to 5 µm for every source across the whole sky. That is how Rewind can start to classify a new find, when it is bright enough.</p>
+      <p class="gm-end-lead">SPHEREx measures 102 spectral channels from 0.75 to 5 µm across the whole sky. When a new find is bright enough, Rewind can use these channels to start classifying it.</p>
       <ol class="gm-list">${KINDS.map((k) => {
         const of = results.filter((x) => x.truth === k.id);
         return of.length ? `<li><span>${k.name}</span><span class="mono">${of.filter((x) => x.ok).length} of ${of.length}</span></li>` : '';

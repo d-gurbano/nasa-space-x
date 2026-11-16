@@ -104,7 +104,7 @@ export function viewer(m: StarManifest, url: string, modes: Mode[], reduced: boo
       ring.style.display = '';
       ring.setAttribute('cx', String(f.pred_xy[0]));
       ring.setAttribute('cy', String(f.pred_xy[1]));
-      read.textContent = `${um(f)}. The ring marks the predicted spot.`;
+      read.textContent = `${um(f)}. The ring marks the predicted position.`;
     } else {
       const f = waves[kk], on = f.wavelength_um >= SHOWS_FROM;
       img.src = rel(url, f.png);

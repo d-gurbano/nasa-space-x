@@ -16,6 +16,7 @@
 .sky-input:hover, .sky-input:focus { border-color: var(--ink-3); background: var(--fill-2); }
 .sky-size { margin-bottom: 0; }
 .sky-size button { height: 40px; font-family: var(--mono); }
+.sky-size-hint { font-size: var(--fs-xs); color: var(--ink-3); }
 .sky-err { margin: var(--g) 0 0; font-size: var(--fs-s); }
 
 /* waiting for the index: the form is there, but quiet */

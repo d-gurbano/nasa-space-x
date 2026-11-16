@@ -171,10 +171,13 @@ export class ObjectFocus {
   private w = new THREE.Vector3();
   private u = new THREE.Vector3();
   // in the close-up the orbit fades out around the body instead of running through it
-  private gap = { uFocus: { value: new THREE.Vector3() }, uGap: { value: 0 } };
+  private gap = { uFocus: { value: new THREE.Vector3() }, uGap: { value: 0 }, uDraw: { value: 1e9 } };
+  // when an object opens, its orbit draws itself out from the object in both directions
+  private drawT = 0;
+  private drawMax = 0; // AU from the dot to the farthest vertex
   private note = Object.assign(document.createElement('p'), {
     className: 'focus-note',
-    innerHTML: '<strong>Artist impression, shape unknown</strong><small>Not to scale</small>',
+    innerHTML: '<strong>Artist’s impression, shape unknown</strong><small>Not to scale</small>',
   });
 
   constructor(private scene: Scene) {
@@ -247,6 +250,10 @@ export class ObjectFocus {
     this.setOrbit(path);
     this.orbitMjd = store.mjd;
     this.orbitSrc = dot.el;
+    this.drawT = 0;
+    this.drawMax = 0;
+    for (let k = 0; k < path.u.length; k++) this.drawMax = Math.max(this.drawMax, Math.hypot(path.rel[k * 3], path.rel[k * 3 + 1], path.rel[k * 3 + 2]));
+    this.gap.uDraw.value = reducedMotion ? 1e9 : 1e-7;
     this.orbit.clear();
     this.group.add(this.orbit);
     // a thin bright core and a wide faint glow
@@ -259,8 +266,8 @@ export class ObjectFocus {
           .replace('#include <logdepthbuf_pars_vertex>', '#include <logdepthbuf_pars_vertex>\nvarying vec3 vGapP;')
           .replace('vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );', 'vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\nvGapP = ( position.y < 0.5 ) ? instanceStart : instanceEnd;');
         sh.fragmentShader = sh.fragmentShader
-          .replace('#include <logdepthbuf_pars_fragment>', '#include <logdepthbuf_pars_fragment>\nvarying vec3 vGapP;\nuniform vec3 uFocus;\nuniform float uGap;')
-          .replace('gl_FragColor = vec4( diffuseColor.rgb, alpha );', 'alpha *= smoothstep( uGap, uGap * 2.5, distance( vGapP, uFocus ) );\ngl_FragColor = vec4( diffuseColor.rgb, alpha );');
+          .replace('#include <logdepthbuf_pars_fragment>', '#include <logdepthbuf_pars_fragment>\nvarying vec3 vGapP;\nuniform vec3 uFocus;\nuniform float uGap;\nuniform float uDraw;')
+          .replace('gl_FragColor = vec4( diffuseColor.rgb, alpha );', 'float dGap = distance( vGapP, uFocus );\nalpha *= smoothstep( uGap, uGap * 2.5, dGap ) * ( 1.0 - smoothstep( uDraw * 0.85, uDraw, dGap ) );\ngl_FragColor = vec4( diffuseColor.rgb, alpha );');
       };
       m.customProgramCacheKey = () => 'orbit-gap';
       const line = new Line2(geo, m);
@@ -416,6 +423,11 @@ export class ObjectFocus {
     const camD = this.scene.camera.position.distanceTo(pos);
     this.gap.uFocus.value.set(0, 0, 0); // the dot, in the orbit's own coordinates
     this.gap.uGap.value = this.radius * 3;
+    if (!reducedMotion && this.drawT < 1) {
+      this.drawT = Math.min(1, this.drawT + dt / 1.8);
+      const t = this.drawT, k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      this.gap.uDraw.value = t >= 1 ? 1e9 : Math.max(1e-7, k * this.drawMax * 1.05);
+    }
     // thinner up close, so the line reads as a path and not a beam
     const thin = THREE.MathUtils.lerp(0.4, 1, THREE.MathUtils.smoothstep(camD, this.radius * 40, this.radius * 400));
     for (const m of this.orbitMats) m.linewidth = m.userData.width * thin;

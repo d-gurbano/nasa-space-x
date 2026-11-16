@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { byOutcome, byType, curveBars, decoyTally, explain, failedChecks, median, outcome, posErrors, tally, usable, type Bench, type BenchCase } from './logic';
+import { byOutcome, byType, curveBars, decoyTally, explain, fact, failedChecks, median, outcome, posErrors, tally, usable, type Bench, type BenchCase } from './logic';
 import { readFileSync } from 'node:fs';
 
 const mk = (truth: string, rewind_verdict: string, extra: Partial<BenchCase> = {}): BenchCase => ({ name: 'x', hidden_until_iso: '2026-01-01', truth, rewind_verdict, ...extra });
@@ -13,6 +13,13 @@ const real = [
 ];
 
 describe('benchmark logic', () => {
+  it('puts the key numbers on the card face', () => {
+    expect(fact(mk('seen', 'FOUND', { snr: 119.72, pos_err_arcsec: 0.11 }))).toBe('0.1 arcsec off / S/N 120');
+    expect(fact(mk('seen', 'TOO_FAINT', { snr: 2.72, oracle_snr: 6.84 }))).toBe('S/N 2.7 blind / 6.8 true');
+    expect(fact(mk('not seen', 'TOO_FAINT', { snr: 1.11, oracle_snr: 1.04 }))).toBe('S/N 1.0 at true spot');
+    expect(fact(mk('seen', 'HINT'))).toBe('');
+  });
+
   it('counts hints on their own, not as misses', () => {
     expect(tally(real)).toEqual({ found: 5, hint: 3, missed: 1, quiet: 1, false: 0, total: 10, seen: 9 });
   });

@@ -31,7 +31,7 @@ All JSON is UTF-8. Times are given as MJD (UTC) plus ISO strings. Positions in 3
   "flag_bits": {"1": "neo", "2": "pha", "4": "new_since_2025", "8": "comet", "16": "in_rewind"},
   "rows": [[a,e,i,node,peri,M,H,flag], ...]
 }
-Include every NEO, every comet with an orbit, every object found since 2025-04-01, and a random sample of main-belt asteroids, about 60,000-120,000 rows in total. Keep the file under about 8 MB (round values sensibly). Also write orbits.bin (Float32, same column order, row-major) with orbits.bin.json giving the row count and fields, so the website can load it fast.
+The file holds every NEO, every comet with an orbit, every object found since 2025-04-01 and a random sample of main-belt asteroids: about 60,000 to 120,000 rows, rounded to stay under about 8 MB. orbits.bin has the same rows as Float32 (same column order, row-major), and orbits.bin.json gives the row count and fields, so the website can load it fast.
 
 ## 3. site/planets.json
 Keplerian elements for Mercury to Neptune (JPL "approximate positions of the planets" table with rates), plus Earth. SPHEREx itself follows Earth (low Earth orbit), so the website draws SPHEREx at Earth's position.
@@ -39,7 +39,7 @@ Keplerian elements for Mercury to Neptune (JPL "approximate positions of the pla
 ## 4. site/objects/<slug>/object.json
 {
   "schema": "rewind-object-v1", "slug", "name", "kind", "verdict", "verdict_text", "sample": false,
-  "story": {"discovered_iso", "by", "site", "plain": "2-4 short sentences", "sources": [urls]},
+  "story": {"discovered_iso", "by", "site", "plain": "<short plain-language story>", "sources": [urls]},
   "facts": {"H": .., "diameter_km": ..|null, "albedo": ..|null, "class": ..|null, "neo": bool, "pha": bool, "sentry": bool, "moid_au": ..|null, "next_close_approach": {"iso", "dist_ld"}|null},
   "orbit": {"epoch_mjd", "a","e","i","node","peri","M","q","Q","period_yr"},
   "cloud": {"dates_mjd": [...], "before": [[[x,y,z] x N clones] per date], "after": same | null,

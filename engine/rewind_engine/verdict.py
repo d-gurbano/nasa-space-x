@@ -41,9 +41,9 @@ def _sign_ok(m):
 
 
 PLAIN = dict(snr="stack S/N below 5", nulls="a null trajectory reached the same S/N", time_shift="S/N does not peak at zero "
-             "time shift", days="positive on fewer than 2 nights", detectable="predicted magnitude below the injection-recovery limit",
+             "time shift", days="positive on fewer than 2 days", detectable="predicted magnitude below the injection-recovery limit",
              cleaned="no usable static-sky reference", orbit="new positions inconsistent with the orbit",
-             sign_test="sign test failed (too few positive single images)", not_one_day="signal depends on a single night")
+             sign_test="sign test failed (too few positive single images)", not_one_day="signal depends on a single day")
 
 
 def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | None = None):
@@ -81,7 +81,7 @@ def decide(obj, res: dict | None, orbit_fit: dict | None = None, clone: dict | N
                 when = f" taken {dd[0]}-{dd[-1]} days before its discovery" if dd[0] != dd[-1] else f" taken {dd[0]} days before its discovery"
             single = "" if m.get("median_frame_snr", 0) >= 5 else " (below the noise in every single image; detected only in the stack)"
             s = (f"Rewind detected {name} in SPHEREx images{when}: null-calibrated S/N {snr:.1f} in the static-sky-subtracted "
-                 f"stack of {m['n']} images{single}, positive on {m['days_positive']} separate nights, and the orbit refit with "
+                 f"stack of {m['n']} images{single}, positive on {m['days_positive']} separate days, and the orbit refit with "
                  f"the new positions stays consistent.")
     elif res.get("qa_fraction", 0) >= 0.3 and res.get("snr_before_qa", 0) >= SNR_FOUND and not snr >= SNR_HINT:
         v = "HINT"

@@ -130,8 +130,8 @@ export class Neighbourhood {
   private fly: { body: Body | null; dir: THREE.Vector3; from: THREE.Vector3; camFrom: THREE.Vector3; t0: number } | null = null;
   private cmp = new THREE.Group();
   private cmpLabel: HTMLElement;
-  private inset = { right: 0, bottom: 0 };
-  private shown = { right: 0, bottom: 0 };
+  private inset = { right: 0, bottom: 0, top: 0 };
+  private shown = { right: 0, bottom: 0, top: 0 };
   private glow = 0;
   private raf = 0;
   private visible = true;
@@ -171,7 +171,7 @@ export class Neighbourhood {
     this.grid();
     for (const s of [SUN, ...STARS]) this.addStar(s);
     this.farRing = this.ring(FAR_RING, 0x8a8f9c, 0.32, true);
-    this.farLabel = this.tag('s3-far', 'Outer ring: distance not to scale');
+    this.farLabel = this.tag('s3-far', 'Outer ring, distance not to scale');
     // the size comparison beside the star in the close-up: a faint disc with an outline
     const circle = new THREE.BufferGeometry().setFromPoints(Array.from({ length: 128 }, (_, i) => new THREE.Vector3(Math.cos((i / 128) * Math.PI * 2), Math.sin((i / 128) * Math.PI * 2), 0)));
     this.cmp.add(
@@ -401,7 +401,7 @@ export class Neighbourhood {
       const [disc, line] = this.cmp.children as [THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>, THREE.LineLoop<THREE.BufferGeometry, THREE.LineBasicMaterial>];
       disc.material.color.set(CMP_COLOR[c.body]);
       line.material.color.set(CMP_COLOR[c.body]);
-      this.cmpLabel.textContent = tiny ? `The ${c.body}: smaller than this dot` : `${c.body === 'Sun' ? 'The Sun' : c.body}, to scale`;
+      this.cmpLabel.textContent = tiny ? `The ${c.body} is smaller than this dot` : `${c.body === 'Sun' ? 'The Sun' : c.body}, to scale`;
     }
     this.fly = { body, dir, from: this.controls.target.clone(), camFrom: this.camera.position.clone(), t0: this.opts.reduced ? -1e9 : performance.now() };
   }
@@ -420,16 +420,19 @@ export class Neighbourhood {
     this.camera.position.copy(this.controls.target).addScaledVector(d.normalize(), len);
   }
 
-  /** Room taken by the panel (px), so the star in focus sits in the open part of the view. */
-  setInset(right: number, bottom: number) {
-    this.inset = { right, bottom };
+  /** Room taken by the panel and the overlays (px), so the map sits in the open part of the view. */
+  setInset(right: number, bottom: number, top = 0) {
+    this.inset = { right, bottom, top };
     if (this.opts.reduced) this.shown = { ...this.inset };
+    // the overview fits itself to the new room; a close-up keeps its distance
+    if (!this.focusId && !this.fly) this.camera.position.setLength(this.home().length());
   }
 
-  /** Far enough back that the far ring fits, also on a tall phone screen. */
+  /** Far enough back that the far ring fits between the insets, also on a tall phone screen. */
   private home(): THREE.Vector3 {
-    const half = Math.tan(((FOV / 2) * Math.PI) / 180) * Math.min(1, this.w / this.h);
-    return HOME_DIR.clone().multiplyScalar(Math.max(15, (FAR_RING * 1.12) / half));
+    const band = Math.max(0.4, (this.h - this.inset.top - this.inset.bottom) / this.h);
+    const half = Math.tan(((FOV / 2) * Math.PI) / 180) * Math.min(band, this.w / this.h);
+    return HOME_DIR.clone().multiplyScalar(Math.max(15, (FAR_RING * 1.15) / half));
   }
 
   private resize() {
@@ -462,7 +465,9 @@ export class Neighbourhood {
     // slide the view centre away from the panel
     this.shown.right += (this.inset.right - this.shown.right) * 0.12;
     this.shown.bottom += (this.inset.bottom - this.shown.bottom) * 0.12;
-    if (this.shown.right > 0.5 || this.shown.bottom > 0.5) this.camera.setViewOffset(this.w, this.h, this.shown.right / 2, this.shown.bottom / 2, this.w, this.h);
+    this.shown.top += (this.inset.top - this.shown.top) * 0.12;
+    const dy = (this.shown.bottom - this.shown.top) / 2;
+    if (this.shown.right > 0.5 || Math.abs(dy) > 0.25) this.camera.setViewOffset(this.w, this.h, this.shown.right / 2, dy, this.w, this.h);
     else this.camera.clearViewOffset();
     this.controls.update();
     this.camera.updateMatrixWorld();
@@ -543,7 +548,9 @@ export class Neighbourhood {
       if (!s) return;
       shown.add(i);
       b.label.hidden = false;
-      b.label.style.transform = `translate3d(${(p[0] + s.dx).toFixed(1)}px, ${(p[1] + s.dy).toFixed(1)}px, 0)`;
+      // never past the top or bottom edge of the map, where a far star can sit
+      const y = Math.min(this.h - 16, Math.max(16, p[1] + s.dy));
+      b.label.style.transform = `translate3d(${(p[0] + s.dx).toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       if (!s.lead) {
         if (b.lead) b.lead.hidden = true;
         return;
@@ -554,7 +561,7 @@ export class Neighbourhood {
         this.labels.prepend(b.lead);
       }
       // from just off the star to the near edge of the label
-      const left = s.dx < 0, x1 = p[0] + (left ? s.dx + b.w! : s.dx), y1 = p[1] + s.dy, ang = Math.atan2(y1 - p[1], x1 - p[0]);
+      const left = s.dx < 0, x1 = p[0] + (left ? s.dx + b.w! : s.dx), y1 = y, ang = Math.atan2(y1 - p[1], x1 - p[0]);
       const x0 = p[0] + Math.cos(ang) * 4, y0 = p[1] + Math.sin(ang) * 4;
       b.lead.hidden = false;
       b.lead.style.width = `${Math.hypot(x1 - x0, y1 - y0).toFixed(1)}px`;

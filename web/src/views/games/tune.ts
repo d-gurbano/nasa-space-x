@@ -1,4 +1,4 @@
-// Stack the images: shift-and-stack by hand. Each round is a set of real SPHEREx photos of one
+// Tune the Rewind: shift-and-stack by hand. Each round is a set of real SPHEREx photos of one
 // fixed patch of sky, with the still sky taken away. Turn the direction dial and the speed tape:
 // the photos are shifted by that motion and averaged, live. At the object's real motion its light
 // lands on one spot and a dot appears that no single photo shows. That is exactly how Rewind works.
@@ -11,6 +11,7 @@ import { shareCard } from '../game/share';
 import { icon } from '../../ui/components';
 import { esc, provenance } from '../../ui/dom';
 import { reducedMotion } from '../../state';
+import { confetti } from './confetti';
 import { rel, type View } from '../page';
 
 const KEY = 'rewind.tune';
@@ -56,7 +57,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((ok, fail) => {
     const img = new Image();
     img.onload = () => ok(img);
-    img.onerror = () => fail(new Error('a photo is missing: ' + src));
+    img.onerror = () => fail(new Error('missing image ' + src));
     img.src = src;
   });
 }
@@ -215,13 +216,13 @@ export const tuneGame: View = async (body, ctx) => {
         <button class="icon-btn tip tip-r tr-help" aria-label="How it works" data-tip="How it works"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.2 9.3a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1-1.3 1.9v.7M12 17.6v.1" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
       </header>
       <ol class="tr-how">
-        <li><b class="mono">1</b><span>These are real SPHEREx photos, taken hours apart.</span></li>
-        <li><b class="mono">2</b><span>The asteroid is too faint to see in one photo.</span></li>
-        <li><b class="mono">3</b><span>Turn the dial and the speed to follow it. Match its motion and the photos add up: it appears.</span></li>
+        <li><b class="mono">1</b><span>These are real SPHEREx images of one patch of sky, taken hours apart.</span></li>
+        <li><b class="mono">2</b><span>The asteroid is too faint to see in any single image.</span></li>
+        <li><b class="mono">3</b><span>Set the direction and speed to follow it. When they match its motion, the images add up and the asteroid appears.</span></li>
       </ol>
       <div class="tr-stage">
         <div class="tr-sky">
-          <canvas class="tr-img" aria-label="The stacked photos"></canvas>
+          <canvas class="tr-img" aria-label="The stacked images"></canvas>
           <svg class="tr-over" aria-hidden="true"><circle class="tr-ring" r="0"/><circle class="tr-ring tr-ring-2" r="0"/></svg>
           <p class="tr-banner" aria-live="assertive"></p>
           <canvas class="tr-film" hidden></canvas>
@@ -244,7 +245,7 @@ export const tuneGame: View = async (body, ctx) => {
           <div class="tr-result" hidden></div>
         </div>
       </div>
-      <div class="tr-foot">${provenance(sample, 'NASA SPHEREx photos')}${sample ? '<span class="hint">Sample rounds made in your browser, until the real ones are ready.</span>' : ''}</div>
+      <div class="tr-foot">${provenance(sample, 'NASA SPHEREx images')}${sample ? '<span class="hint">These sample rounds are made in your browser until the real rounds are ready.</span>' : ''}</div>
     </div>
     <div class="tr-end" hidden></div>`;
   const q = <T extends Element = HTMLElement>(s: string) => body.querySelector(s) as T;
@@ -407,8 +408,8 @@ export const tuneGame: View = async (body, ctx) => {
       sky.classList.add('won');
       navigator.vibrate?.(30);
       burst((R.spot[0] / w) * 100, (R.spot[1] / h) * 100);
-      banner.textContent = helped ? 'There it is.' : 'You rewound it!';
-      sigSay.textContent = 'Motion matched. The photos add up.';
+      banner.textContent = helped ? 'Here is the asteroid.' : 'You found it.';
+      sigSay.textContent = 'The motion matches, so the images add up.';
       const last = k + 1 === total;
       const stars = helped ? 0 : Math.max(1, starsFor(secs) - hints);
       ctrl.hidden = true;
@@ -416,11 +417,12 @@ export const tuneGame: View = async (body, ctx) => {
         <div class="tr-res-top">
           <p class="tr-res-time"><span class="mono">${helped ? 'Shown' : 'Locked in'}</span>${helped ? '' : fmtS(secs)}</p>
           ${starRow(stars)}
-          <p class="tr-res-snr mono">Signal ${R.snrTruth.toFixed(1)}${Number.isFinite(R.snrOne) ? ` <span>vs ${Math.max(0, R.snrOne).toFixed(1)} in one photo</span>` : ''}</p>
+          <p class="tr-res-snr mono">Signal ${R.snrTruth.toFixed(1)}${Number.isFinite(R.snrOne) ? ` <span>vs ${Math.max(0, R.snrOne).toFixed(1)} in one image</span>` : ''}</p>
         </div>
         ${r.explain ? `<p class="tr-res-say">${esc(r.explain)}</p>` : ''}
         <button class="btn btn-primary tr-next">${last ? 'See what Rewind found' : 'Next round'}${icon('arrow')}</button>`;
       result.hidden = false;
+      if (!helped) confetti(result);
       const next = q<HTMLButtonElement>('.tr-next');
       next.onclick = () => {
         lastStack = snapshot();
@@ -436,11 +438,11 @@ export const tuneGame: View = async (body, ctx) => {
         const wide = hints === 1 ? 90 : 30;
         const lo = truth.angle - wide * (0.25 + 0.5 * Math.random());
         dial.limit(lo, lo + wide);
-        sigSay.textContent = `Hint: it moves somewhere inside the gold arc.`;
+        sigSay.textContent = 'Its direction is somewhere inside the gold arc.';
       } else if (hints === 3) {
         const u = truth.rate / R.rmax, lo = Math.max(0, u - 0.08 - 0.08 * Math.random());
         tape.limit(lo, Math.min(1, lo + 0.24));
-        sigSay.textContent = 'Hint: the speed is inside the gold part of the bar.';
+        sigSay.textContent = 'Its speed is inside the gold part of the bar.';
       } else return lock(true);
       hintBtn.textContent = hints === 3 ? 'Show me' : 'Another hint';
       input({ angle: dial.get(), rate: tape.get() * R.rmax });
@@ -507,7 +509,7 @@ export const tuneGame: View = async (body, ctx) => {
     over.querySelectorAll('circle').forEach((c) => (c.setAttribute('cx', String(w / 2)), c.setAttribute('cy', String(h / 2))));
     const goal = r.snr_truth ?? Math.max(...st.map((s) => s.snr));
     goalEl.textContent = goal.toFixed(1);
-    sigSay.textContent = 'This one is too fast to tune by hand, so Rewind did the shifting. Try each motion.';
+    sigSay.textContent = 'This object moves too fast to tune by hand, so we made the stacks for you. Try each motion.';
     const names: Record<string, string> = { wrong: 'A wrong motion', close: 'A close motion', exact: 'The exact motion' };
     guided.innerHTML = st.map((s, i) => `<button class="tr-g" data-i="${i}"><span class="mono">${i + 1}</span>${esc(names[s.label] ?? s.label)}</button>`).join('');
     guided.hidden = false;
@@ -525,7 +527,7 @@ export const tuneGame: View = async (body, ctx) => {
         navigator.vibrate?.(30);
         burst(50, 50);
         banner.textContent = 'There it is.';
-        sigSay.textContent = 'Only the right motion makes it pop.';
+        sigSay.textContent = 'Only the exact motion brings the object out.';
         const last = k + 1 === total;
         result.innerHTML = `
           <div class="tr-res-top">
@@ -582,17 +584,17 @@ export const tuneGame: View = async (body, ctx) => {
     fin.hidden = false;
     body.closest('.page')?.scrollTo(0, 0);
     fin.innerHTML = `
-        <div class="tr-end-art">${art ? '' : `<img src="${esc(ctx.source.base)}objects/2025yh5/stack.png" alt="Rewind's stack of SPHEREx photos that shows 2025 YH5">`}</div>
+        <div class="tr-end-art">${art ? '' : `<img src="${esc(ctx.source.base)}objects/2025yh5/stack.png" alt="Our stack of SPHEREx images showing 2025 YH5">`}</div>
         <div class="tr-end-text">
-          <p class="kicker">The real one</p>
-          <h1 class="tr-end-h">This is how Rewind recovered 2025 YH5.</h1>
-          <p class="tr-end-lead">A potentially hazardous asteroid, in SPHEREx photos taken <b>${days} days</b> before its first known observation. No single photo shows it; the stack along its motion does${find?.best_snr ? `: S/N ${find.best_snr.toFixed(1)}` : ''}${photos ? ` from ${photos} photos` : ''}.</p>
-          <a class="btn btn-gold" href="#/object/2025yh5">See 2025 YH5${icon('arrow')}</a>
+          <p class="kicker">The real result</p>
+          <h1 class="tr-end-h">How we found 2025 YH5 in SPHEREx images</h1>
+          <p class="tr-end-lead">2025 YH5 is a potentially hazardous asteroid. We found it in SPHEREx images taken <b>${days} days</b> before its first known observation. No single image shows it, but our stack along its motion does${find?.best_snr ? `, at S/N ${find.best_snr.toFixed(1)}` : ''}${photos ? ` from ${photos} images` : ''}.</p>
+          <a class="btn btn-gold" href="#/object/2025yh5">Open 2025 YH5${icon('arrow')}</a>
           <div class="tr-score">
             <p class="tr-score-big"><span class="mono">${solo ? 'Your time' : 'Rounds solved'}</span>${solo ? fmtS(totalS) : `${done.length} of ${total}`}</p>
             ${starRow(Math.round(stars / total))}
             <ol class="tr-laps">${times.map((t, i) => `<li><span class="mono">${i + 1}</span>${t == null ? 'shown' : rounds[i].mode === 'guided' ? 'reveal' : fmtS(t)}</li>`).join('')}</ol>
-            <p class="hint">${prev && solo ? `Best ${fmtS(Math.min(prev, totalS))}. ` : ''}Kept only in this browser.${sample ? ' Sample rounds.' : ''}${total < 2 ? ' More rounds coming.' : ''}</p>
+            <p class="hint">${prev && solo ? `Best ${fmtS(Math.min(prev, totalS))}. ` : ''}Your times are saved only in this browser.${sample ? ' These were sample rounds.' : ''}${total < 2 ? ' More rounds will follow.' : ''}</p>
           </div>
           <div class="tr-end-btns">
             <button class="btn btn-primary tr-share">Share my card</button>

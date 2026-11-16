@@ -1,4 +1,4 @@
-// Test targets logic, kept apart from the page so it can be tested: reading the engine's
+// Challenge targets logic, kept apart from the page so it can be tested: reading the engine's
 // CSV tables, the "years of motion" track, the brightness curve, and where the star should
 // be in each pass picture.
 import { mjdFromIso } from '../../lib/time';

@@ -67,6 +67,11 @@
 .ab-team li { flex: 1 1 280px; max-width: 400px; display: flex; align-items: center; gap: var(--g2); padding: var(--g2) var(--g3) var(--g2) var(--g2); border: 1px solid var(--line); border-radius: var(--r2); background: var(--panel); }
 .ab-initials { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border: 1px solid var(--gold-line); border-radius: 50%; font: var(--w-medium) var(--fs-s) / 1 var(--mono); color: var(--gold); }
 .ab-name { font: var(--w-semi) var(--fs-xl) / 1.15 var(--font-display); letter-spacing: var(--track-display); }
+.ab-member { display: flex; align-items: center; gap: var(--g2); width: 100%; color: inherit; text-decoration: none; }
+.ab-who { display: flex; flex-direction: column; gap: 4px; }
+.ab-link { font-size: var(--fs-xs); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2, #9aa0a6); transition: color .2s; }
+.ab-team li:hover { border-color: var(--gold-line); }
+.ab-member:hover .ab-link, .ab-member:focus-visible .ab-link { color: var(--gold); }
 .ab-team + .ab-text { margin-bottom: 0; }
 
 /* rows that are links: data credits and "go further", two columns */

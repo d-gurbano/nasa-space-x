@@ -7,7 +7,7 @@ import '../styles/page-benchmark.css';
 import { mjdFromIso, plainDate } from '../lib/time';
 import { esc, plural, provenance } from '../ui/dom';
 import { chip } from '../ui/components';
-import { alarmLine, byOutcome, byType, curveBars, decoyTally, explain, methodText, median, orbitKey, outcome, posErrors, snrBar, tally, usable, type Bench, type BenchCase, type Outcome } from './benchmark/logic';
+import { alarmLine, byOutcome, byType, curveBars, decoyTally, explain, fact, methodText, median, orbitKey, outcome, posErrors, snrBar, tally, usable, type Bench, type BenchCase, type Outcome } from './benchmark/logic';
 import { PIXEL_ARCSEC } from './sky/logic';
 import { BENCH_ORBITS } from './visuals/bench-orbits';
 import { animateOrbits, type OrbitMini } from './visuals/orbit-mini';
@@ -44,6 +44,7 @@ function card(c: BenchCase, i: number, hasOrbit: boolean, xref = ''): string {
         ${hasOrbit ? '<canvas class="dw-orbit" aria-hidden="true"></canvas>' : '<span class="dw-orbit dw-no-orbit" aria-hidden="true"></span>'}
         <span class="dw-badge">${BADGE[o]}</span>
         <span class="dw-id"><span class="dw-name">${esc(shortName(c.name))}</span>${number(c.name) ? `<span class="dw-num mono">${number(c.name)}</span>` : ''}</span>
+        ${fact(c) ? `<span class="dw-fact mono">${esc(fact(c))}</span>` : ''}
       </span>
       <span class="dw-face dw-back" aria-hidden="true">
         <span class="dw-badge">${BADGE[o]}</span>
@@ -61,9 +62,9 @@ function xrefText(c: BenchCase, o: IndexObject | undefined): string {
   if (!o) return '';
   const blind = outcome(c);
   if (o.verdict === 'FOUND' && blind !== 'found') {
-    return `Main search: FOUND${o.best_snr != null ? ` (S/N ${o.best_snr.toFixed(1)})` : ''}, using the full observed arc and ${plural(o.n_frames ?? 0, 'SPHEREx image')}. This blind run used ${c.arc_days != null ? `a ${c.arc_days}-day arc` : 'a truncated arc'}${c.n_frames != null ? ` and ${plural(c.n_frames, 'image')}` : ''}.`;
+    return `The main search, with the full observed arc and ${plural(o.n_frames ?? 0, 'SPHEREx image')}, gave FOUND${o.best_snr != null ? ` (S/N ${o.best_snr.toFixed(1)})` : ''}. This blind run used ${c.arc_days != null ? `a ${c.arc_days}-day arc` : 'a truncated arc'}${c.n_frames != null ? ` and ${plural(c.n_frames, 'image')}` : ''}.`;
   }
-  if (o.verdict !== 'FOUND' && blind === 'found') return `Main search verdict: ${o.verdict.replace('_', ' ')}.`;
+  if (o.verdict !== 'FOUND' && blind === 'found') return `The main search gave ${o.verdict.replace('_', ' ')}.`;
   return '';
 }
 
@@ -77,7 +78,7 @@ function curveHtml(data: Bench): string {
       <span class="dw-col-num mono">${b.found}/${b.n}</span>
       <span class="dw-col"><i class="dw-col-hint" style="--h:${b.hint / b.n}"></i><i class="dw-col-found" style="--h:${b.found / b.n}"></i></span>
       <span class="dw-col-label mono">${esc(b.label)}</span></li>`).join('')}</ol>
-    <p class="dw-panel-foot">FOUND fraction among objects SPHEREx recorded, per bin of predicted V magnitude (JPL Horizons; left is brighter). Blue: HINT.</p>
+    <p class="dw-panel-foot">Fraction FOUND among the objects SPHEREx recorded, by predicted V magnitude from JPL Horizons. Brighter objects are on the left, and blue marks HINT.</p>
   </article>`;
 }
 
@@ -92,7 +93,7 @@ function closeHtml(data: Bench, cases: BenchCase[]): string {
     <p class="dw-big">${med.toFixed(1)}<small>arcsec, median</small></p>
     ${errs.length ? `<div class="dw-strip" role="img" aria-label="${errs.length} measured positions, all within ${errs[errs.length - 1].toFixed(1)} arcsec of the JPL Horizons position">${errs.map((v) => `<i style="--x:${at(v)}"></i>`).join('')}<b style="--x:${at(med)}"></b></div>
     <p class="dw-strip-ends mono"><span>0</span><span>1 SPHEREx pixel, ${PIXEL_ARCSEC.toFixed(1)}"</span></p>` : ''}
-    <p class="dw-panel-foot">Offset of the blind-search position from JPL Horizons; one mark per test object.</p>
+    <p class="dw-panel-foot">Each mark is one test object, placed at the offset of its blind-search position from JPL Horizons.</p>
   </article>`;
 }
 
@@ -104,7 +105,7 @@ function typeHtml(cases: BenchCase[]): string {
     <ul class="dw-types">${types.map(([k, t]) => `<li>
       <span class="dw-type-name">${esc(TYPE[k] ?? k)}</span><span class="dw-type-num mono">${t.found} of ${t.seen}</span>
       <span class="dw-seg" aria-hidden="true">${(['found', 'hint', 'missed'] as Outcome[]).map((o) => (t[o] ? `<i class="dw-${o}" style="flex:${t[o]}"></i>` : '')).join('')}</span></li>`).join('')}</ul>
-    <p class="dw-panel-foot">FOUND fraction among detectable test objects. Blue: HINT; grey: missed.</p>
+    <p class="dw-panel-foot">Fraction FOUND among the detectable test objects. Blue marks HINT and grey marks missed.</p>
   </article>`;
 }
 
@@ -114,7 +115,7 @@ function firstTestHtml(v1: Bench['v1']): string {
   if (!cases.length) return '';
   const t = tally(cases);
   return `<details class="dw-fold"><summary>First test (${plural(cases.length, 'case')})</summary>
-    <p>${t.found} of ${t.seen} detectable objects recovered as FOUND${t.hint ? `, ${plural(t.hint, 'HINT')}` : ''}${t.missed ? `, ${t.missed} missed` : ''}, ${plural(t.false, 'false FOUND')}. The test above repeats it with more objects and with empty-sky decoys.</p>
+    <p>${t.found} of ${t.seen} detectable objects recovered as FOUND${t.hint ? `, ${plural(t.hint, 'HINT')}` : ''}${t.missed ? `, ${t.missed} missed` : ''}, ${plural(t.false, 'false FOUND')}. The test above repeats it with more objects and adds empty-sky decoys.</p>
     <ul class="dw-v1">${cases.map((c) => `<li class="dw-card dw-${outcome(c)}"><span class="dw-badge">${BADGE[outcome(c)]}</span><span>${esc(shortName(c.name))}</span><span class="mono">${typeof c.snr === 'number' ? 'S/N ' + c.snr.toFixed(1) : ''}</span></li>`).join('')}</ul>
   </details>`;
 }
@@ -139,27 +140,27 @@ export const benchmarkView: View = async (body, ctx) => {
   const panels = [curveHtml(data), closeHtml(data, cases), typeHtml(cases)].filter(Boolean);
 
   body.innerHTML = `
-    <p class="dw-hero display">With the later observations hidden, Rewind recovered <em>${t.found} of ${t.seen}</em> known ${what} that SPHEREx recorded, with ${alarms}.</p>
-    <p class="dw-sub">${t.found} FOUND, ${plural(t.hint, 'HINT')}, ${t.missed} missed, of ${t.seen} objects detectable at their true positions (S/N ≥ 5). ${t.quiet ? `${t.quiet} more were below S/N 5 even at the true position. ` : ''}A false alarm would be a FOUND on an object SPHEREx did not record, or on an empty-sky decoy.</p>
+    <p class="dw-hero display">We hid the later observations, and Rewind recovered <em>${t.found} of ${t.seen}</em> known ${what} that SPHEREx recorded, with ${alarms}.</p>
+    <p class="dw-sub">${t.found} FOUND, ${plural(t.hint, 'HINT')}, ${t.missed} missed, of ${t.seen} objects detectable at their true positions (S/N ≥ 5). ${t.quiet ? `${t.quiet} more were below S/N 5 even at the true position. ` : ''}A false alarm would be a FOUND for an object SPHEREx did not record, or for an empty-sky decoy.</p>
     <ul class="dw-tally" aria-label="Results">${counts.map((o) => `<li class="dw-${o}"><i></i><b class="mono">${t[o]}</b>${BADGE[o]}</li>`).join('')}<li class="dw-decoys">${alarmLine(t, decoys).replace(/^(\d+)/, '<b class="mono">$1</b>')}</li></ul>
     ${panels.length ? `<div class="dw-panels">${panels.join('')}</div>` : ''}
 
-    <p class="dw-hint-line dw-rule">HINT: a signal, but not all nine checks pass; each card names the failed checks. Not visible: S/N &lt; 5 even at the true position, so the object was not detectable in these images.</p>
+    <p class="dw-hint-line dw-rule">A HINT has a signal but fails at least one of the nine checks, and each card names the failed checks. Below limit means S/N &lt; 5 even at the true position, so the object was not detectable in these images.</p>
     <ol class="dw-grid" aria-label="${plural(t.total, 'test object')}, found first">${cases.map((c, i) => card(c, i, !!orbits[i], xrefText(c, mainBy.get(orbitKey(c.name))))).join('')}</ol>
-    <p class="dw-hint-line">Each card shows the object's orbit (Earth's orbit dotted). Hover or tap for the result.</p>
+    <p class="dw-hint-line">Each card shows the object's orbit, with Earth's orbit dotted. Hover or tap a card to see the result.</p>
 
     <ol class="dw-how" aria-label="How the test works">
-      <li>${svg('hide')}<span><b>Truncate the arc</b>Fit an orbit from only the first 20 to 45 days of a known object's MPC observations, as if it had just been discovered.</span></li>
-      <li>${svg('search')}<span><b>Blind search</b>Shift-and-stack up to 40 SPHEREx images from the 20 days before that date along the short-arc prediction, and apply the nine checks.</span></li>
-      <li>${svg('check')}<span><b>Compare</b>Measure the same images at the true JPL Horizons positions. A miss costs completeness; a false FOUND would cost trust.</span></li>
+      <li>${svg('hide')}<span><b>Truncate the arc</b>We fit an orbit to only the first 20 to 45 days of a known object's MPC observations, as if it were newly discovered.</span></li>
+      <li>${svg('search')}<span><b>Blind search</b>We take up to 40 SPHEREx images from the 20 days before that date. We shift them along the short-arc prediction and add them up (shift-and-stack), then apply the nine checks.</span></li>
+      <li>${svg('check')}<span><b>Compare</b>We measure the same images at the true JPL Horizons positions. A miss lowers completeness. A false FOUND would mean the checks let through a wrong detection.</span></li>
     </ol>
 
     <div class="dw-folds">
       ${firstTestHtml(data.v1)}
-      ${skipped ? `<details class="dw-fold"><summary>${plural(skipped, 'more case')} could not be tested</summary><p>${esc(data.summary?.unusable_note ?? 'These had no usable blind test: ' + all.filter((c) => !usable(c)).map((c) => c.name).join(', ') + '.')}</p></details>` : ''}
-      ${data.summary?.method ? `<details class="dw-fold"><summary>How the test was run, exactly</summary><p>${esc(methodText(data.summary.method))}</p></details>` : ''}
+      ${skipped ? `<details class="dw-fold"><summary>${plural(skipped, 'more case')} could not be tested</summary><p>${esc(data.summary?.unusable_note?.replace("'pretend it is new' test", 'blind test') ?? 'These had no usable blind test. ' + all.filter((c) => !usable(c)).map((c) => c.name).join(', ') + '.')}</p></details>` : ''}
+      ${data.summary?.method ? `<details class="dw-fold"><summary>Full method of the test</summary><p>${esc(methodText(data.summary.method))}</p></details>` : ''}
       <!-- numbers from the Kaggle runs: MAIN/data/kaggle/SUMMARY.md, K2 -->
-      <details class="dw-fold"><summary>Where we used machine learning</summary><p>On held-out sky, a small CNN separated known asteroids from injected artifacts with accuracy 0.974 (gradient boosting: 0.931). The negatives are injected, so this does not measure performance on real artifacts. A U-Net that predicts the static sky did not beat the plain reference image (about twice the false alarms near bright stars) and is not used. No verdict rule uses either model.</p></details>
+      <details class="dw-fold"><summary>Where we used machine learning</summary><p>On held-out sky, a small neural network (CNN) separated known asteroids from injected artifacts with accuracy 0.974. Gradient boosting reached 0.931. The negatives are injected, so this does not measure performance on real artifacts. We also tried a U-Net that predicts the static sky. It gave about twice the false alarms near bright stars compared with the plain reference image, so we do not use it. No verdict rule uses either model.</p></details>
     </div>
     <div class="dw-foot">${provenance(sample, 'Rewind test on NASA SPHEREx')}${data.summary?.label ? chip(data.summary.label) : ''}<span class="hint">Orbits: JPL Small-Body Database. Reference positions: JPL Horizons.</span></div>`;
 

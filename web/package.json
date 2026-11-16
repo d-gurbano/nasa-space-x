@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "cp ../docs/DATA-CONTRACT.md public/DATA-CONTRACT.md",
+    "prebuild": "perl -0pe 's/\\n+## Website notes.*?(?=^## |\\z)/\\n/ms' ../docs/DATA-CONTRACT.md > public/DATA-CONTRACT.md",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

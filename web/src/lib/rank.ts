@@ -1,6 +1,6 @@
 // Ordering of Rewind objects, the choice of the "best" flash for the guided demo, and the
 // grouping of flash marks on the time bar.
-import type { FlashEvent, IndexObject, ObjectPage, SiteIndex } from './types';
+import type { FlashEvent, IndexObject, SiteIndex } from './types';
 import { mjdFromIso } from './time';
 
 const ORDER: Record<string, number> = { FOUND: 0, HINT: 1, TOO_FAINT: 2, NO_PHOTOS: 3, PENDING: 4 };
@@ -67,43 +67,42 @@ export function tally(objects: Pick<IndexObject, 'verdict' | 'kind' | 'first_sph
   };
 }
 
-/** Stack S/N measured against the fake-path (null) distribution: (S/N - null mean) / null spread. */
-export function nullScaledSnr(o: Pick<IndexObject, 'best_snr'>, p: Pick<ObjectPage, 'checks' | 'spherex'> | null): number {
-  const snr = p?.spherex?.stack?.snr ?? o.best_snr ?? -Infinity;
-  const np = p?.checks?.null_paths;
-  if (!np || !Number.isFinite(np.snr_mean) || !(np.snr_std > 0)) return snr;
-  return (snr - np.snr_mean) / np.snr_std;
+/** SPHEREx photos read: the sum over the objects shown, so it never lags behind headline_stats. */
+export function framesRead(objects: Pick<IndexObject, 'n_frames'>[]): number {
+  return objects.reduce((s, o) => s + (o.n_frames ?? 0), 0);
+}
+
+/** "2 of them are potentially hazardous asteroids (...), per JPL." from the finds' object pages (facts.pha). */
+export function phaLine(pages: ({ name: string; facts?: { pha?: boolean } | null } | null)[]): string {
+  const names = pages.filter((p) => p?.facts?.pha).map((p) => p!.name);
+  if (!names.length) return '';
+  const what = names.length === 1 ? 'is a potentially hazardous asteroid' : 'are potentially hazardous asteroids';
+  return `${names.length} of them ${what} (${names.join(', ')}), per JPL.`;
 }
 
 export interface Showcase {
   object: IndexObject;
   flash: FlashEvent;
   sure: boolean; // FOUND (true) or only a HINT (false)
-  score: number;
+  score: number; // S/N of that one photo
 }
 
 /**
  * The object for the guided rewind and the demo, chosen from index.json each time:
- * FOUND before HINT, never a known object, needs a SPHEREx photo from before anyone had it,
- * highest null-scaled S/N wins. Its strongest such photo is the flash to show.
+ * FOUND before HINT, never a known object, needs a SPHEREx photo from before anyone had it.
+ * The object whose single best such photo has the highest S/N wins, and that photo is the flash:
+ * a visitor sees one photo, so a clear one beats a strong stack of faint ones.
  */
-export async function pickShowcase(
-  idx: Pick<SiteIndex, 'objects' | 'flash_events'>,
-  page: (slug: string) => Promise<ObjectPage>,
-  prefer?: string | null,
-): Promise<Showcase | null> {
+export function pickShowcase(idx: Pick<SiteIndex, 'objects' | 'flash_events'>, prefer?: string | null): Showcase | null {
   const pre = (o: IndexObject) => idx.flash_events.filter((f) => f.slug === o.slug && f.before_first_known_obs !== false && f.mjd < knownSince(o));
+  const best = (fs: FlashEvent[]) => fs.reduce((b, f) => ((f.snr ?? 0) > (b.snr ?? 0) ? f : b));
   for (const verdict of ['FOUND', 'HINT'] as const) {
     let cands = idx.objects.filter((o) => o.verdict === verdict && !isKnown(o) && pre(o).length);
     if (prefer && cands.some((o) => o.slug === prefer)) cands = cands.filter((o) => o.slug === prefer);
     if (!cands.length) continue;
-    const scored = await Promise.all(
-      cands.map(async (o) => ({ o, score: nullScaledSnr(o, await page(o.slug).catch(() => null)) })),
-    );
-    scored.sort((a, b) => b.score - a.score);
-    const best = scored[0];
-    const flash = pre(best.o).reduce((b, f) => ((f.snr ?? 0) > (b.snr ?? 0) ? f : b));
-    return { object: best.o, flash, sure: verdict === 'FOUND', score: best.score };
+    const scored = cands.map((o) => ({ o, flash: best(pre(o)) })).sort((a, b) => (b.flash.snr ?? 0) - (a.flash.snr ?? 0));
+    const { o, flash } = scored[0];
+    return { object: o, flash, sure: verdict === 'FOUND', score: flash.snr ?? 0 };
   }
   return null;
 }

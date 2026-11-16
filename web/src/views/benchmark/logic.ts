@@ -70,7 +70,7 @@ export function alarmLine(t: ReturnType<typeof tally>, decoys: ReturnType<typeof
 
 /** The engine's method note, in plain words where it uses shorthand. */
 export function methodText(s: string): string {
-  return s.replace('missed excludes hints. Frames listed with MOST (full orbit).', "'Missed' doesn't count hints. Frame lists come from the MOST service using the full orbit.");
+  return s.replace('missed excludes hints. Frames listed with MOST (full orbit).', "'Missed' does not count hints. The frame lists come from the MOST service, using the full orbit.");
 }
 
 /** Empty-sky decoys: how many ran, and how many Rewind wrongly called a find. */
@@ -124,10 +124,10 @@ const FAILED: Record<string, string> = {
   cleaned: 'no usable static-sky reference',
   nulls: 'a null trajectory reached the same S/N',
   time_shift: 'S/N does not peak at zero time shift',
-  days: 'positive on fewer than 2 nights',
-  detectable: 'predicted magnitude below the injection–recovery limit',
+  days: 'positive on fewer than 2 days',
+  detectable: 'predicted magnitude fainter than the injection-recovery limit',
   sign_test: 'sign test failed (too few positive single images)',
-  not_one_day: 'signal depends on a single night',
+  not_one_day: 'signal depends on a single day',
   orbit: 'new positions inconsistent with the orbit',
 };
 
@@ -136,6 +136,18 @@ export function failedChecks(c: BenchCase): string[] {
 }
 
 const sn = (v: number | null | undefined, tail: string) => (typeof v === 'number' ? ` (S/N ${v.toFixed(1)}${tail})` : '');
+
+const num = (v: number) => v.toFixed(v >= 100 ? 0 : 1);
+
+/** The key numbers for the card face, e.g. "0.1 arcsec off / S/N 120". Empty when the file has none. */
+export function fact(c: BenchCase): string {
+  const has = (v: number | null | undefined): v is number => typeof v === 'number';
+  const o = outcome(c);
+  if (o === 'quiet') return has(c.oracle_snr) ? `S/N ${num(c.oracle_snr)} at true spot` : '';
+  if (o === 'missed') return has(c.snr) && has(c.oracle_snr) ? `S/N ${num(c.snr)} blind / ${num(c.oracle_snr)} true` : '';
+  const parts = [has(c.pos_err_arcsec) ? `${c.pos_err_arcsec.toFixed(1)} arcsec off` : '', has(c.snr) ? `S/N ${num(c.snr)}` : ''];
+  return parts.filter(Boolean).join(' / ');
+}
 
 /** One plain sentence about a case. It never says more than the verdict in the file. */
 export function explain(c: BenchCase): string {
@@ -147,11 +159,11 @@ export function explain(c: BenchCase): string {
       return why.length ? `Failed: ${why.join('; ')}.` : 'Not every check passed.';
     }
     case 'missed':
-      return `Detectable at the true position${sn(c.oracle_snr, '')}, but the short-arc prediction was too far off for the stack to build up. Classified ${said(c)}, so no false FOUND.`;
+      return `Detectable at the true position${sn(c.oracle_snr, '')}. The short-arc prediction was too far off for the stack to build up. Classified ${said(c)}, so there was no false FOUND.`;
     case 'quiet':
       return `Below the detection limit even at the true position${sn(c.oracle_snr, ' < 5')}. Classified ${said(c)}, not FOUND.`;
     case 'false':
-      return 'Classified FOUND although the object is not detectable at its true position: a false alarm.';
+      return 'Classified FOUND although the object is not detectable at its true position. This is a false alarm.';
   }
 }
 
